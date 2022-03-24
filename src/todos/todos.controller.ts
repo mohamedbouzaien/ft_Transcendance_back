@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import JwtAuthenticationGuard from 'src/authentication/jwtAuthentication.guard';
+import JwtAuthenticationGuard from 'src/authentication/jwt-authentication.guard';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { TodosService } from './todos.service';
 
