@@ -18,9 +18,12 @@ export class RegisterDto {
         description: 'Has to match a regular expression: /^\\+[1-9]\\d{1,14}$/',
         example: '+123123123123'
       })
-      @IsString()
-      @IsNotEmpty()
-      @Matches(/^\+[1-9]\d{1,14}$/)
-      phoneNumber: string;
+    @IsString()
+    @IsNotEmpty()
+    @Matches(/^\+[1-9]\d{1,14}$/)
+    phoneNumber: string;
+
+    @IsString()
+    intraId: string;
 }
 export default RegisterDto;

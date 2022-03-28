@@ -1,7 +1,9 @@
-import { Body, Controller, HttpCode, Post, Req, Res, UseGuards, Response, Get } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Res, UseGuards, Response, Get, Redirect } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { AuthenticationService } from './authentication.service';
 import RegisterDto from './dto/register.dto';
+import { FtAuthenticationGuard } from './ft-authentication.guard';
+import { ftStrategy } from './ft.strategy';
 import JwtAuthenticationGuard from './jwt-authentication.guard';
 import JwtRefreshGuard from './jwt-refresh.guard';
 import { LocalAuthenticationGuard } from './local-authentication.guard';
@@ -34,6 +36,12 @@ export class AuthenticationController {
         return user;
     }
 
+    @UseGuards(FtAuthenticationGuard)
+    @Get('log-in')
+    loginWith42() {
+      
+    }
+
     @UseGuards(JwtRefreshGuard)
     @Get('refresh')
     refresh(@Req() request: RequestWithUser) {
@@ -56,5 +64,19 @@ export class AuthenticationController {
       const user = request.user;
       user.password = undefined;
       return user;
+    }
+
+    @UseGuards(FtAuthenticationGuard)
+    @Get('callback')
+    async ftCallback(@Req() request: RequestWithUser) {
+        const {user} = request;
+        const accessTokenCookie = this.authenticationService.getCookieWithJwtAccessToken(user.id);
+        const {
+            cookie: refreshTokenCookie,
+            token: refreshToken
+        } = this.authenticationService.getCookieWithJwtRefreshToken(user.id);
+        await this.usersService.setCurrentRefreshToken(refreshToken, user.id);
+        request.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
+        return user;
     }
 }

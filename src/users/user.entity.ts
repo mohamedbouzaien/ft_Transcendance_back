@@ -14,6 +14,8 @@ class User {
     @Column({ nullable: true})
     @Exclude()
     public currentHashedRefreshToken?: string;
+    @Column({nullable: true, unique: true})
+    public intraId: string;
 }
 
 export default User;

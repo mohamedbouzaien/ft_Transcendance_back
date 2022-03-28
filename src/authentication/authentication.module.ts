@@ -8,6 +8,7 @@ import { AuthenticationService } from './authentication.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtRefreshTokenStrategy } from './jwt-refresh-token.strategy';
 import { LocalStrategy } from './local.strategy';
+import { ftStrategy } from './ft.strategy';
 
 @Module({
     imports: [
@@ -16,7 +17,7 @@ import { LocalStrategy } from './local.strategy';
             ConfigModule,
             JwtModule.register({})
             ],
-    providers: [AuthenticationService, LocalStrategy, JwtStrategy, JwtRefreshTokenStrategy],
+    providers: [AuthenticationService, LocalStrategy, JwtStrategy, JwtRefreshTokenStrategy, ftStrategy],
     controllers: [AuthenticationController]
 })
 export class AuthenticationModule {}

@@ -12,14 +12,6 @@ export class UsersService {
         private usersRepository: Repository<User>
     ) {}
 
-    async   getByEmail(email: string)
-    {
-        const user = await this.usersRepository.findOne({email});
-        if (user)
-            return user;
-        throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
-    }
-
     async create(userData: CreateUserDto)
     {
         const newUser = await this.usersRepository.create(userData);
@@ -35,6 +27,14 @@ export class UsersService {
         });
     }
 
+    async   getByEmail(email: string)
+    {
+        const user = await this.usersRepository.findOne({email});
+        if (user)
+            return user;
+        throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
+    }
+
     async getById(id: number) {
         const user = await this.usersRepository.findOne({
             id
@@ -43,6 +43,14 @@ export class UsersService {
             return user;
         }
         throw new HttpException('User with this id does not exist', HttpStatus.NOT_FOUND);
+    }
+
+    async   getByIntraId(intraId: string)
+    {
+        const user = await this.usersRepository.findOne({intraId});
+        if (user)
+            return user;
+        return undefined;
     }
 
     async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
@@ -59,4 +67,5 @@ export class UsersService {
             currentHashedRefreshToken: null
         });
     }
+
 }
