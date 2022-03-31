@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import JwtAuthenticationGuard from 'src/authentication/jwt-authentication.guard';
+import JwtTwoFactornGuard from 'src/authentication/jwt-two-factor.guard';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { TodosService } from './todos.service';
 
@@ -7,6 +8,7 @@ import { TodosService } from './todos.service';
 export class TodosController {
     constructor (private readonly todosService: TodosService) {}
     @Get()
+    @UseGuards(JwtTwoFactornGuard)
     findAll() {
         return this.todosService.getAll();
     }

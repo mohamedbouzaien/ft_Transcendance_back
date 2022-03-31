@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from 'src/users/users.module';
@@ -9,6 +9,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { JwtRefreshTokenStrategy } from './jwt-refresh-token.strategy';
 import { LocalStrategy } from './local.strategy';
 import { ftStrategy } from './ft.strategy';
+import { JwtTwoFactorStrategy } from './jwt-two-factor.strategy';
 
 @Module({
     imports: [
@@ -17,7 +18,8 @@ import { ftStrategy } from './ft.strategy';
             ConfigModule,
             JwtModule.register({})
             ],
-    providers: [AuthenticationService, LocalStrategy, JwtStrategy, JwtRefreshTokenStrategy, ftStrategy],
-    controllers: [AuthenticationController]
+    providers: [AuthenticationService, LocalStrategy, JwtStrategy, JwtRefreshTokenStrategy, ftStrategy, JwtTwoFactorStrategy],
+    controllers: [AuthenticationController],
+    exports: [AuthenticationService]
 })
 export class AuthenticationModule {}

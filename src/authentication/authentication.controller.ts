@@ -1,15 +1,15 @@
-import { Body, Controller, HttpCode, Post, Req, Res, UseGuards, Response, Get, Redirect } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Res, UseGuards, Response, Get, Redirect, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { AuthenticationService } from './authentication.service';
 import RegisterDto from './dto/register.dto';
 import { FtAuthenticationGuard } from './ft-authentication.guard';
-import { ftStrategy } from './ft.strategy';
 import JwtAuthenticationGuard from './jwt-authentication.guard';
 import JwtRefreshGuard from './jwt-refresh.guard';
 import { LocalAuthenticationGuard } from './local-authentication.guard';
 import RequestWithUser from './request-with-user.interface';
 
 @Controller('authentication')
+@UseInterceptors(ClassSerializerInterceptor)
 export class AuthenticationController {
     constructor(
         private readonly authenticationService: AuthenticationService,
@@ -33,6 +33,9 @@ export class AuthenticationController {
         } = this.authenticationService.getCookieWithJwtRefreshToken(user.id);
         await this.usersService.setCurrentRefreshToken(refreshToken, user.id);
         request.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
+        if (user.isTwoFactorAuthenticationEnabled) {
+            return;
+        }
         return user;
     }
 
@@ -67,6 +70,7 @@ export class AuthenticationController {
     }
 
     @UseGuards(FtAuthenticationGuard)
+    @Redirect(process.env.FRONT_URL)
     @Get('callback')
     async ftCallback(@Req() request: RequestWithUser) {
         const {user} = request;

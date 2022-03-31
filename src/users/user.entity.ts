@@ -16,6 +16,10 @@ class User {
     public currentHashedRefreshToken?: string;
     @Column({nullable: true, unique: true})
     public intraId: string;
+    @Column({nullable: true})
+    public twoFactorAuthenticationSecret?: string;
+    @Column({default: false})
+    public isTwoFactorAuthenticationEnabled: boolean;
 }
 
 export default User;

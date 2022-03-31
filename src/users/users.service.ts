@@ -68,4 +68,15 @@ export class UsersService {
         });
     }
 
+    async setTwoFactorAuthenticationSecret(secret: string, userId: number) {
+        return this.usersRepository.update(userId, {
+            twoFactorAuthenticationSecret: secret
+        });
+    }
+
+    async setIsTwoFactorAuthenticationIsEnabled(status: boolean, userId: number) {
+        return this.usersRepository.update(userId, {
+            isTwoFactorAuthenticationEnabled: status
+        });
+    }
 }
