@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import CreateUserDto from './dto/createUser.dto';
 import User from './user.entity';
 import * as bcrypt from 'bcrypt';
+import LocalFilesService from 'src/local-files/local-files.service';
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(User)
-        private usersRepository: Repository<User>
+        private usersRepository: Repository<User>,
+        private localFilesService: LocalFilesService
     ) {}
 
     async create(userData: CreateUserDto)
@@ -56,7 +58,6 @@ export class UsersService {
     async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
         const user = await this.getById(userId);
         const isRefreshTokenMatching = await bcrypt.compare(refreshToken, user.currentHashedRefreshToken);
-        console.log(isRefreshTokenMatching);
         if (isRefreshTokenMatching) {
             return user;
         }
@@ -77,6 +78,13 @@ export class UsersService {
     async setIsTwoFactorAuthenticationIsEnabled(status: boolean, userId: number) {
         return this.usersRepository.update(userId, {
             isTwoFactorAuthenticationEnabled: status
+        });
+    }
+
+    async addAvatar(userId: number, fileData: LocalFileDto) {
+        const avatar = await this.localFilesService.saveLocalFileData(fileData);
+        await this.usersRepository.update(userId, {
+            avatarId: avatar.id
         });
     }
 }

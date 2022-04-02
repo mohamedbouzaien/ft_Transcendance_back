@@ -1,5 +1,6 @@
 import { Exclude } from "class-transformer";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import LocalFile from "src/local-files/local-file.entity";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 class User {
@@ -20,6 +21,14 @@ class User {
     public twoFactorAuthenticationSecret?: string;
     @Column({default: false})
     public isTwoFactorAuthenticationEnabled: boolean;
+    @JoinColumn({name: 'avatarId'})
+    @OneToOne(() => LocalFile,
+    {
+        nullable: true
+    })
+    public avatar?: LocalFile;
+    @Column({nullable: true})
+    public avatarId?: number;
 }
 
 export default User;

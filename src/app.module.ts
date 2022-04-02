@@ -7,6 +7,8 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { TwoFactorAuthenticationModule } from './two-factor-authentication/two-factor-authentication.module';
+import { LocalFilesService } from './local-files/local-files.service';
+import { LocalFilesModule } from './local-files/local-files.module';
 import * as Joi from '@hapi/joi';
 
 @Module({
@@ -25,9 +27,10 @@ import * as Joi from '@hapi/joi';
       FT_AUTH_CLIENT_ID: Joi.string().required(),
       FT_AUTH_CLIENT_SECRET: Joi.string().required(),
       FRONT_URL: Joi.string().required(),
-      TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required()
+      TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
+      UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule],
   controllers: [AppController],
   providers: [AppService],
 })
