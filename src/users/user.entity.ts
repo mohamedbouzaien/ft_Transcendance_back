@@ -1,6 +1,7 @@
 import { Exclude } from "class-transformer";
 import LocalFile from "src/local-files/local-file.entity";
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import UserRelationship from "src/user-relationships/user-relationship.entity"
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 class User {
@@ -29,6 +30,12 @@ class User {
     public avatar?: LocalFile;
     @Column({nullable: true})
     public avatarId?: number;
+
+    @OneToMany(() => UserRelationship, (userRelationship: UserRelationship) =>userRelationship.first_user)
+    public relationships_first: UserRelationship[];
+
+    @OneToMany(() => UserRelationship, (userRelationship: UserRelationship) =>userRelationship.second_user)
+    public relationships_second: UserRelationship[];
 }
 
 export default User;
