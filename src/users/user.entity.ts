@@ -1,6 +1,7 @@
 import { Exclude } from "class-transformer";
 import LocalFile from "src/local-files/local-file.entity";
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import Message from "src/messages/message.entity";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 class User {
@@ -29,6 +30,9 @@ class User {
     public avatar?: LocalFile;
     @Column({nullable: true})
     public avatarId?: number;
+
+    @OneToMany(() => Message, (message: Message) => message.author)
+    public messages: Message[];
 }
 
 export default User;
