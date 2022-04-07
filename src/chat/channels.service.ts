@@ -21,7 +21,6 @@ export class ChannelsService {
     if (!channelData.members.find(user => { return user.id === owner.id})) {
       await channelData.members.splice(0, 0, owner);
     }
-    console.log(channelData);
     const newChannel = await this.channelsRepository.create({
       ...channelData,
       owner,
@@ -30,6 +29,9 @@ export class ChannelsService {
     return newChannel;
   }
 
+  async getChannelById(id: number) {
+    return await this.channelsRepository.findOne(id, {relations: ['owner', 'members', 'messages']});
+  }
   async getAllChannels() {
     return await this.channelsRepository.find({relations: ['owner', 'members', 'messages']});
   }

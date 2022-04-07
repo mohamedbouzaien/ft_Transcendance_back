@@ -12,9 +12,29 @@
 </head>
 <body>
     <div id="app" class="container">
+        <div class="row">
+            <div class="col-md-6 offset-md-3 col-sm-12">
+                <h1 class="text-center">{{ title }}</h1>
+                <br>
+                <div id="status"></div>
+                <div id="channels">
+
+                    <br>
+                    <div class="card">
+                        <div id="channels" class="card-block">
+                            <ul>
+                                <li v-for="channel of channels"  @click="select_channel(channel)">channel {{ channel.id }}: created by {{ channel.owner.name }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <br>
+                    <br>
+                    <button id="send" class="btn" @click.prevent="createChannel">Create channel</button>
+                </div>
+            </div>
+        </div>
             <div class="row">
                 <div class="col-md-6 offset-md-3 col-sm-12">
-                    <h1 class="text-center">{{ title }}</h1>
                     <br>
                     <div id="status"></div>
                     <div id="chat">
@@ -23,7 +43,7 @@
                         <div class="card">
                             <div id="messages" class="card-block">
                                 <ul>
-                                    <li v-for="message of messages">{{ message.author.name }}: {{ message.content }}</li>
+                                    <li v-for="message of current_channel.messages">{{ message.author.name }}: {{ message.content }}</li>
                                 </ul>
                             </div>
                         </div>
@@ -34,7 +54,6 @@
                     </div>
                 </div>
             </div>
-            <button id="send" class="btn" @click.prevent="createChannel">Create channel</button>
     </div>
 
 <script src="main.js"></script>

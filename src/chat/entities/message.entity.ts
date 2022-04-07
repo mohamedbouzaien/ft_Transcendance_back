@@ -1,5 +1,5 @@
 import User from "src/users/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import Channel from "./channel.entity";
 
 @Entity()
@@ -10,11 +10,11 @@ class Message {
   @Column()
   public content: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (author: User) => author.messages)
   public author: User;
 
-  @ManyToOne(() => Channel)
+  @ManyToOne(() => Channel, (channel: Channel) => channel.messages)
   public channel: Channel;
 }
 
-export default Message;
+export default Message

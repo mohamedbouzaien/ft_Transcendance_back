@@ -4,6 +4,7 @@ import { MessagesService } from "src/chat/messages.service";
 import { ChannelsService } from "./channels.service";
 import { ChatService } from "./chat.service";
 import CreateChannelDto from "./dto/createChannel.dto";
+import CreateMessageDto from "./dto/createMessage.dto";
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
@@ -17,23 +18,27 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   async handleConnection(socket: Socket) {
-    this.requestAllMessages(socket);
+    this.requestAllChannels(socket);
   }
 
   @SubscribeMessage('create_channel')
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
-    console.log(channelData);
     const owner = await this.chatService.getUserFromSocket(socket);
     const channel = await this.channelsService.createChannel(channelData, owner);
-    console.log(channel);
     this.server.sockets.emit('channel_created', channel);
   }
 
+  @SubscribeMessage('request_all_channels')
+  async requestAllChannels(@ConnectedSocket() socket: Socket) {
+    await this.chatService.getUserFromSocket(socket);
+    const channels = await this.channelsService.getAllChannels();
+    this.server.sockets.emit('get_all_channels', channels);
+  }
+
   @SubscribeMessage('send_message')
-  async listenForMessages(@MessageBody() content: string, @ConnectedSocket() socket: Socket) {
+  async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
     const author = await this.chatService.getUserFromSocket(socket);
-    const message = await this.messagesService.saveMessage(content, author);
-    console.log(message);
+    const message = await this.messagesService.saveMessage(messageData, author);
     this.server.sockets.emit('receive_message', message);
   }
 
@@ -41,6 +46,6 @@ export class ChatGateway implements OnGatewayConnection {
   async requestAllMessages(@ConnectedSocket() socket: Socket) {
     await this.chatService.getUserFromSocket(socket);
     const messages = await this.messagesService.getAllMessages();
-    this.server.sockets.emit('send_all_messages', messages);
+    this.server.sockets.emit('get_all_messages', messages);
   }
 }
