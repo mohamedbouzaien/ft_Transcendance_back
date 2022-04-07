@@ -1,7 +1,9 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { MessagesService } from "src/messages/messages.service";
+import { MessagesService } from "src/chat/messages.service";
+import { ChannelsService } from "./channels.service";
 import { ChatService } from "./chat.service";
+import CreateChannelDto from "./dto/createChannel.dto";
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
@@ -10,11 +12,21 @@ export class ChatGateway implements OnGatewayConnection {
 
   constructor(
     private readonly chatService: ChatService, 
+    private readonly channelsService: ChannelsService,
     private readonly messagesService: MessagesService) {
   }
 
   async handleConnection(socket: Socket) {
     this.requestAllMessages(socket);
+  }
+
+  @SubscribeMessage('create_channel')
+  async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
+    console.log(channelData);
+    const owner = await this.chatService.getUserFromSocket(socket);
+    const channel = await this.channelsService.createChannel(channelData, owner);
+    console.log(channel);
+    this.server.sockets.emit('channel_created', channel);
   }
 
   @SubscribeMessage('send_message')
@@ -29,7 +41,6 @@ export class ChatGateway implements OnGatewayConnection {
   async requestAllMessages(@ConnectedSocket() socket: Socket) {
     await this.chatService.getUserFromSocket(socket);
     const messages = await this.messagesService.getAllMessages();
-    console.log(messages);
     this.server.sockets.emit('send_all_messages', messages);
   }
 }

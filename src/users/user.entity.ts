@@ -1,7 +1,9 @@
 import { Exclude } from "class-transformer";
 import LocalFile from "src/local-files/local-file.entity";
-import Message from "src/messages/message.entity";
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import Message from "src/chat/entities/message.entity";
+import { Column, Entity, JoinColumn, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import Channel from "src/chat/entities/channel.entity";
+import { channel } from "diagnostics_channel";
 
 @Entity()
 class User {
@@ -30,6 +32,12 @@ class User {
     public avatar?: LocalFile;
     @Column({nullable: true})
     public avatarId?: number;
+
+    @OneToMany(() => Channel, (owned_channel: Channel) => owned_channel.owner)
+    public owned_channels: Channel[];
+
+    @ManyToMany(() => Channel, (channel: Channel) => channel.members)
+    public channels: Channel[];
 
     @OneToMany(() => Message, (message: Message) => message.author)
     public messages: Message[];

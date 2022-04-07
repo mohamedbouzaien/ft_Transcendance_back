@@ -12,6 +12,7 @@ const app = new Vue({
     const message = {
       status: 'private',
       password: '',
+      members: []
     }
     this.socket.emit('create_channel', message);
   }, 
