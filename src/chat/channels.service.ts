@@ -2,10 +2,12 @@ import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { use } from "passport";
 import { AuthenticationService } from "src/authentication/authentication.service";
+import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import User from "src/users/user.entity";
 import { Repository } from "typeorm";
 import CreateChannelDto from "./dto/createChannel.dto";
 import Channel from "./entities/channel.entity";
+import { ChannelNotFoundException } from "./exception/channelNotFound.exception";
 
 @Injectable()
 export class ChannelsService {
@@ -30,19 +32,23 @@ export class ChannelsService {
   }
 
   async getChannelById(id: number) {
-    return await this.channelsRepository.findOne(id, {relations: ['owner', 'members', 'messages']});
+    const channel =  await this.channelsRepository.findOne(id, {relations: ['owner', 'members', 'messages']});
+    if (!channel)
+    throw new ChannelNotFoundException(id);
+    return channel;
   }
+
   async getAllChannels() {
     return await this.channelsRepository.find({relations: ['owner', 'members', 'messages']});
   }
 
   async deleteChannel(channel: Channel, user: User) {
     if (channel.owner.id !== user.id) {
-      throw new HttpException('User not allowed', HttpStatus.NOT_FOUND);
+      throw new UserUnauthorizedException(user.id);
     }
     const deletedChannel = await this.channelsRepository.delete(channel.id);
     if (!deletedChannel.affected) {
-      throw new HttpException('Channel not found', HttpStatus.NOT_FOUND);
+      throw new ChannelNotFoundException(channel.id);
     }
   }
 }
