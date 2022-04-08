@@ -23,7 +23,7 @@ class Channel {
   @Column()
   public password: string;
 
-  @ManyToOne(() => User, (owner: User) => owner.owned_channels)
+  @ManyToOne(() => User, (owner: User) => owner.owned_channels, {onDelete: 'CASCADE'})
   public owner: User;
 
   @Column("int", {array: true, nullable: true})

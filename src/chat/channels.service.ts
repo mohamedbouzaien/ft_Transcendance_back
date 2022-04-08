@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { use } from "passport";
 import { AuthenticationService } from "src/authentication/authentication.service";
@@ -34,5 +34,15 @@ export class ChannelsService {
   }
   async getAllChannels() {
     return await this.channelsRepository.find({relations: ['owner', 'members', 'messages']});
+  }
+
+  async deleteChannel(channel: Channel, user: User) {
+    if (channel.owner.id !== user.id) {
+      throw new HttpException('User not allowed', HttpStatus.NOT_FOUND);
+    }
+    const deletedChannel = await this.channelsRepository.delete(channel.id);
+    if (!deletedChannel.affected) {
+      throw new HttpException('Channel not found', HttpStatus.NOT_FOUND);
+    }
   }
 }

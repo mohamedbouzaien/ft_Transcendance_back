@@ -22,6 +22,10 @@ const app = new Vue({
     console.log(this.current_channel);
   },
 
+  deleteChannel(channel) {
+    this.socket.emit('delete_channel', channel);
+  },
+  
   sendMessage() {
     if(this.validateInput()) {
      const message = {

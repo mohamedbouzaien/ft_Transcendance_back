@@ -23,7 +23,7 @@
                     <div class="card">
                         <div id="channels" class="card-block">
                             <ul>
-                                <li v-for="channel of channels"  @click="select_channel(channel)">channel {{ channel.id }}: created by {{ channel.owner.name }}</li>
+                                <li v-for="channel of channels"  @click="select_channel(channel)">channel {{ channel.id }}: created by {{ channel.owner.name }} <button id="send" class="btn" @click.prevent="deleteChannel(channel)">delete</button></li>
                             </ul>
                         </div>
                     </div>
