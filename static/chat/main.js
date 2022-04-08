@@ -4,28 +4,34 @@ const app = new Vue({
    title: 'Nestjs Websockets Chat',
    content: '',
    channels: [],
+   messages: ['1', '2'],
    current_channel: '',
+   new_channel_type: '',
+   new_channel_password: '',
    socket: null
   },
   methods: {
   
   createChannel() {
     const message = {
-      password: '',
+      password: this.new_channel_password,
+      status: this.new_channel_type,
       members: []
     }
     this.socket.emit('create_channel', message);
+    this.new_channel_password = '';
+    this.new_channel_type = '';
   }, 
 
   select_channel(channel) {
-    this.current_channel = channel;
-    console.log(this.current_channel);
+    channel.password = this.new_channel_password;
+    this.socket.emit('request_channel', channel);
   },
 
   deleteChannel(channel) {
     this.socket.emit('delete_channel', channel);
   },
-  
+
   sendMessage() {
     if(this.validateInput()) {
      const message = {
@@ -51,21 +57,29 @@ const app = new Vue({
    return this.content.length > 0
   }
  },
+
+ pushMessage(message) {
+   this.messages.push(message);
+ }, 
   created() {
    this.socket = io('http://localhost:3000')
    this.socket.on('receive_message', (message) => {
-     console.log(message);
     this.receivedMessage(message)
    });
    this.socket.on('channel_created', (channel) => {
-     console.log('created');
    this.receivedMessage(channel);
   });
    this.socket.on('get_all_channels', (channels) => {
-    console.log(channels)
     channels.forEach(channel => {
       this.receivedChannel(channel)
      })
-  })
+  });
+  this.socket.on('get_channel', (channel) => {
+    this.current_channel = channel;
+    console.log('ok');
+    channel.messages.forEach(message => {
+      app.messages.push.message;
+    })
+  }) 
   },
 })

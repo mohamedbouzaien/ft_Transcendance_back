@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { use } from "passport";
 import { AuthenticationService } from "src/authentication/authentication.service";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import User from "src/users/user.entity";
@@ -8,6 +7,7 @@ import { Repository } from "typeorm";
 import CreateChannelDto from "./dto/createChannel.dto";
 import Channel from "./entities/channel.entity";
 import { ChannelNotFoundException } from "./exception/channelNotFound.exception";
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class ChannelsService {
@@ -20,6 +20,8 @@ export class ChannelsService {
 
   async createChannel(channelData: CreateChannelDto, owner: User) {
 
+    const hashedPassword = await bcrypt.hash(channelData.password, 10);
+    channelData.password = hashedPassword;
     if (!channelData.members.find(user => { return user.id === owner.id})) {
       await channelData.members.splice(0, 0, owner);
     }
@@ -38,6 +40,15 @@ export class ChannelsService {
     return channel;
   }
 
+  async getChannelByUser(channel: Channel, user: User) {
+    const wanted_channel = await this.getChannelById(channel.id);
+    const isPasswordMatching = await bcrypt.compare(channel.password, wanted_channel.password);
+    if (!isPasswordMatching) {
+      throw new HttpException('Wrong credentials provided', HttpStatus.BAD_REQUEST);
+    }
+    return wanted_channel;
+  }
+
   async getAllChannels() {
     return await this.channelsRepository.find({relations: ['owner', 'members', 'messages']});
   }
@@ -51,4 +62,6 @@ export class ChannelsService {
       throw new ChannelNotFoundException(channel.id);
     }
   }
+
+
 }

@@ -29,6 +29,12 @@
                     </div>
                     <br>
                     <br>
+                    <select v-model="new_channel_type">
+                        <option disabled value="">Choisissez</option>
+                        <option>public</option>
+                        <option>private</option>
+                      </select>
+                    <input v-model="new_channel_password"></input>
                     <button id="send" class="btn" @click.prevent="createChannel">Create channel</button>
                 </div>
             </div>
@@ -43,7 +49,7 @@
                         <div class="card">
                             <div id="messages" class="card-block">
                                 <ul>
-                                    <li v-for="message of current_channel.messages">{{ message.author.name }}: {{ message.content }}</li>
+                                    <li v-for="message of messages">{{ message }}</li>
                                 </ul>
                             </div>
                         </div>
