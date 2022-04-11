@@ -31,9 +31,9 @@ export class ftStrategy extends PassportStrategy(Strategy)
             email: profile.emails[0].value,
             phoneNumber: profile.phoneNumbers[0].value,
             password: '0000',
-            intraId: profile.id
+            intra_id: profile.id
         }
-        const user = await this.userService.getByIntraId(userData.intraId);
+        const user = await this.userService.getByIntraId(userData.intra_id);
         if (user)
             return user;
         return this.authenticationService.register(userData);

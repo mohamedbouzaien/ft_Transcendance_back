@@ -1,32 +1,32 @@
 import User from "src/users/user.entity";
-import { Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
-
-export enum RelashionshipStatus {
-    PENDING_FIRST_SECOND,
-    PENDING_SECOND_FIRST,
-    FRIENDS,
-    BLOCK_FIRST_SECOND,
-    BLOCK_SECOND_FIRST,
-    BLOCK_BOTH
-}
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { UserRelationshipStatus } from "./user-relationship-status.enum";
 
 @Entity()
 class UserRelationship {
 
-    @PrimaryColumn()
-    public first_user_id: number;
-    @ManyToOne(()=> User, (first_user: User) => first_user.relationships_first)
-    public first_user: User;
-    @PrimaryColumn()
-    public second_user_id: number;
-    @ManyToOne(()=> User, (second_user: User) => second_user.relationships_second)
-    public second_user: User;
+    @PrimaryGeneratedColumn()
+    public id: number;
+
+    @Column()
+    public issuer_id: number;
+
+    @ManyToOne(()=> User, (issuer: User) => issuer.sent_relationships)
+    @JoinColumn({name: 'issuer_id'})
+    public issuer: User;
+
+    @Column()
+    public receiver_id: number;
+
+    @ManyToOne(()=> User, (receiver: User) => receiver.received_relationships)
+    @JoinColumn({name: 'receiver_id'})
+    public receiver: User;
     @Column({
         type: "enum",
-        enum: RelashionshipStatus,
-        default: RelashionshipStatus.PENDING_FIRST_SECOND
+        enum: UserRelationshipStatus,
+        default: UserRelationshipStatus.PENDING
     })
-    public status: RelashionshipStatus;
+    public status: UserRelationshipStatus;
 }
 
 export default UserRelationship;

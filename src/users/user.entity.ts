@@ -1,7 +1,8 @@
 import { Exclude } from "class-transformer";
 import LocalFile from "src/local-files/local-file.entity";
 import UserRelationship from "src/user-relationships/user-relationship.entity"
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { UserStatus } from "./user-status.enum";
 
 @Entity()
 class User {
@@ -10,32 +11,47 @@ class User {
     @Column({unique: true})
     public email: string;
     @Column()
-    public name: string;
+    public username: string;
     @Column()
     public password: string;
     @Column({ nullable: true})
     @Exclude()
     public currentHashedRefreshToken?: string;
     @Column({nullable: true, unique: true})
-    public intraId: string;
+    @Exclude()
+    public intra_id: string;
     @Column({nullable: true})
     public twoFactorAuthenticationSecret?: string;
     @Column({default: false})
     public isTwoFactorAuthenticationEnabled: boolean;
-    @JoinColumn({name: 'avatarId'})
+    @JoinColumn({name: 'avatar_id'})
     @OneToOne(() => LocalFile,
     {
         nullable: true
     })
     public avatar?: LocalFile;
     @Column({nullable: true})
-    public avatarId?: number;
+    public avatar_id?: number;
 
-    @OneToMany(() => UserRelationship, (userRelationship: UserRelationship) =>userRelationship.first_user)
-    public relationships_first: UserRelationship[];
+    @Column({
+        type: "enum",
+        enum: UserStatus,
+        default: UserStatus.OFFLINE
+    })
+    public status: UserStatus;
 
-    @OneToMany(() => UserRelationship, (userRelationship: UserRelationship) =>userRelationship.second_user)
-    public relationships_second: UserRelationship[];
+    @OneToMany(() => UserRelationship, (userRelationship: UserRelationship) =>userRelationship.issuer)
+    public sent_relationships: UserRelationship[];
+
+    @OneToMany(() => UserRelationship, (userRelationship: UserRelationship) =>userRelationship.receiver)
+    @JoinTable()
+    public received_relationships: UserRelationship[];
+
+    @Column({default: 0})
+    public victories: number;
+    
+    @Column({default: 0})
+    public defeats: number;
 }
 
 export default User;

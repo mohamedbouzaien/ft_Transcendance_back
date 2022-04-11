@@ -8,7 +8,6 @@ import { UsersModule } from './users/users.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { TwoFactorAuthenticationModule } from './two-factor-authentication/two-factor-authentication.module';
 import { LocalFilesModule } from './local-files/local-files.module';
-import { UserRelationshipsService } from './user-relationships/user-relationships.service';
 import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
 import * as Joi from '@hapi/joi';
 
@@ -33,6 +32,6 @@ import * as Joi from '@hapi/joi';
     })
   }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, UserRelationshipsModule],
   controllers: [AppController],
-  providers: [AppService, UserRelationshipsService],
+  providers: [AppService],
 })
 export class AppModule {}
