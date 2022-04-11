@@ -69,6 +69,16 @@ export class ChannelsService {
     let is_invited = false;
     let index = 0
 
+    let is_already_member = false;
+    wanted_channel.members.forEach((member) => {
+      if (member.id === user.id) {
+        is_already_member = true;
+        return ;
+      }
+    })
+    if (is_already_member) {
+      throw new HttpException('user_already_member', HttpStatus.BAD_REQUEST);
+    }
     wanted_channel.invited_members.forEach((invited_member) => {
       if (invited_member.id === user.id) {
         is_invited = true;
@@ -83,19 +93,7 @@ export class ChannelsService {
       wanted_channel.invited_members.splice(index, 1);
     }
     this.checkChannelPassword(channel, wanted_channel);
-    let is_already_member = false;
-    wanted_channel.members.forEach((member) => {
-      if (member.id === user.id) {
-        is_already_member = true;
-        return ;
-      }
-    })
-    if (is_already_member) {
-      new HttpException('user_already_member', HttpStatus.BAD_REQUEST);
-    }
-    else {
-      wanted_channel.members.splice(0, 0, user);
-    }
+    wanted_channel.members.splice(0, 0, user);
     this.channelsRepository.save(wanted_channel);
     return (wanted_channel);
   }

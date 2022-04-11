@@ -40,6 +40,8 @@ export class UsersService {
     async getById(id: number) {
         const user = await this.usersRepository.findOne({
             id
+        }, {
+            relations: ['channels', 'invited_channels']
         });
         if (user) {
             return user;
