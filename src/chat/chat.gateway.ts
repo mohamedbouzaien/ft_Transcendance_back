@@ -1,4 +1,5 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { channel } from "diagnostics_channel";
 import { Server, Socket } from "socket.io";
 import { MessagesService } from "src/chat/messages.service";
 import { ChannelsService } from "./channels.service";
@@ -6,6 +7,7 @@ import { ChatService } from "./chat.service";
 import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import Channel from "./entities/channel.entity";
+import Message from "./entities/message.entity";
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
@@ -33,7 +35,7 @@ export class ChatGateway implements OnGatewayConnection {
     console.log(channelData);
     const user = await this.chatService.getUserFromSocket(socket);
     const channel = await this.channelsService.getChannelByUser(channelData, user);
-    this.server.sockets.emit('get_channel', channel);
+    socket.emit('get_channel', channel);
   }
 
   @SubscribeMessage('create_channel')
@@ -45,12 +47,22 @@ export class ChatGateway implements OnGatewayConnection {
 
   @SubscribeMessage('delete_channel')
   async deleteChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
-    console.log(channel);
     const user = await this.chatService.getUserFromSocket(socket);
-    console.log(user);
     await this.channelsService.deleteChannel(channel, user);
-    console.log('success');
     this.server.sockets.emit('channel_deleted', 'ok');
+  }
+
+  @SubscribeMessage('join_channel')
+  async joinChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
+    try {
+      const user = await this.chatService.getUserFromSocket(socket);
+      const joined_channel = await this.channelsService.addUserToChannel(channel, user);
+      socket.emit('channel_joined', joined_channel);
+    }
+    catch (error) {
+      console.log(error);
+      socket.emit(error.message, channel);
+    }
   }
 
   @SubscribeMessage('send_message')

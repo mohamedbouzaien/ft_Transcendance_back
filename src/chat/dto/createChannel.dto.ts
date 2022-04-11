@@ -6,6 +6,7 @@ class CreateChannelDto {
   status: ChannelStatus;
   password: string;
   members: User[];
+  invited_members: User[];
   messages: Message[];
 }
 

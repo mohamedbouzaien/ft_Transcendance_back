@@ -34,7 +34,7 @@ export class ChannelsService {
   }
 
   async getChannelById(id: number) {
-    const channel =  await this.channelsRepository.findOne(id, {relations: ['owner', 'members', 'messages']});
+    const channel =  await this.channelsRepository.findOne(id, {relations: ['owner', 'members', 'invited_members', 'messages']});
     if (!channel)
     throw new ChannelNotFoundException(id);
     return channel;
@@ -42,11 +42,62 @@ export class ChannelsService {
 
   async getChannelByUser(channel: Channel, user: User) {
     const wanted_channel = await this.getChannelById(channel.id);
+    let is_already_member = false;
+    wanted_channel.members.forEach((member) => {
+      if (member.id === user.id) {
+        is_already_member = true;
+        return ;
+      }
+    })
+    if (is_already_member || channel.status === 'public') {
+      return (channel);
+    }
+    throw new UserUnauthorizedException(user.id);
+  }
+
+  async checkChannelPassword(channel: Channel, wanted_channel: Channel) {
     const isPasswordMatching = await bcrypt.compare(channel.password, wanted_channel.password);
     if (!isPasswordMatching) {
-      throw new HttpException('Wrong credentials provided', HttpStatus.BAD_REQUEST);
+      let error_message = (channel.password === '' ) ? 'need_password_for_channel' : 'wrong_password_for_channel';
+      throw new HttpException(error_message, HttpStatus.BAD_REQUEST);
     }
     return wanted_channel;
+  }
+
+  async addUserToChannel(channel: Channel, user: User) {
+    const wanted_channel = await this.getChannelById(channel.id);
+    let is_invited = false;
+    let index = 0
+
+    wanted_channel.invited_members.forEach((invited_member) => {
+      if (invited_member.id === user.id) {
+        is_invited = true;
+        return ;
+      }
+      index++;
+    })
+    if (wanted_channel.status === 'private' && is_invited === false) {
+      throw new UserUnauthorizedException(user.id);
+    }
+    if (is_invited) {
+      wanted_channel.invited_members.splice(index, 1);
+    }
+    this.checkChannelPassword(channel, wanted_channel);
+    let is_already_member = false;
+    wanted_channel.members.forEach((member) => {
+      if (member.id === user.id) {
+        is_already_member = true;
+        return ;
+      }
+    })
+    if (is_already_member) {
+      new HttpException('user_already_member', HttpStatus.BAD_REQUEST);
+    }
+    else {
+      wanted_channel.members.splice(0, 0, user);
+    }
+    this.channelsRepository.save(wanted_channel);
+    return (wanted_channel);
   }
 
   async getAllChannels() {

@@ -16,7 +16,8 @@ const app = new Vue({
     const message = {
       password: this.new_channel_password,
       status: this.new_channel_type,
-      members: []
+      members: [],
+      invited_members: [],
     }
     this.socket.emit('create_channel', message);
     this.new_channel_password = '';
@@ -26,6 +27,11 @@ const app = new Vue({
   select_channel(channel) {
     channel.password = this.new_channel_password;
     this.socket.emit('request_channel', channel);
+  },
+
+  join_channel(channel) {
+    channel.password = this.new_channel_password;
+    this.socket.emit('join_channel', channel);
   },
 
   deleteChannel(channel) {
@@ -73,6 +79,12 @@ const app = new Vue({
       this.receivedMessage(message)
     })
     console.log(this.messages);
-  }) 
+  });
+  this.socket.on('need_password_for_channel', (message) => {
+    console.log('need_password_for_channel');
+  }) ;
+  this.socket.on('wrong_password_for_channel', (message) => {
+    console.log('wrong_password_for_channel');
+  })
   },
 })

@@ -39,6 +39,9 @@ class User {
     @ManyToMany(() => Channel, (channel: Channel) => channel.members)
     public channels: Channel[];
 
+    @ManyToMany(() => Channel, (invited_channel: Channel) => invited_channel.invited_members)
+    public invited_channels: Channel[];
+
     @OneToMany(() => Message, (message: Message) => message.author)
     public messages: Message[];
 }

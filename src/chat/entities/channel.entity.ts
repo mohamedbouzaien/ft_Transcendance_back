@@ -33,6 +33,10 @@ class Channel {
   @JoinTable()
   public members: User[];
 
+  @ManyToMany(() => User, (invited_member: User) => invited_member.invited_channels)
+  @JoinTable()
+  public invited_members: User[];
+  
   @OneToMany(() => Message, (message: Message) => message.channel)
   public messages: Message[];
 }
