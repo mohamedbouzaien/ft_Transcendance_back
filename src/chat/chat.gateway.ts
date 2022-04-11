@@ -1,5 +1,4 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
-import { channel } from "diagnostics_channel";
 import { Server, Socket } from "socket.io";
 import { MessagesService } from "src/chat/messages.service";
 import { ChannelsService } from "./channels.service";
@@ -7,7 +6,6 @@ import { ChatService } from "./chat.service";
 import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import Channel from "./entities/channel.entity";
-import Message from "./entities/message.entity";
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
@@ -26,10 +24,11 @@ export class ChatGateway implements OnGatewayConnection {
 
   @SubscribeMessage('request_all_channels')
   async requestAllChannels(@ConnectedSocket() socket: Socket) {
-    await this.chatService.getUserFromSocket(socket);
-    const channels = await this.channelsService.getAllChannels();
+    const user = await this.chatService.getUserFromSocket(socket);
+    const channels = await this.channelsService.getAllChannelsForUser(user);
     this.server.sockets.emit('get_all_channels', channels);
   }
+
   @SubscribeMessage('request_channel')
   async requestChannel(@MessageBody() channelData: Channel, @ConnectedSocket() socket: Socket) {
     console.log(channelData);

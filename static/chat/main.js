@@ -68,6 +68,7 @@ const app = new Vue({
    this.receivedMessage(channel);
   });
    this.socket.on('get_all_channels', (channels) => {
+     console.log(channels);
     channels.forEach(channel => {
       this.receivedChannel(channel)
      })

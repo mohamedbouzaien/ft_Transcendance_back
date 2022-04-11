@@ -22,9 +22,9 @@ export class ChannelsService {
 
     const hashedPassword = await bcrypt.hash(channelData.password, 10);
     channelData.password = hashedPassword;
-    if (!channelData.members.find(user => { return user.id === owner.id})) {
+    /*if (!channelData.members.find(user => { return user.id === owner.id})) {
       await channelData.members.splice(0, 0, owner);
-    }
+    }*/
     const newChannel = await this.channelsRepository.create({
       ...channelData,
       owner,
@@ -102,6 +102,17 @@ export class ChannelsService {
     return await this.channelsRepository.find({relations: ['owner', 'members', 'messages']});
   }
 
+  async getAllChannelsForUser(user :User) {
+    let user_channels = user.channels;
+    let public_channels = await this.channelsRepository.find({
+      where: {
+        status: 'public',
+      }
+    });
+    var channels_ids = new Set(user_channels.map(channel => channel.id));
+    var merged = [...user_channels, ...public_channels.filter(channel => !channels_ids.has(channel.id))];
+    return (merged);
+  }
   async deleteChannel(channel: Channel, user: User) {
     if (channel.owner.id !== user.id) {
       throw new UserUnauthorizedException(user.id);
