@@ -1,7 +1,8 @@
-import { ClassSerializerInterceptor, Controller, Param, ParseIntPipe, Post, Req, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, HttpCode, HttpException, HttpStatus, ParseIntPipe, Post, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import JwtTwoFactornGuard from 'src/authentication/jwt-two-factor.guard';
 import RequestWithUser from 'src/authentication/request-with-user.interface';
 import { UsersService } from 'src/users/users.service';
+import { UpdateUserRelationshipStatusDto } from './dto/update-user-relationship-status.dto';
 import { UserRelationshipStatus } from './user-relationship-status.enum';
 import { UserRelationshipsService } from './user-relationships.service';
 
@@ -12,16 +13,28 @@ export class UserRelationshipsController {
         private readonly userRelationshipsService: UserRelationshipsService,
         private readonly usersService: UsersService
         ) {}
-    @Post(':id')
+    @Post()
     @UseGuards(JwtTwoFactornGuard)
-    async createRelationship(@Param('id', ParseIntPipe)id: number, @Req() request: RequestWithUser) {
+    async createRelationship(@Body('id', ParseIntPipe)id: number, @Req() request: RequestWithUser) {
         const requestedUser = await this.usersService.getById(id);
-        const {user} = request;
-        return this.userRelationshipsService.create({
-            issuer: user,
-            receiver: requestedUser,
-            status: UserRelationshipStatus.PENDING
-        });
+        if (requestedUser)
+        {
+            const {user} = request;
+            return this.userRelationshipsService.create({
+                issuer: user,
+                receiver: requestedUser,
+                status: UserRelationshipStatus.PENDING
+            });
+        }
+        throw new HttpException('Requested user doesn\'t exist', HttpStatus.BAD_REQUEST);
+    }
 
+    @Post('update-status')
+    @HttpCode(200)
+    @UseGuards(JwtTwoFactornGuard)
+    async updateStatus(@Req() request: RequestWithUser, @Body() {id, status}: UpdateUserRelationshipStatusDto) {
+        const {user} = request;
+        const userRelationship = await this.userRelationshipsService.getById(id);
+        return await this.userRelationshipsService.updateStatus(status, userRelationship, user);
     }
 }
