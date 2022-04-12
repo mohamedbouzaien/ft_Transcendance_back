@@ -5,6 +5,7 @@ import { ChannelsService } from "./channels.service";
 import { ChatService } from "./chat.service";
 import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
+import UpdateChannelDto from "./dto/updateChannel.dto";
 import Channel from "./entities/channel.entity";
 
 @WebSocketGateway()
@@ -48,6 +49,14 @@ export class ChatGateway implements OnGatewayConnection {
     const owner = await this.chatService.getUserFromSocket(socket);
     const channel = await this.channelsService.createChannel(channelData, owner);
     this.server.sockets.emit('channel_created', channel);
+  }
+
+  @SubscribeMessage('update_channel')
+  async updateChannel(@MessageBody() channelData: UpdateChannelDto, @ConnectedSocket() socket: Socket) {
+    const user = await this.chatService.getUserFromSocket(socket);
+    //channelData.invited_members[0] = user;
+    console.log(channelData);
+    const updated_channel = await this.channelsService.updateChannel(channelData.id, channelData, user);
   }
 
   @SubscribeMessage('delete_channel')

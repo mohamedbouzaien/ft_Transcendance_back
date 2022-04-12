@@ -8,6 +8,8 @@ import CreateChannelDto from "./dto/createChannel.dto";
 import Channel from "./entities/channel.entity";
 import { ChannelNotFoundException } from "./exception/channelNotFound.exception";
 import * as bcrypt from 'bcrypt'
+import UpdateChannelDto from "./dto/updateChannel.dto";
+import { use } from "passport";
 
 @Injectable()
 export class ChannelsService {
@@ -49,6 +51,23 @@ export class ChannelsService {
       }
     })
     return is_already_member; 
+  }
+
+  async isUserChannelAdmin(channel: Channel, user: User) : Promise<boolean> {
+    let is_admin = false;
+    if (channel.owner.id === user.id) {
+      return true;
+    }
+    if (channel.admins_id == null) {
+      return is_admin;
+    }
+    await channel.admins_id.forEach((admin_id) => {
+      if (admin_id === user.id) {
+        is_admin = true;
+        return ;
+      }
+    })
+    return is_admin; 
   }
 
   async getChannelByUser(channel: Channel, user: User) {
@@ -118,6 +137,20 @@ export class ChannelsService {
     var merged = [...user_channels, ...public_channels.filter(channel => !channels_ids.has(channel.id))];
     return (merged);
   }
+
+  async updateChannel(id: number, channelData: UpdateChannelDto, user: User) {
+    const channel = await this.getChannelById(id);
+    if ((await this.isUserChannelMember(channel, user) === false) ||
+    (channelData.admins_id && channelData.admins_id !== [] && (await this.isUserChannelAdmin(channel, user) === false))) {
+      throw new UserUnauthorizedException(user.id);
+    }
+    const updated_channel = await this.channelsRepository.update(id, channelData);
+    if (updated_channel) {
+      return updated_channel;
+    }
+    throw new ChannelNotFoundException(channel.id);
+  }
+
   async deleteChannel(channel: Channel, user: User) {
     if (channel.owner.id !== user.id) {
       throw new UserUnauthorizedException(user.id);
