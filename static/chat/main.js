@@ -40,7 +40,9 @@ const app = new Vue({
 
   sendMessage() {
      const message = {
-       channel: this.current_channel,
+       channel: {
+         id: 2,
+       },
        content: this.content
      }
      console.log(message);
@@ -68,10 +70,10 @@ const app = new Vue({
    this.receivedMessage(channel);
   });
    this.socket.on('get_all_channels', (channels) => {
-     console.log(channels);
-    channels.forEach(channel => {
+    channels.avalaible_channels.forEach(channel => {
       this.receivedChannel(channel)
      })
+     console.log(this.channels);
   });
   this.socket.on('get_channel', (channel) => {
     console.log(channel);

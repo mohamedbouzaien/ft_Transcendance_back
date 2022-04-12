@@ -40,16 +40,21 @@ export class ChannelsService {
     return channel;
   }
 
-  async getChannelByUser(channel: Channel, user: User) {
-    const wanted_channel = await this.getChannelById(channel.id);
+  async isUserChannelMember(channel: Channel, user: User) : Promise<boolean> {
     let is_already_member = false;
-    wanted_channel.members.forEach((member) => {
+    await channel.members.forEach((member) => {
       if (member.id === user.id) {
         is_already_member = true;
         return ;
       }
     })
-    if (is_already_member || channel.status === 'public') {
+    return is_already_member; 
+  }
+
+  async getChannelByUser(channel: Channel, user: User) {
+    const wanted_channel = await this.getChannelById(channel.id);
+    let is_already_member = await this.isUserChannelMember(wanted_channel, user);
+    if (is_already_member || wanted_channel.status === 'public') {
       return (channel);
     }
     throw new UserUnauthorizedException(user.id);
