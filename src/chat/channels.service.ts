@@ -9,7 +9,6 @@ import Channel from "./entities/channel.entity";
 import { ChannelNotFoundException } from "./exception/channelNotFound.exception";
 import * as bcrypt from 'bcrypt'
 import UpdateChannelDto from "./dto/updateChannel.dto";
-import { use } from "passport";
 
 @Injectable()
 export class ChannelsService {
@@ -140,11 +139,14 @@ export class ChannelsService {
 
   async updateChannel(id: number, channelData: UpdateChannelDto, user: User) {
     const channel = await this.getChannelById(id);
-    if ((await this.isUserChannelMember(channel, user) === false) ||
-    (channelData.admins_id && channelData.admins_id !== [] && (await this.isUserChannelAdmin(channel, user) === false))) {
+    if (channel.owner.id !== user.id) {
       throw new UserUnauthorizedException(user.id);
     }
-    const updated_channel = await this.channelsRepository.update(id, channelData);
+    if ('password' in channelData) {
+      channelData.password = await bcrypt.hash(channelData.password, 10);
+    }
+    await this.channelsRepository.update(id, channelData);
+    const updated_channel = this.getChannelById(id);
     if (updated_channel) {
       return updated_channel;
     }

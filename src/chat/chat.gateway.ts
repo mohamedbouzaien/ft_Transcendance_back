@@ -53,10 +53,14 @@ export class ChatGateway implements OnGatewayConnection {
 
   @SubscribeMessage('update_channel')
   async updateChannel(@MessageBody() channelData: UpdateChannelDto, @ConnectedSocket() socket: Socket) {
+    try {
     const user = await this.chatService.getUserFromSocket(socket);
-    //channelData.invited_members[0] = user;
-    console.log(channelData);
     const updated_channel = await this.channelsService.updateChannel(channelData.id, channelData, user);
+    socket.emit('get_channel', updated_channel);
+    } catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
   }
 
   @SubscribeMessage('delete_channel')

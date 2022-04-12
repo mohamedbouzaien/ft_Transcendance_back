@@ -10,7 +10,7 @@ class UpdateChannelDto {
   admins_id: number[];
 
   @IsOptional()
-  invited_members: User[];
+  password: string;
 }
 
 export default UpdateChannelDto;
