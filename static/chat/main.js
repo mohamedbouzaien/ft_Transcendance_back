@@ -39,8 +39,8 @@ const app = new Vue({
   },
 
   sendMessage() {
-    this.join_channel({id: 3});
-    /*const invite =  {
+    //this.select_channel({id: 2, password: ''});
+    const invite =  {
       channel: {
         id: 4,
       },
@@ -48,20 +48,19 @@ const app = new Vue({
         id: 1,
       }
     }
-    this.socket.emit('channel_invitation', invite);*/
+    this.socket.emit('channel_invitation', invite);
     /*const up_chan = {
       id: 1,
-      admins_id: [3],
+      admins_id: [10],
     }
     this.socket.emit('update_channel', up_chan);*/
-    /*
-     const message = {
+    
+     /*const message = {
        channel: {
          id: 2,
        },
-       content: this.content
+       content: 'hello'
      }
-     console.log(message);
     this.socket.emit('send_message', message)
     this.content = '';*/
   },

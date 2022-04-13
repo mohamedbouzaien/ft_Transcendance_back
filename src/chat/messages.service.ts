@@ -19,7 +19,7 @@ export class MessagesService {
   }
   async saveMessage(messageData: CreateMessageDto, author: User) {
     const message_channel = await this.channelsService.getChannelById(messageData.channel.id);
-    if (await this.channelsService.isUserChannelMember(message_channel, author) === false) {
+    if (!(message_channel.members.find(member => member.id === author.id))) {
       throw new UserUnauthorizedException(author.id);
     }
     const newMessage = await this.messagesRepository.create({

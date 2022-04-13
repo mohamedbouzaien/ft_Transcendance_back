@@ -31,8 +31,8 @@ export class ChatGateway implements OnGatewayConnection {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
-      const author = await this.chatService.getUserFromSocket(socket);
-      if (this.channelsService.isUserChannelMember(channel, author)) {
+      const user = await this.chatService.getUserFromSocket(socket);
+      if (channel.members.find(member => member.id === user.id)) {
         socket.emit(event, channel);
       }
     }
