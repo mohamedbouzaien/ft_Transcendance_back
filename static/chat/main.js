@@ -39,11 +39,21 @@ const app = new Vue({
   },
 
   sendMessage() {
-    const up_chan = {
+    this.join_channel({id: 3});
+    /*const invite =  {
+      channel: {
+        id: 4,
+      },
+      invited_user: {
+        id: 1,
+      }
+    }
+    this.socket.emit('channel_invitation', invite);*/
+    /*const up_chan = {
       id: 1,
       admins_id: [3],
     }
-    this.socket.emit('update_channel', up_chan);
+    this.socket.emit('update_channel', up_chan);*/
     /*
      const message = {
        channel: {

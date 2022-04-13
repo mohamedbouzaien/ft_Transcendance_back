@@ -1,8 +1,10 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { MessagesService } from "src/chat/messages.service";
+import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./channels.service";
 import { ChatService } from "./chat.service";
+import ChannelInvitation from "./dto/ChannelInvitation";
 import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelDto from "./dto/updateChannel.dto";
@@ -16,7 +18,9 @@ export class ChatGateway implements OnGatewayConnection {
   constructor(
     private readonly chatService: ChatService, 
     private readonly channelsService: ChannelsService,
-    private readonly messagesService: MessagesService) {
+    private readonly messagesService: MessagesService,
+    private readonly usersService: UsersService,
+    ) {
   }
 
   async handleConnection(socket: Socket) {
@@ -81,6 +85,13 @@ export class ChatGateway implements OnGatewayConnection {
       console.log(error);
       socket.emit(error.message, channel);
     }
+  }
+
+  @SubscribeMessage('channel_invitation')
+  async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitation, @ConnectedSocket() socket: Socket) {
+    const user = await this.chatService.getUserFromSocket(socket);
+    const invited_user = await this.usersService.getById(invitationData.invited_user.id);
+    await this.channelsService.manageInvitation(invitationData.channel.id, invited_user, user);
   }
 
   @SubscribeMessage('send_message')

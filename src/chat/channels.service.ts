@@ -43,6 +43,9 @@ export class ChannelsService {
 
   async isUserChannelMember(channel: Channel, user: User) : Promise<boolean> {
     let is_already_member = false;
+    if (!channel.members) {
+      return is_already_member;
+    }
     await channel.members.forEach((member) => {
       if (member.id === user.id) {
         is_already_member = true;
@@ -69,6 +72,19 @@ export class ChannelsService {
     return is_admin; 
   }
 
+  async isUserInvitedInChannel (channel: Channel, user: User) {
+    let is_invited = false;
+    let index = 0;
+    channel.invited_members.forEach((invited_member) => {
+      if (invited_member.id === user.id) {
+        is_invited = true;
+        return ;
+      }
+      index++;
+    })
+    return {is_invited, index};
+  }
+
   async getChannelByUser(channel: Channel, user: User) {
     const wanted_channel = await this.getChannelById(channel.id);
     let is_already_member = await this.isUserChannelMember(wanted_channel, user);
@@ -89,31 +105,17 @@ export class ChannelsService {
 
   async addUserToChannel(channel: Channel, user: User) {
     const wanted_channel = await this.getChannelById(channel.id);
-    let is_invited = false;
-    let index = 0
+    const is_already_member = await this.isUserChannelMember(wanted_channel, user);
 
-    let is_already_member = false;
-    wanted_channel.members.forEach((member) => {
-      if (member.id === user.id) {
-        is_already_member = true;
-        return ;
-      }
-    })
     if (is_already_member) {
       throw new HttpException('user_already_member', HttpStatus.BAD_REQUEST);
     }
-    wanted_channel.invited_members.forEach((invited_member) => {
-      if (invited_member.id === user.id) {
-        is_invited = true;
-        return ;
-      }
-      index++;
-    })
-    if (wanted_channel.status === 'private' && is_invited === false) {
+    const is_invited = await this.isUserInvitedInChannel(wanted_channel, user);
+    if (wanted_channel.status === 'private' && is_invited.is_invited === false) {
       throw new UserUnauthorizedException(user.id);
     }
-    if (is_invited) {
-      wanted_channel.invited_members.splice(index, 1);
+    if (is_invited.is_invited) {
+      wanted_channel.invited_members.splice(is_invited.index, 1);
     }
     this.checkChannelPassword(channel, wanted_channel);
     wanted_channel.members.splice(0, 0, user);
@@ -135,6 +137,29 @@ export class ChannelsService {
     var channels_ids = new Set(user_channels.map(channel => channel.id));
     var merged = [...user_channels, ...public_channels.filter(channel => !channels_ids.has(channel.id))];
     return (merged);
+  }
+
+  async manageInvitation(id: number, invited_user: User, user: User) {
+    let channel = await this.getChannelById(id);
+    let invitation = await this.isUserInvitedInChannel(channel, user);
+    if (user.id === invited_user.id) {
+      if (invitation.is_invited) {
+        channel.invited_members.splice(invitation.index, 1);
+      }
+      else {
+        throw new UserUnauthorizedException(user.id);
+      }
+    }
+    else {
+      if (await this.isUserChannelMember(channel, user) === false) {
+        throw new UserUnauthorizedException(user.id);
+      }
+      else if (!invitation.is_invited) {
+        channel.invited_members.splice(0, 0, invited_user);
+      }
+    }
+    const updated_channel = await this.channelsRepository.save(channel);
+    return updated_channel;
   }
 
   async updateChannel(id: number, channelData: UpdateChannelDto, user: User) {

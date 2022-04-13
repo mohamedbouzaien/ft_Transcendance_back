@@ -2,6 +2,8 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthenticationModule } from "src/authentication/authentication.module";
 import { MessagesService } from "src/chat/messages.service";
+import { UsersModule } from "src/users/users.module";
+import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./channels.service";
 import { ChatGateway } from "./chat.gateway";
 import { ChatService } from "./chat.service";
@@ -12,7 +14,8 @@ import Message from "./entities/message.entity";
   imports: [
     TypeOrmModule.forFeature([Channel]),
     TypeOrmModule.forFeature([Message]), 
-    AuthenticationModule
+    AuthenticationModule,
+    UsersModule
   ],
   controllers: [],
   providers: [ChatGateway, ChatService, ChannelsService, MessagesService],
