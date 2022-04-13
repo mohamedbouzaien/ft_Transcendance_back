@@ -1,4 +1,4 @@
-import { Body, ClassSerializerInterceptor, Controller, HttpCode, HttpException, HttpStatus, ParseIntPipe, Post, Req, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, Delete, HttpCode, HttpException, HttpStatus, Param, ParseIntPipe, Post, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import JwtTwoFactornGuard from 'src/authentication/jwt-two-factor.guard';
 import RequestWithUser from 'src/authentication/request-with-user.interface';
 import { UsersService } from 'src/users/users.service';
@@ -36,5 +36,12 @@ export class UserRelationshipsController {
         const {user} = request;
         const userRelationship = await this.userRelationshipsService.getById(id);
         return await this.userRelationshipsService.updateStatus(status, userRelationship, user);
+    }
+
+    @Delete(':id')
+    @UseGuards(JwtTwoFactornGuard)
+    async deleteRelationship(@Param('id', ParseIntPipe)id: number, @Req() request:RequestWithUser) {
+        const {user} = request;
+        return await this.userRelationshipsService.delete(id, user);
     }
 }

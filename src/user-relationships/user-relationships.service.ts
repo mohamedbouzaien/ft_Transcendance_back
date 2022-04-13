@@ -55,4 +55,11 @@ export class UserRelationshipsService {
         }   
         throw new HttpException('Relationship status not alloud', HttpStatus.BAD_REQUEST);
     }
+
+    async delete(id: number, user: User) {
+        const userRelationship = await this.userRelashionshipRepository.findOne(id);
+        if (userRelationship && (userRelationship.issuer_id == user.id || userRelationship.receiver_id == user.id))
+            return await this.userRelashionshipRepository.delete(id);
+        throw new HttpException('Relationship status not alloud', HttpStatus.BAD_REQUEST);
+    }
 }
