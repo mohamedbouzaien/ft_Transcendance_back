@@ -1,5 +1,6 @@
 import User from "src/users/user.entity";
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import ChannelUser from "./channelUser.entity";
 import Message from "./message.entity";
 
 export enum ChannelStatus {
@@ -23,15 +24,11 @@ class Channel {
   @Column()
   public password: string;
 
-  @ManyToOne(() => User, (owner: User) => owner.owned_channels, {onDelete: 'CASCADE'})
-  public owner: User;
-
   @Column("int", {array: true, nullable: true})
   admins_id: number[];
 
-  @ManyToMany(() => User, (member: User) => member.channels)
-  @JoinTable()
-  public members: User[];
+  @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.channel)
+  channelUsers: ChannelUser[];
 
   @ManyToMany(() => User, (invited_member: User) => invited_member.invited_channels)
   @JoinTable()

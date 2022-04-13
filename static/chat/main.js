@@ -15,7 +15,7 @@ const app = new Vue({
   createChannel() {
     const message = {
       password: this.new_channel_password,
-      status: this.new_channel_type,
+      status: 'public',
       members: [],
       invited_members: [],
     }

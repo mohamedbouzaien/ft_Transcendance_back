@@ -32,7 +32,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     for (let socket of sockets) {
       const user = await this.chatService.getUserFromSocket(socket);
-      if (channel.members.find(member => member.id === user.id)) {
+      if (channel.channelUsers.find(channelUser => channelUser.user.id === user.id)) {
         socket.emit(event, channel);
       }
     }
@@ -42,13 +42,14 @@ export class ChatGateway implements OnGatewayConnection {
   async requestAllChannels(@ConnectedSocket() socket: Socket) {
     const user = await this.chatService.getUserFromSocket(socket);
     const avalaible_channels = await this.channelsService.getAllChannelsForUser(user);
+    const user_channels = await this.channelsService.exctractAllChannelsForUser(user);
     const invited_channels = user.invited_channels;
-    const user_channels = user.channels;
     const channels = {
       user_channels,
       avalaible_channels,
       invited_channels
     }
+    console.log(channels);
     socket.emit('get_all_channels', channels);
   }
 
@@ -63,6 +64,7 @@ export class ChatGateway implements OnGatewayConnection {
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
     const owner = await this.chatService.getUserFromSocket(socket);
     const channel = await this.channelsService.createChannel(channelData, owner);
+    console.log(channel);
     if (channel.status === 'public') {
       this.server.sockets.emit('channel_created', channel);
     }

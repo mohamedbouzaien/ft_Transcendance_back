@@ -41,7 +41,7 @@ export class UsersService {
         const user = await this.usersRepository.findOne({
             id
         }, {
-            relations: ['channels', 'invited_channels']
+            relations: ['invited_channels', 'userChannels']
         });
         if (user) {
             return user;

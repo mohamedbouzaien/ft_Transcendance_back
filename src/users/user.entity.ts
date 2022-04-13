@@ -4,6 +4,7 @@ import Message from "src/chat/entities/message.entity";
 import { Column, Entity, JoinColumn, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import Channel from "src/chat/entities/channel.entity";
 import { channel } from "diagnostics_channel";
+import ChannelUser from "src/chat/entities/channelUser.entity";
 
 @Entity()
 class User {
@@ -33,11 +34,8 @@ class User {
     @Column({nullable: true})
     public avatarId?: number;
 
-    @OneToMany(() => Channel, (owned_channel: Channel) => owned_channel.owner)
-    public owned_channels: Channel[];
-
-    @ManyToMany(() => Channel, (channel: Channel) => channel.members)
-    public channels: Channel[];
+    @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.user)
+    userChannels: ChannelUser[];
 
     @ManyToMany(() => Channel, (invited_channel: Channel) => invited_channel.invited_members)
     public invited_channels: Channel[];
