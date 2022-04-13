@@ -27,6 +27,17 @@ export class ChatGateway implements OnGatewayConnection {
     this.requestAllChannels(socket);
   }
 
+  async sendChannel(channel: Channel, event: string) {
+    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+    for (let socket of sockets) {
+      const author = await this.chatService.getUserFromSocket(socket);
+      if (this.channelsService.isUserChannelMember(channel, author)) {
+        socket.emit(event, channel);
+      }
+    }
+  }
+
   @SubscribeMessage('request_all_channels')
   async requestAllChannels(@ConnectedSocket() socket: Socket) {
     const user = await this.chatService.getUserFromSocket(socket);
@@ -52,7 +63,12 @@ export class ChatGateway implements OnGatewayConnection {
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
     const owner = await this.chatService.getUserFromSocket(socket);
     const channel = await this.channelsService.createChannel(channelData, owner);
-    this.server.sockets.emit('channel_created', channel);
+    if (channel.status === 'public') {
+      this.server.sockets.emit('channel_created', channel);
+    }
+    else {
+      socket.emit('channel_created', channel);
+    }
   }
 
   @SubscribeMessage('update_channel')
@@ -60,7 +76,7 @@ export class ChatGateway implements OnGatewayConnection {
     try {
     const user = await this.chatService.getUserFromSocket(socket);
     const updated_channel = await this.channelsService.updateChannel(channelData.id, channelData, user);
-    socket.emit('get_channel', updated_channel);
+    this.sendChannel(updated_channel, 'updated_channel');
     } catch (error) {
       console.log(error);
       socket.emit('error', error);
@@ -71,7 +87,7 @@ export class ChatGateway implements OnGatewayConnection {
   async deleteChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
     const user = await this.chatService.getUserFromSocket(socket);
     await this.channelsService.deleteChannel(channel, user);
-    this.server.sockets.emit('channel_deleted', 'ok');
+    this.server.sockets.emit('channel_deleted', channel.id);
   }
 
   @SubscribeMessage('join_channel')
@@ -92,6 +108,16 @@ export class ChatGateway implements OnGatewayConnection {
     const user = await this.chatService.getUserFromSocket(socket);
     const invited_user = await this.usersService.getById(invitationData.invited_user.id);
     await this.channelsService.manageInvitation(invitationData.channel.id, invited_user, user);
+    const invited_channels = await (await this.usersService.getById(invitationData.invited_user.id)).invited_channels;
+    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+    for (socket of sockets) {
+      const author = await this.chatService.getUserFromSocket(socket);
+      if (invited_user.id === author.id) {
+        socket.emit('invited_channels', invited_channels);
+        return ;
+      }
+    }
   }
 
   @SubscribeMessage('send_message')
@@ -99,13 +125,6 @@ export class ChatGateway implements OnGatewayConnection {
     const author = await this.chatService.getUserFromSocket(socket);
     const message = await this.messagesService.saveMessage(messageData, author);
     const channel = await this.channelsService.getChannelById(message.channel.id);
-    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
-
-    for (socket of sockets) {
-      const author = await this.chatService.getUserFromSocket(socket);
-      if (this.channelsService.isUserChannelMember(channel, author)) {
-        socket.emit('receive_message', message);
-      }
-    }
+    this.sendChannel(channel, 'receive_message');
   }
 }
