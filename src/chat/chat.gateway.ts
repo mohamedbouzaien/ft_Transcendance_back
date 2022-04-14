@@ -3,12 +3,14 @@ import { Server, Socket } from "socket.io";
 import { MessagesService } from "src/chat/messages.service";
 import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./channels.service";
+import { ChannelUsersService } from "./channelUser.service";
 import { ChatService } from "./chat.service";
 import ChannelInvitation from "./dto/ChannelInvitation";
 import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelDto from "./dto/updateChannel.dto";
 import Channel from "./entities/channel.entity";
+import ChannelUser from "./entities/channelUser.entity";
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
@@ -20,6 +22,7 @@ export class ChatGateway implements OnGatewayConnection {
     private readonly channelsService: ChannelsService,
     private readonly messagesService: MessagesService,
     private readonly usersService: UsersService,
+    private readonly channelUsersService: ChannelUsersService
     ) {
   }
 
@@ -104,6 +107,17 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @SubscribeMessage('leave_channel')
+  async leaveChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
+    try {
+      const user = await this.chatService.getUserFromSocket(socket);
+      await this.channelsService.leaveChannel(channel, user);
+    }
+    catch(error) {
+      console.log(error);
+      socket.emit(error.message, channel);
+    }
+  }
   @SubscribeMessage('channel_invitation')
   async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitation, @ConnectedSocket() socket: Socket) {
     const user = await this.chatService.getUserFromSocket(socket);

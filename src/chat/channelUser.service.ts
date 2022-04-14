@@ -1,11 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import User from "src/users/user.entity";
 import { Repository } from "typeorm";
 import CreateChannelUserDto from "./dto/createChannelUser.dto";
 import Channel from "./entities/channel.entity";
 import ChannelUser from "./entities/channelUser.entity";
-
+import { ChannelUserNotFoundException } from './exception/channelUserNotFound.exception'
 @Injectable()
 export class ChannelUsersService {
   constructor(
@@ -13,11 +14,25 @@ export class ChannelUsersService {
     private readonly channelUsersRepository: Repository<ChannelUser>
     ) {}
 
+    async getChannelUserById(id: number) {
+      const channelUser = this.channelUsersRepository.findOne(id, {relations: ['user', 'channel']});
+      if (!channelUser) {
+        throw new ChannelUserNotFoundException(id);
+      }
+      return (channelUser);
+    }
     async createChannelUser(channelUserData: CreateChannelUserDto) {
       const newChannelUser = await this.channelUsersRepository.create({
         ...channelUserData,
       });
       await this.channelUsersRepository.save(newChannelUser);
       return newChannelUser;
+    }
+
+    async deleteChannelUser(id: number) {
+      const delete_channel = await this.channelUsersRepository.delete(id);
+      if (delete_channel.affected) {
+        throw new ChannelUserNotFoundException(id);
+      }
     }
 }

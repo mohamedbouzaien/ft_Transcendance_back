@@ -39,6 +39,7 @@ const app = new Vue({
   },
 
   sendMessage() {
+    this.socket.emit('leave_channel', {id: 10});
     //this.join_channel({id: 13});
     //this.deleteChannel({id: 1});
     //this.select_channel({id: 5, password: ''});
@@ -57,14 +58,14 @@ const app = new Vue({
     }
     this.socket.emit('update_channel', up_chan);*/
     
-     const message = {
+   /*  const message = {
        channel: {
          id: 1,
        },
        content: 'hello'
      }
     this.socket.emit('send_message', message)
-    this.content = '';
+    this.content = '';*/
   },
   receivedMessage(message) {
     this.messages.push(message)

@@ -128,6 +128,14 @@ export class ChannelsService {
     return updated_channel;
   }
 
+  async leaveChannel(channel: Channel, user: User) {
+    const wanted_channel = await this.getChannelById(channel.id);
+    const channel_user =  wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
+    if (!channel_user) {
+      throw new UserUnauthorizedException(user.id);
+    }
+    await this.channelUsersService.deleteChannelUser(channel_user.id);
+  }
   async updateChannel(id: number, channelData: UpdateChannelDto, user: User) {
     const channel = await this.getChannelById(id);
     const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === channel.id && userChannel.user.id === user.id);
