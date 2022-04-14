@@ -71,8 +71,8 @@ export class ChatGateway implements OnGatewayConnection {
   async updateChannel(@MessageBody() channelData: UpdateChannelDto, @ConnectedSocket() socket: Socket) {
     try {
     const user = await this.chatsService.getUserFromSocket(socket);
-    //const updated_channel = await this.channelsService.updateChannel(channelData.id, channelData, user);
-    //this.sendChannel(updated_channel, 'updated_channel');
+    const updated_channel = await this.chatsService.updateChannel(channelData, user);
+    this.sendChannel(updated_channel, 'updated_channel');
     } catch (error) {
       console.log(error);
       socket.emit('error', error);
@@ -113,18 +113,24 @@ export class ChatGateway implements OnGatewayConnection {
   }
   @SubscribeMessage('channel_invitation')
   async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitation, @ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
-    const invited_user = await this.usersService.getById(invitationData.invited_user.id);
-    await this.chatsService.manageInvitation(invitationData, user);
-    const invited_channels = await (await this.usersService.getById(invitationData.invited_user.id)).invited_channels;
-    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+    try {
+      console.log(invitationData);
+      const user = await this.chatsService.getUserFromSocket(socket);
+      const invited_user = await this.usersService.getById(invitationData.invited_user.id);
+      await this.chatsService.manageInvitation(invitationData, user);
+      const invited_channels = await (await this.usersService.getById(invitationData.invited_user.id)).invited_channels;
+      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
-    for (socket of sockets) {
-      const author = await this.chatsService.getUserFromSocket(socket);
-      if (invited_user.id === author.id) {
-        socket.emit('invited_channels', invited_channels);
-        return ;
+      for (socket of sockets) {
+        const author = await this.chatsService.getUserFromSocket(socket);
+        if (invited_user.id === author.id) {
+          socket.emit('invited_channels', invited_channels);
+          return ;
+        }
       }
+    } catch (error) {
+      console.log(error);
+      socket.emit('error', error);
     }
   }
 

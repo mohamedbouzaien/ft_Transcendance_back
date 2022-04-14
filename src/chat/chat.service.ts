@@ -15,7 +15,9 @@ import ChannelInvitationDto from './dto/ChannelInvitation.dto';
 import { UsersService } from 'src/users/users.service';
 import CreateMessageDto from './dto/createMessage.dto';
 import { MessagesService } from './messages.service';
- 
+import UpdateChannelDto from './dto/updateChannel.dto';
+import * as bcrypt from 'bcrypt'
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -41,6 +43,25 @@ export class ChatService {
     const channel = await this.channelsService.createChannel(channelData);
     const channelUser = await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
     return await this.channelsService.getChannelById(channel.id);
+  }
+
+  async updateChannel(channelData: UpdateChannelDto, user: User) {
+    const channel = await this.channelsService.getChannelById(channelData.id);
+    const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === channel.id && userChannel.user.id
+     === user.id);
+     if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
+       throw new UserUnauthorizedException(user.id);
+      }
+      if ('password' in channelData) {
+        channelData.password = await bcrypt.hash(channelData.password, 10);
+      }
+      console.log(channelData);
+      if ('invited_members' in channelData) {
+        delete channelData['invited_members']
+      }
+      console.log(channelData);
+      const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
+      return updated_channel;
   }
 
   async exctractAllChannelsForUser(user: User) {
@@ -98,7 +119,6 @@ export class ChatService {
       wanted_channel.invited_members.splice(wanted_channel.invited_members.indexOf(is_invited), 1);
     }
     await this.channelsService.checkChannelPassword(channel, wanted_channel);
-    //wanted_channel = await this.channelsService.channelsRepository.save(wanted_channel);
     await this.channelUsersService.createChannelUser({channel: wanted_channel, user, role: ChannelUserRole.USER});
     return (this.channelsService.getChannelById(wanted_channel.id));
   }
@@ -129,11 +149,11 @@ export class ChatService {
         throw new UserUnauthorizedException(user.id);
       }
       else if (!invitation) {
-        channel.invited_members.splice(0, 0, invited_user);
+        channel.invited_members.push(invited_user);
       }
     }
-    //const updated_channel = await this.channelsRepository.save(channel);
-    return 'ok';
+    const updated_channel = await this.channelsService.saveChannel(channel);
+    return updated_channel;
   }
 
   async saveMessage(messageData: CreateMessageDto, author: User) {

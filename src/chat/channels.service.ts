@@ -56,6 +56,22 @@ export class ChannelsService {
     })
   }
 
+  async saveChannel(channel: Channel) {
+    const updated_channel = await this.channelsRepository.save(channel);
+    if (!updated_channel) {
+      throw new ChannelNotFoundException(channel.id);
+    }
+    return updated_channel;
+  }
+  async updateChannel(id: number, channelData: UpdateChannelDto) {
+    await this.channelsRepository.update(id, channelData);
+    const updatedPost = await this.getChannelById(id);
+    if (!updatedPost) {
+      throw new ChannelNotFoundException(id);
+    }
+    return updatedPost;
+  }
+
   async deleteChannel(id: number) {
     const deletedChannel = await this.channelsRepository.delete(id);
     if (!deletedChannel.affected) {
