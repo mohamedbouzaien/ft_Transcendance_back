@@ -1,9 +1,9 @@
 import User from "src/users/user.entity";
 import Channel from "../entities/channel.entity";
 
-class ChannelInvitation {
+class ChannelInvitationDto {
   invited_user: User;
   channel: Channel;
 }
 
-export default ChannelInvitation;
+export default ChannelInvitationDto;
