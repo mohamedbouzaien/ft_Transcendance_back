@@ -7,9 +7,6 @@ class UpdateChannelDto {
   id: number;
 
   @IsOptional()
-  admins_id: number[];
-
-  @IsOptional()
   password: string;
 }
 

@@ -3,7 +3,6 @@ import LocalFile from "src/local-files/local-file.entity";
 import Message from "src/chat/entities/message.entity";
 import { Column, Entity, JoinColumn, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import Channel from "src/chat/entities/channel.entity";
-import { channel } from "diagnostics_channel";
 import ChannelUser from "src/chat/entities/channelUser.entity";
 
 @Entity()

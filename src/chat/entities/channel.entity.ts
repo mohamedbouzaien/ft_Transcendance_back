@@ -24,9 +24,6 @@ class Channel {
   @Column()
   public password: string;
 
-  @Column("int", {array: true, nullable: true})
-  admins_id: number[];
-
   @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.channel)
   channelUsers: ChannelUser[];
 

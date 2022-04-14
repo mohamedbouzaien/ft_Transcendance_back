@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { AuthenticationService } from "src/authentication/authentication.service";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import User from "src/users/user.entity";
 import { createQueryBuilder, Repository } from "typeorm";
@@ -27,7 +26,7 @@ export class ChannelsService {
     const newChannel = await this.channelsRepository.create({
       ...channelData,
     })
-    await this.channelsRepository.save(newChannel);
+    await this.channelsRepository.save(newChannel);    
     await this.channelUsersService.createChannelUser({
       user: owner,
       channel: newChannel,
@@ -37,9 +36,10 @@ export class ChannelsService {
   }
 
   async getChannelById(id: number) {
-    const channel =  await this.channelsRepository.findOne(id, {relations: ['owner', 'channelUsers', 'invited_members', 'messages']});
-    if (!channel)
-    throw new ChannelNotFoundException(id);
+    const channel =  await this.channelsRepository.findOne(id, {relations: ['channelUsers', 'invited_members', 'messages']});
+    if (!channel) {
+      throw new ChannelNotFoundException(id);
+    }
     return channel;
   }
 
@@ -47,7 +47,7 @@ export class ChannelsService {
     const wanted_channel = await this.getChannelById(channel.id);
     const is_already_member = wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
     if (is_already_member || wanted_channel.status === 'public') {
-      return (channel);
+      return (wanted_channel);
     }
     throw new UserUnauthorizedException(user.id);
   }
@@ -62,7 +62,7 @@ export class ChannelsService {
   }
 
   async addUserToChannel(channel: Channel, user: User) {
-    const wanted_channel = await this.getChannelById(channel.id);
+    let wanted_channel = await this.getChannelById(channel.id);
     const is_already_member = wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
 
     if (is_already_member) {
@@ -75,10 +75,10 @@ export class ChannelsService {
     if (is_invited) {
       wanted_channel.invited_members.splice(wanted_channel.invited_members.indexOf(is_invited), 1);
     }
-    this.checkChannelPassword(channel, wanted_channel);
-    //wanted_channel.members.splice(0, 0, user);
-    this.channelsRepository.save(wanted_channel);
-    return (wanted_channel);
+    await this.checkChannelPassword(channel, wanted_channel);
+    wanted_channel = await this.channelsRepository.save(wanted_channel);
+    await this.channelUsersService.createChannelUser({channel: wanted_channel, user, role: ChannelUserRole.USER});
+    return (this.getChannelById(wanted_channel.id));
   }
 
   async getAllChannels() {

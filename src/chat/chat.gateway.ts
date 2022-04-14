@@ -49,7 +49,6 @@ export class ChatGateway implements OnGatewayConnection {
       avalaible_channels,
       invited_channels
     }
-    console.log(channels);
     socket.emit('get_all_channels', channels);
   }
 
@@ -64,7 +63,6 @@ export class ChatGateway implements OnGatewayConnection {
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
     const owner = await this.chatService.getUserFromSocket(socket);
     const channel = await this.channelsService.createChannel(channelData, owner);
-    console.log(channel);
     if (channel.status === 'public') {
       this.server.sockets.emit('channel_created', channel);
     }
@@ -97,6 +95,7 @@ export class ChatGateway implements OnGatewayConnection {
     try {
       const user = await this.chatService.getUserFromSocket(socket);
       const joined_channel = await this.channelsService.addUserToChannel(channel, user);
+      console.log(joined_channel);
       socket.emit('channel_joined', joined_channel);
     }
     catch (error) {
