@@ -43,27 +43,42 @@ export class ChatGateway implements OnGatewayConnection {
 
   @SubscribeMessage('request_all_channels')
   async requestAllChannels(@ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
-    const channels = await this.chatsService.getAllChannelsForUser(user);
-    socket.emit('get_all_channels', channels);
+    try {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      const channels = await this.chatsService.getAllChannelsForUser(user);
+      socket.emit('get_all_channels', channels);
+    } catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
   }
 
   @SubscribeMessage('request_channel')
   async requestChannel(@MessageBody() channelData: Channel, @ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
-    const channel = await this.chatsService.getChannelForUser(channelData, user);
-    socket.emit('get_channel', channel);
+    try {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      const channel = await this.chatsService.getChannelForUser(channelData, user);
+      socket.emit('get_channel', channel);
+    } catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
   }
 
   @SubscribeMessage('create_channel')
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
-    const owner = await this.chatsService.getUserFromSocket(socket);
-    const channel = await this.chatsService.createChannel(channelData, owner);
-    if (channel.status === 'public') {
-      this.server.sockets.emit('channel_created', channel);
-    }
-    else {
-      socket.emit('channel_created', channel);
+    try {
+      const owner = await this.chatsService.getUserFromSocket(socket);
+      const channel = await this.chatsService.createChannel(channelData, owner);
+      if (channel.status === 'public') {
+       this.server.sockets.emit('channel_created', channel);
+      }
+      else {
+       socket.emit('channel_created', channel);
+      }
+    } catch(error) {
+      console.log(error);
+      socket.emit('error', error);
     }
   }
 
@@ -81,9 +96,14 @@ export class ChatGateway implements OnGatewayConnection {
 
   @SubscribeMessage('delete_channel')
   async deleteChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
-    await this.chatsService.deleteChannel(channel, user);
-    this.server.sockets.emit('channel_deleted', channel.id);
+    try {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      await this.chatsService.deleteChannel(channel, user);
+      this.server.sockets.emit('channel_deleted', channel.id);
+    } catch (error) {
+      console.log('error', error);
+      socket.emit('error', error);
+    }
   }
 
   @SubscribeMessage('join_channel')
@@ -92,11 +112,11 @@ export class ChatGateway implements OnGatewayConnection {
       const user = await this.chatsService.getUserFromSocket(socket);
       const joined_channel = await this.chatsService.joinChannel(channel, user);
       console.log(joined_channel);
-      socket.emit('channel_joined', joined_channel);
+      this.sendChannel(joined_channel, 'updated_channel');
     }
     catch (error) {
       console.log(error);
-      socket.emit(error.message, channel);
+      socket.emit('error', error);
     }
   }
 
@@ -105,10 +125,12 @@ export class ChatGateway implements OnGatewayConnection {
     try {
       const user = await this.chatsService.getUserFromSocket(socket);
       await this.chatsService.leaveChannel(channel, user);
+      const updated_chan = await this.channelsService.getChannelById(channel.id);
+      this.sendChannel(updated_chan, 'updated_channel');
     }
-    catch(error) {
+    catch (error) {
       console.log(error);
-      socket.emit(error.message, channel);
+      socket.emit('error', error);
     }
   }
   @SubscribeMessage('channel_invitation')
@@ -136,9 +158,15 @@ export class ChatGateway implements OnGatewayConnection {
 
   @SubscribeMessage('send_message')
   async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
-    const author = await this.chatsService.getUserFromSocket(socket);
-    const message = await this.chatsService.saveMessage(messageData, author);
-    const channel = await this.channelsService.getChannelById(message.channel.id);
-    this.sendChannel(channel, 'receive_message');
+    try {
+      const author = await this.chatsService.getUserFromSocket(socket);
+      const message = await this.chatsService.saveMessage(messageData, author);
+      const channel = await this.channelsService.getChannelById(message.channel.id);
+      this.sendChannel(channel, 'receive_message');
+    }
+    catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
   }
 }
