@@ -158,6 +158,20 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @SubscribeMessage('punish_channel_user')
+  async punishChannelUser(@MessageBody() punishmentData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
+    try {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      console.log(punishmentData);
+      const punishment = await this.chatsService.punishChannelUser(punishmentData, user);
+      console.log(punishment);
+    }
+    catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
+  }
+  
   @SubscribeMessage('update_password')
   async updateChannelPassword(@MessageBody() passwordData: UpdateChannelPasswordDto, @ConnectedSocket() socket: Socket) {
     try {

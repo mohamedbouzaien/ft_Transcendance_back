@@ -39,6 +39,13 @@ const app = new Vue({
   },
 
   sendMessage() {
+    /*var d = new Date(); d.setMinutes(d.getMinutes() + 30);
+    this.socket.emit('punish_channel_user', {
+      id: 15,
+      sanction: 'mute',
+      end_of_sanction: d,
+
+    });*/
     //this.socket.emit('update_password', {id: 9, old_password: this.new_channel_password, new_password: 'test'});
     /*this.socket.emit('update_channel_user', {
       id: 3,
@@ -52,7 +59,7 @@ const app = new Vue({
    });*/
     //this.socket.emit('update_channel', {id: 4, password: 'lul', invited_members: [{id: 1}]});
     //this.socket.emit('leave_channel', {id: 9});
-    this.join_channel({id: 9});
+    //this.join_channel({id: 9});
     //this.deleteChannel({id: 1});
     //this.select_channel({id: 9});
     /*const invite =  {
@@ -70,14 +77,14 @@ const app = new Vue({
     }
     this.socket.emit('update_channel', up_chan);*/
     
-   /*  const message = {
+     const message = {
        channel: {
-         id: 1,
+         id: 9,
        },
-       content: 'hello'
+       content: this.content
      }
     this.socket.emit('send_message', message)
-    this.content = '';*/
+    this.content = '';
   },
   receivedMessage(message) {
     this.messages.push(message)

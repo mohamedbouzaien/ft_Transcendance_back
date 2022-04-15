@@ -1,11 +1,8 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
-import User from "src/users/user.entity";
 import { Repository } from "typeorm";
 import CreateChannelUserDto from "./dto/createChannelUser.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
-import Channel from "./entities/channel.entity";
 import ChannelUser from "./entities/channelUser.entity";
 import { ChannelUserNotFoundException } from './exception/channelUserNotFound.exception'
 @Injectable()

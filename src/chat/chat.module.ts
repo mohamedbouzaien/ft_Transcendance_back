@@ -3,7 +3,6 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthenticationModule } from "src/authentication/authentication.module";
 import { MessagesService } from "src/chat/messages.service";
 import { UsersModule } from "src/users/users.module";
-import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./channels.service";
 import { ChannelUsersService } from "./channelUser.service";
 import { ChatGateway } from "./chat.gateway";

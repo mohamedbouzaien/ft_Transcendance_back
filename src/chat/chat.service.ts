@@ -7,10 +7,9 @@ import CreateChannelDto from './dto/createChannel.dto';
 import User from 'src/users/user.entity';
 import { ChannelsService } from './channels.service';
 import { ChannelUsersService } from './channelUser.service';
-import { ChannelUserRole } from './entities/channelUser.entity';
+import { ChannelUserRole, SanctionType } from './entities/channelUser.entity';
 import Channel, { ChannelStatus } from './entities/channel.entity';
 import { UserUnauthorizedException } from 'src/users/exception/userUnauthorized.exception';
-import { ChannelNotFoundException } from './exception/channelNotFound.exception';
 import ChannelInvitationDto from './dto/ChannelInvitation.dto';
 import { UsersService } from 'src/users/users.service';
 import CreateMessageDto from './dto/createMessage.dto';
@@ -174,6 +173,17 @@ export class ChatService {
     return updated_channel;
   }
 
+  async punishChannelUser(punishment: UpdateChannelUserDto, user: User) {
+    const channelPunished = await this.channelUsersService.getChannelUserById(punishment.id);
+    const channelPunisher = user.userChannels.find(userChannel => userChannel.user.id === user.id);
+    /*if (!channelPunisher || channelPunisher.role === ChannelUserRole.USER || 
+      (channelPunisher.role > ChannelUserRole.USER && channelPunisher.role < channelPunished.role)) {
+        throw new UserUnauthorizedException(user.id);
+      }*/
+      console.log('before update');
+    return await this.channelUsersService.updateChannelUser(channelPunished.id, punishment);
+  }
+
   async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {
     const channelUser = await this.channelUsersService.getChannelUserById(channelUserData.id);
     const isChannelOwner = user.userChannels.find(userChannel => userChannel.channel.id === channelUser.channel.id);
@@ -185,8 +195,23 @@ export class ChatService {
 
   async saveMessage(messageData: CreateMessageDto, author: User) {
     const message_channel = await this.channelsService.getChannelById(messageData.channel.id);
-    if (!(message_channel.channelUsers.find(channelUser => channelUser.user.id === author.id))) {
+    const channelUser = await message_channel.channelUsers.find(channelUser => channelUser.user.id === author.id);
+    if (!(channelUser)) {
       throw new UserUnauthorizedException(author.id);
+    }
+    if (channelUser.sanction) {
+      if (channelUser.end_of_sanction <= new Date()) {
+        console.log('sanction ended');
+        this.channelUsersService.updateChannelUser(channelUser.id, {
+          ...channelUser,
+          sanction: null,
+          end_of_sanction: null 
+        })
+      }
+      else {
+        console.log('muted bwo');
+        throw new UserUnauthorizedException(author.id);
+      }
     }
     const newMessage = await this.messagesService.saveMessage({
       ...messageData,
