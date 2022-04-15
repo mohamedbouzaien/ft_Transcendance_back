@@ -40,9 +40,9 @@ const app = new Vue({
 
   sendMessage() {
     /*var d = new Date(); d.setMinutes(d.getMinutes() + 30);
-    this.socket.emit('punish_channel_user', {
+    this.socket.emit('manage_channel_user_sanction', {
       id: 15,
-      sanction: 'mute',
+      sanction: 'ban',
       end_of_sanction: d,
 
     });*/
@@ -64,13 +64,13 @@ const app = new Vue({
     //this.select_channel({id: 9});
     /*const invite =  {
       channel: {
-        id: 4,
+        id: 9,
       },
       invited_user: {
         id: 1,
       }
-    }*/
-    //this.socket.emit('channel_invitation', invite);
+    }
+    this.socket.emit('channel_invitation', invite);*/
     /*const up_chan = {
       id: 1,
       admins_id: [10],

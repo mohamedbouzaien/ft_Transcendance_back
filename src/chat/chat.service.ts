@@ -7,7 +7,7 @@ import CreateChannelDto from './dto/createChannel.dto';
 import User from 'src/users/user.entity';
 import { ChannelsService } from './channels.service';
 import { ChannelUsersService } from './channelUser.service';
-import { ChannelUserRole, SanctionType } from './entities/channelUser.entity';
+import ChannelUser, { ChannelUserRole, SanctionType } from './entities/channelUser.entity';
 import Channel, { ChannelStatus } from './entities/channel.entity';
 import { UserUnauthorizedException } from 'src/users/exception/userUnauthorized.exception';
 import ChannelInvitationDto from './dto/ChannelInvitation.dto';
@@ -65,11 +65,30 @@ export class ChatService {
       return updated_channel;
   }
 
+  async isUserBannedFromChannel(channelUser: UpdateChannelUserDto) {
+    if (channelUser.sanction !== SanctionType.BAN) {
+      return false;
+    }
+    else if (channelUser.end_of_sanction && channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
+      console.log('ban ended');
+      await this.channelUsersService.updateChannelUser(channelUser.id, {
+        ...channelUser,
+        sanction: null,
+        end_of_sanction: null
+      })
+      return false;
+    }
+    console.log('banned');
+    return true;
+  }
+
   async exctractAllChannelsForUser(user: User) {
     let user_channels : Channel[];
     user_channels = [];
      user.userChannels.forEach(userChannel => {
-       user_channels.splice(user_channels.length, 0, userChannel.channel);
+       if (userChannel.sanction !== SanctionType.BAN || !this.isUserBannedFromChannel(userChannel)) {
+        user_channels.splice(user_channels.length, 0, userChannel.channel);
+       }
      });
      return user_channels
   }
@@ -90,11 +109,11 @@ export class ChatService {
 
   async getChannelForUser(channel: Channel, user: User) {
     const wanted_channel = await this.channelsService.getChannelById(channel.id);
-    const is_already_member = await wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
-    if(!is_already_member && wanted_channel.status === ChannelStatus.PRIVATE) {
+    const channelUser = await wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
+    if((!channelUser && wanted_channel.status === ChannelStatus.PRIVATE) || await this.isUserBannedFromChannel(channelUser)) {
       throw new UserUnauthorizedException(user.id);
     }
-    return (wanted_channel);
+    return (await this.channelsService.getChannelById(channel.id));
   }
 
   async deleteChannel(channel: Channel, user: User) {
@@ -108,13 +127,13 @@ export class ChatService {
 
   async joinChannel(channel: Channel, user: User) {
     let wanted_channel = await this.channelsService.getChannelById(channel.id);
-    const is_already_member = wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
-    if (is_already_member) {
-      throw new HttpException('user_already_member', HttpStatus.BAD_REQUEST);
-    }
+    const channelUser = wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
     let is_invited = wanted_channel.invited_members.find(member => member.id === user.id);
-    if (wanted_channel.status === 'private' && !is_invited) {
+    if ((wanted_channel.status === 'private' && !is_invited) || await this.isUserBannedFromChannel(channelUser)) {
       throw new UserUnauthorizedException(user.id);
+    }
+    if (channelUser) {
+      throw new HttpException('user_already_member', HttpStatus.BAD_REQUEST);
     }
     if (is_invited) {
       wanted_channel.invited_members.splice(wanted_channel.invited_members.indexOf(is_invited), 1);
@@ -162,7 +181,8 @@ export class ChatService {
       }
     }
     else {
-      if (!(channel.channelUsers.find(channelUser => channelUser.user.id === user.id))) {
+      const channelUser = channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
+      if (!(channelUser) || this.isUserBannedFromChannel(channelUser)) {
         throw new UserUnauthorizedException(user.id);
       }
       else if (!invitation) {
@@ -173,14 +193,14 @@ export class ChatService {
     return updated_channel;
   }
 
-  async punishChannelUser(punishment: UpdateChannelUserDto, user: User) {
+  async manageChannelUserSanction(punishment: UpdateChannelUserDto, user: User) {
     const channelPunished = await this.channelUsersService.getChannelUserById(punishment.id);
     const channelPunisher = user.userChannels.find(userChannel => userChannel.user.id === user.id);
-    /*if (!channelPunisher || channelPunisher.role === ChannelUserRole.USER || 
+    if (channelPunisher.sanction || 
+      !channelPunisher || channelPunisher.role === ChannelUserRole.USER || 
       (channelPunisher.role > ChannelUserRole.USER && channelPunisher.role < channelPunished.role)) {
         throw new UserUnauthorizedException(user.id);
-      }*/
-      console.log('before update');
+      }
     return await this.channelUsersService.updateChannelUser(channelPunished.id, punishment);
   }
 
@@ -200,7 +220,7 @@ export class ChatService {
       throw new UserUnauthorizedException(author.id);
     }
     if (channelUser.sanction) {
-      if (channelUser.end_of_sanction <= new Date()) {
+      if (channelUser.end_of_sanction && channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
         console.log('sanction ended');
         this.channelUsersService.updateChannelUser(channelUser.id, {
           ...channelUser,
@@ -209,7 +229,6 @@ export class ChatService {
         })
       }
       else {
-        console.log('muted bwo');
         throw new UserUnauthorizedException(author.id);
       }
     }

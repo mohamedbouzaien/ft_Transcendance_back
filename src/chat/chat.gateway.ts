@@ -12,7 +12,7 @@ import UpdateChannelDto from "./dto/updateChannel.dto";
 import UpdateChannelPasswordDto from "./dto/updateChannelPassword.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
 import Channel from "./entities/channel.entity";
-import ChannelUser from "./entities/channelUser.entity";
+import ChannelUser, { SanctionType } from "./entities/channelUser.entity";
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
@@ -37,7 +37,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     for (let socket of sockets) {
       const user = await this.chatsService.getUserFromSocket(socket);
-      if (channel.channelUsers.find(channelUser => channelUser.user.id === user.id)) {
+      if (channel.channelUsers.find(channelUser => channelUser.user.id === user.id && channelUser.sanction !== SanctionType.BAN)) {
         socket.emit(event, channel);
       }
     }
@@ -158,12 +158,12 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
-  @SubscribeMessage('punish_channel_user')
-  async punishChannelUser(@MessageBody() punishmentData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
+  @SubscribeMessage('manage_channel_user_sanction')
+  async manageChannelUserSanction(@MessageBody() punishmentData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
     try {
       const user = await this.chatsService.getUserFromSocket(socket);
       console.log(punishmentData);
-      const punishment = await this.chatsService.punishChannelUser(punishmentData, user);
+      const punishment = await this.chatsService.manageChannelUserSanction(punishmentData, user);
       console.log(punishment);
     }
     catch (error) {
