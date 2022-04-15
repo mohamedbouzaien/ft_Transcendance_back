@@ -9,6 +9,7 @@ import ChannelInvitation from "./dto/ChannelInvitation.dto";
 import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelDto from "./dto/updateChannel.dto";
+import UpdateChannelPasswordDto from "./dto/updateChannelPassword.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
 import Channel from "./entities/channel.entity";
 import ChannelUser from "./entities/channelUser.entity";
@@ -152,6 +153,18 @@ export class ChatGateway implements OnGatewayConnection {
         }
       }
     } catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
+  }
+
+  @SubscribeMessage('update_password')
+  async updateChannelPassword(@MessageBody() passwordData: UpdateChannelPasswordDto, @ConnectedSocket() socket: Socket) {
+    try {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      const channel_user = await this.chatsService.updateChannelPassword(passwordData, user);
+    }
+    catch (error) {
       console.log(error);
       socket.emit('error', error);
     }

@@ -8,7 +8,7 @@ import User from 'src/users/user.entity';
 import { ChannelsService } from './channels.service';
 import { ChannelUsersService } from './channelUser.service';
 import { ChannelUserRole } from './entities/channelUser.entity';
-import Channel from './entities/channel.entity';
+import Channel, { ChannelStatus } from './entities/channel.entity';
 import { UserUnauthorizedException } from 'src/users/exception/userUnauthorized.exception';
 import { ChannelNotFoundException } from './exception/channelNotFound.exception';
 import ChannelInvitationDto from './dto/ChannelInvitation.dto';
@@ -18,6 +18,7 @@ import { MessagesService } from './messages.service';
 import UpdateChannelDto from './dto/updateChannel.dto';
 import * as bcrypt from 'bcrypt'
 import UpdateChannelUserDto from './dto/updateChannelUser.dto';
+import UpdateChannelPasswordDto from './dto/updateChannelPassword.dto';
 
 @Injectable()
 export class ChatService {
@@ -90,11 +91,11 @@ export class ChatService {
 
   async getChannelForUser(channel: Channel, user: User) {
     const wanted_channel = await this.channelsService.getChannelById(channel.id);
-    const is_already_member = wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
-    if (is_already_member || wanted_channel.status === 'public') {
-      return (wanted_channel);
+    const is_already_member = await wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
+    if(!is_already_member && wanted_channel.status === ChannelStatus.PRIVATE) {
+      throw new UserUnauthorizedException(user.id);
     }
-    throw new UserUnauthorizedException(user.id);
+    return (wanted_channel);
   }
 
   async deleteChannel(channel: Channel, user: User) {
@@ -119,7 +120,7 @@ export class ChatService {
     if (is_invited) {
       wanted_channel.invited_members.splice(wanted_channel.invited_members.indexOf(is_invited), 1);
     }
-    await this.channelsService.checkChannelPassword(channel, wanted_channel);
+    await this.channelsService.checkChannelPassword(channel.password, wanted_channel.password);
     await this.channelUsersService.createChannelUser({channel: wanted_channel, user, role: ChannelUserRole.USER});
     return (this.channelsService.getChannelById(wanted_channel.id));
   }
@@ -131,6 +132,22 @@ export class ChatService {
       throw new UserUnauthorizedException(user.id);
     }
     await this.channelUsersService.deleteChannelUser(channel_user.id);
+  }
+
+  async updateChannelPassword(passwordData: UpdateChannelPasswordDto, user: User) {
+    const channel = await this.channelsService.getChannelById(passwordData.id);
+    const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === channel.id && userChannel.user.id === user.id);
+    if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
+      throw new UserUnauthorizedException(user.id);
+    }
+    await this.channelsService.checkChannelPassword(passwordData.old_password, channel.password);
+    const new_hashed_password = await bcrypt.hash(passwordData.new_password, 10);
+    let updateChannel: UpdateChannelDto;
+    updateChannel = {
+      id: channel.id,
+      password: new_hashed_password
+    }
+    return await this.channelsService.updateChannel(channel.id, updateChannel);
   }
 
   async manageInvitation(invitationData: ChannelInvitationDto, user: User) {

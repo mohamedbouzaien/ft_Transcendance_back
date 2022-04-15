@@ -35,13 +35,13 @@ export class ChannelsService {
     return channel;
   }
 
-  async checkChannelPassword(channel: Channel, wanted_channel: Channel) {
-    const isPasswordMatching = await bcrypt.compare(channel.password, wanted_channel.password);
+  async checkChannelPassword(plain_password: string, hashed_password: string) {
+    const isPasswordMatching = await bcrypt.compare(plain_password, hashed_password);
     if (!isPasswordMatching) {
-      let error_message = (channel.password === '' ) ? 'need_password_for_channel' : 'wrong_password_for_channel';
+      let error_message = (plain_password === '' ) ? 'need_password_for_channel' : 'wrong_password_for_channel';
       throw new HttpException(error_message, HttpStatus.BAD_REQUEST);
     }
-    return wanted_channel;
+    return true;
   }
 
   async getAllChannels() {

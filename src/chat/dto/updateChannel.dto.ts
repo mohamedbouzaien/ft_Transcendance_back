@@ -8,9 +8,6 @@ class UpdateChannelDto {
 
   @IsOptional()
   password: string;
-
-  @IsOptional()
-  invited_members: User[];
 }
 
 export default UpdateChannelDto;
