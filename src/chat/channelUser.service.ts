@@ -4,6 +4,7 @@ import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.
 import User from "src/users/user.entity";
 import { Repository } from "typeorm";
 import CreateChannelUserDto from "./dto/createChannelUser.dto";
+import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
 import Channel from "./entities/channel.entity";
 import ChannelUser from "./entities/channelUser.entity";
 import { ChannelUserNotFoundException } from './exception/channelUserNotFound.exception'
@@ -27,6 +28,15 @@ export class ChannelUsersService {
       });
       await this.channelUsersRepository.save(newChannelUser);
       return newChannelUser;
+    }
+
+    async updateChannelUser(id: number, channelUserData: UpdateChannelUserDto) {
+      await this.channelUsersRepository.update(id, channelUserData);
+      const updatedChannelUser = await this.getChannelUserById(id);
+      if (!updatedChannelUser) {
+        throw new ChannelUserNotFoundException(id);
+      }
+      return updatedChannelUser;
     }
 
     async deleteChannelUser(id: number) {

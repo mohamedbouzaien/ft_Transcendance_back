@@ -39,6 +39,16 @@ const app = new Vue({
   },
 
   sendMessage() {
+    this.socket.emit('update_channel_user', {
+      id: 3,
+      channel: {
+        id: 3,
+      },
+      user: {
+        id: 1,
+      },
+      role: 2, 
+   });
     //this.socket.emit('update_channel', {id: 4, password: 'lul', invited_members: [{id: 1}]});
     //this.socket.emit('leave_channel', {id: 4});
     //this.join_channel({id: 1});
@@ -52,7 +62,7 @@ const app = new Vue({
         id: 1,
       }
     }*/
-    this.socket.emit('channel_invitation', invite);
+    //this.socket.emit('channel_invitation', invite);
     /*const up_chan = {
       id: 1,
       admins_id: [10],

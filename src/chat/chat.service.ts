@@ -17,6 +17,7 @@ import CreateMessageDto from './dto/createMessage.dto';
 import { MessagesService } from './messages.service';
 import UpdateChannelDto from './dto/updateChannel.dto';
 import * as bcrypt from 'bcrypt'
+import UpdateChannelUserDto from './dto/updateChannelUser.dto';
 
 @Injectable()
 export class ChatService {
@@ -154,6 +155,15 @@ export class ChatService {
     }
     const updated_channel = await this.channelsService.saveChannel(channel);
     return updated_channel;
+  }
+
+  async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {
+    const channelUser = await this.channelUsersService.getChannelUserById(channelUserData.id);
+    const isChannelOwner = user.userChannels.find(userChannel => userChannel.channel.id === channelUser.channel.id);
+    if (!isChannelOwner || isChannelOwner.role !== ChannelUserRole.OWNER) {
+        throw new UserUnauthorizedException(user.id);
+      }
+    return await this.channelUsersService.updateChannelUser(channelUser.id, channelUserData); 
   }
 
   async saveMessage(messageData: CreateMessageDto, author: User) {
