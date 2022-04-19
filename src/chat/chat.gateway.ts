@@ -1,9 +1,7 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { MessagesService } from "src/chat/services/messages.service";
 import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./services/channels.service";
-import { ChannelUsersService } from "./services/channelUser.service";
 import { ChatService } from "./services/chat.service";
 import ChannelInvitation from "./dto/ChannelInvitation.dto";
 import CreateChannelDto from "./dto/createChannel.dto";
@@ -12,7 +10,7 @@ import UpdateChannelDto from "./dto/updateChannel.dto";
 import UpdateChannelPasswordDto from "./dto/updateChannelPassword.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
 import Channel from "./entities/channel.entity";
-import ChannelUser, { SanctionType } from "./entities/channelUser.entity";
+import { SanctionType } from "./entities/channelUser.entity";
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
@@ -22,9 +20,7 @@ export class ChatGateway implements OnGatewayConnection {
   constructor(
     private readonly chatsService: ChatService, 
     private readonly channelsService: ChannelsService,
-    private readonly messagesService: MessagesService,
     private readonly usersService: UsersService,
-    private readonly channelUsersService: ChannelUsersService
     ) {
   }
 
