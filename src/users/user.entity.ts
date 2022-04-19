@@ -33,8 +33,14 @@ class User {
     @Column({nullable: true})
     public avatarId?: number;
 
+    @ManyToMany(() => User, (user: User) => user.blocked_by)
+    public blocked_users;
+
+    @ManyToMany(() => User, (user: User) => user.blocked_users)
+    public blocked_by;
+
     @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.user)
-    userChannels: ChannelUser[];
+    public userChannels: ChannelUser[];
 
     @ManyToMany(() => Channel, (invited_channel: Channel) => invited_channel.invited_members)
     public invited_channels: Channel[];

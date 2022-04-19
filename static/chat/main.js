@@ -39,6 +39,7 @@ const app = new Vue({
   },
 
   sendMessage() {
+    this.socket.emit('send_direct_message', {recipient: {id: 2}, content: 'hello'});
     /*var d = new Date(); d.setMinutes(d.getMinutes() + 30);
     this.socket.emit('manage_channel_user_sanction', {
       id: 15,
@@ -77,14 +78,14 @@ const app = new Vue({
     }
     this.socket.emit('update_channel', up_chan);*/
     
-     const message = {
+     /*const message = {
        channel: {
          id: 9,
        },
        content: this.content
      }
     this.socket.emit('send_message', message)
-    this.content = '';
+    this.content = '';*/
   },
   receivedMessage(message) {
     this.messages.push(message)

@@ -18,6 +18,8 @@ import UpdateChannelDto from '../dto/updateChannel.dto';
 import * as bcrypt from 'bcrypt'
 import UpdateChannelUserDto from '../dto/updateChannelUser.dto';
 import UpdateChannelPasswordDto from '../dto/updateChannelPassword.dto';
+import CreateChannelUserDto from '../dto/createChannelUser.dto';
+import CreateDirectMessageDto from '../dto/createDirectMessage.dto';
 
 @Injectable()
 export class ChatService {
@@ -213,7 +215,7 @@ export class ChatService {
     return await this.channelUsersService.updateChannelUser(channelUser.id, channelUserData); 
   }
 
-  async saveMessage(messageData: CreateMessageDto, author: User) {
+  async saveChannelMessage(messageData: CreateMessageDto, author: User) {
     const message_channel = await this.channelsService.getChannelById(messageData.channel.id);
     const channelUser = await message_channel.channelUsers.find(channelUser => channelUser.user.id === author.id);
     if (!(channelUser)) {
@@ -237,5 +239,62 @@ export class ChatService {
       author
     });
     return newMessage;
+  }
+
+  // Direct Message UwU
+
+
+  async createDirectMessagesChannel(applicant: User, recipient: User) {
+    let channelData: CreateChannelDto;
+    channelData = {
+      ...channelData,
+      status: ChannelStatus.DIRECT_MESSAGE,
+    }
+    const channel = await this.channelsService.createChannel(channelData);
+    let channelUserData: CreateChannelUserDto = {
+      user: applicant,
+      role: ChannelUserRole.USER,
+      channel
+    };
+    await this.channelUsersService.createChannelUser(channelUserData);
+    channelUserData.user = recipient;
+    await this.channelUsersService.createChannelUser(channelUserData);
+    return await this.channelsService.getChannelById(channel.id);
+  }
+
+  async getDirectMessagesChannel(applicant: User, recipient: User) {
+    let channelUser = applicant.userChannels.find(channelUser => {
+      if (channelUser.channel.status === ChannelStatus.DIRECT_MESSAGE &&
+      recipient.userChannels.find(chanUser => chanUser.channel.id === channelUser.channel.id)) {
+        return channelUser;
+      }
+      });
+    if (!channelUser) {
+      return await this.createDirectMessagesChannel(applicant, recipient);
+    }
+    return await this.channelsService.getChannelById(channelUser.channel.id);
+  }
+
+  async saveDirectMessage(directMessageData: CreateDirectMessageDto, author: User) {
+    let channel: Channel;
+
+    if (directMessageData.channel) {
+      channel = await this.channelsService.getChannelById(directMessageData.channel.id);
+      if (!channel.channelUsers.find(userChannel => userChannel.user.id === author.id)) {
+        throw new UserUnauthorizedException(author.id);
+      }
+    }
+    else {
+      const recipient = await this.usersService.getById(directMessageData.recipient.id);
+      channel = await this.getDirectMessagesChannel(author, recipient);
+    }
+    if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(author.id);
+    }
+    return await this.messagesService.saveMessage(({
+      content: directMessageData.content,
+      channel,
+      author
+    }));
   }
 }

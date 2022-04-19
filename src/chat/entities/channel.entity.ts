@@ -21,7 +21,7 @@ class Channel {
   })
   public status: ChannelStatus;
 
-  @Column()
+  @Column({nullable: true})
   public password: string;
 
   @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.channel)

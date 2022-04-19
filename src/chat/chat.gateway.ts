@@ -9,8 +9,10 @@ import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelDto from "./dto/updateChannel.dto";
 import UpdateChannelPasswordDto from "./dto/updateChannelPassword.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
-import Channel from "./entities/channel.entity";
+import Channel, { ChannelStatus } from "./entities/channel.entity";
 import { SanctionType } from "./entities/channelUser.entity";
+import User from "src/users/user.entity";
+import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
@@ -191,13 +193,55 @@ export class ChatGateway implements OnGatewayConnection {
       socket.emit('error', error);
     }
   }
-  @SubscribeMessage('send_message')
+
+  // Direct Messages UwU
+
+  @SubscribeMessage('get_direct_messages_channel')
+  async getDirectMessages(@MessageBody() userData: User , @ConnectedSocket() socket: Socket) {
+    try {
+      const applicant  = await this.chatsService.getUserFromSocket(socket);
+      const recipient = await this.usersService.getById(userData.id);
+      const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
+      console.log(channel);
+      socket.emit('get_direct_messages_channel', channel);
+    }
+    catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
+  }
+
+  @SubscribeMessage('send_channel_message')
   async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
     try {
       const author = await this.chatsService.getUserFromSocket(socket);
-      const message = await this.chatsService.saveMessage(messageData, author);
+      const message = await this.chatsService.saveChannelMessage(messageData, author);
       const channel = await this.channelsService.getChannelById(message.channel.id);
       this.sendChannel(channel, 'receive_message');
+    }
+    catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
+  }
+
+  @SubscribeMessage('send_direct_message')
+  async listenForDirectMessages(@MessageBody() messageData: CreateDirectMessageDto, @ConnectedSocket() socket: Socket) {
+    try {
+      console.log(messageData);
+      const author = await this.chatsService.getUserFromSocket(socket);
+      const message = await this.chatsService.saveDirectMessage(messageData, author);
+      const channel = await this.channelsService.getChannelById(message.channel.id);
+      console.log(message);
+      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+      for (socket of sockets) {
+        const user = await this.chatsService.getUserFromSocket(socket);
+        if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id)) {
+          socket.emit('receive_message', message);
+          return ;
+        }
+      }
     }
     catch (error) {
       console.log(error);
