@@ -1,23 +1,23 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { AuthenticationService } from '../authentication/authentication.service';
+import { AuthenticationService } from '../../authentication/authentication.service';
 import { Socket } from 'socket.io';
 import { parse } from 'cookie';
 import { WsException } from '@nestjs/websockets';
-import CreateChannelDto from './dto/createChannel.dto';
+import CreateChannelDto from '../dto/createChannel.dto';
 import User from 'src/users/user.entity';
 import { ChannelsService } from './channels.service';
 import { ChannelUsersService } from './channelUser.service';
-import ChannelUser, { ChannelUserRole, SanctionType } from './entities/channelUser.entity';
-import Channel, { ChannelStatus } from './entities/channel.entity';
+import ChannelUser, { ChannelUserRole, SanctionType } from '../entities/channelUser.entity';
+import Channel, { ChannelStatus } from '../entities/channel.entity';
 import { UserUnauthorizedException } from 'src/users/exception/userUnauthorized.exception';
-import ChannelInvitationDto from './dto/ChannelInvitation.dto';
+import ChannelInvitationDto from '../dto/ChannelInvitation.dto';
 import { UsersService } from 'src/users/users.service';
-import CreateMessageDto from './dto/createMessage.dto';
+import CreateMessageDto from '../dto/createMessage.dto';
 import { MessagesService } from './messages.service';
-import UpdateChannelDto from './dto/updateChannel.dto';
+import UpdateChannelDto from '../dto/updateChannel.dto';
 import * as bcrypt from 'bcrypt'
-import UpdateChannelUserDto from './dto/updateChannelUser.dto';
-import UpdateChannelPasswordDto from './dto/updateChannelPassword.dto';
+import UpdateChannelUserDto from '../dto/updateChannelUser.dto';
+import UpdateChannelPasswordDto from '../dto/updateChannelPassword.dto';
 
 @Injectable()
 export class ChatService {

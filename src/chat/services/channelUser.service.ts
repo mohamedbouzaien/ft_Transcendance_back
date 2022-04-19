@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import CreateChannelUserDto from "./dto/createChannelUser.dto";
-import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
-import ChannelUser from "./entities/channelUser.entity";
-import { ChannelUserNotFoundException } from './exception/channelUserNotFound.exception'
+import CreateChannelUserDto from "../dto/createChannelUser.dto";
+import UpdateChannelUserDto from "../dto/updateChannelUser.dto";
+import ChannelUser from "../entities/channelUser.entity";
+import { ChannelUserNotFoundException } from '../exception/channelUserNotFound.exception'
 @Injectable()
 export class ChannelUsersService {
   constructor(

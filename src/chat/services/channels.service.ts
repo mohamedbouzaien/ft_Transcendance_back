@@ -1,11 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import CreateChannelDto from "./dto/createChannel.dto";
-import Channel from "./entities/channel.entity";
-import { ChannelNotFoundException } from "./exception/channelNotFound.exception";
+import CreateChannelDto from "../dto/createChannel.dto";
+import Channel from "../entities/channel.entity";
+import { ChannelNotFoundException } from "../exception/channelNotFound.exception";
 import * as bcrypt from 'bcrypt'
-import UpdateChannelDto from "./dto/updateChannel.dto";
+import UpdateChannelDto from "../dto/updateChannel.dto";
 import { ChannelUsersService } from "./channelUser.service";
 
 @Injectable()

@@ -5,8 +5,8 @@ import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.
 import User from "src/users/user.entity";
 import { Repository } from "typeorm";
 import { ChannelsService } from "./channels.service";
-import CreateMessageDto from "./dto/createMessage.dto";
-import Message from "./entities/message.entity";
+import CreateMessageDto from "../dto/createMessage.dto";
+import Message from "../entities/message.entity";
 
 @Injectable()
 export class MessagesService {
