@@ -69,6 +69,7 @@ export class ChatGateway implements OnGatewayConnection {
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
     try {
       const owner = await this.chatsService.getUserFromSocket(socket);
+      console.log(channelData);
       const channel = await this.chatsService.createChannel(channelData, owner);
       if (channel.status === 'public') {
        this.server.sockets.emit('channel_created', channel);
@@ -97,6 +98,7 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('delete_channel')
   async deleteChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
     try {
+      console.log(channel);
       const user = await this.chatsService.getUserFromSocket(socket);
       await this.chatsService.deleteChannel(channel, user);
       this.server.sockets.emit('channel_deleted', channel.id);

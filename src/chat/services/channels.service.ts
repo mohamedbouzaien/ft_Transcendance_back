@@ -22,6 +22,9 @@ export class ChannelsService {
       const hashedPassword = await bcrypt.hash(channelData.password, 10);
       channelData.password = hashedPassword;
     }
+    else {
+      delete channelData.password;
+    }
     const newChannel = await this.channelsRepository.create({
       ...channelData,
     })
@@ -38,6 +41,9 @@ export class ChannelsService {
   }
 
   async checkChannelPassword(plain_password: string, hashed_password: string) {
+    if (!hashed_password) {
+      return true;
+    }
     const isPasswordMatching = await bcrypt.compare(plain_password, hashed_password);
     if (!isPasswordMatching) {
       let error_message = (plain_password === '' ) ? 'need_password_for_channel' : 'wrong_password_for_channel';

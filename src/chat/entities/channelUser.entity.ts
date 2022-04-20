@@ -36,7 +36,7 @@ class ChannelUser {
   @Column({ type: 'timestamptz', nullable: true })
   end_of_sanction: Date;
 
-  @ManyToOne(() => Channel, (channel: Channel) => channel.channelUsers, {cascade: true, eager: true})
+  @ManyToOne(() => Channel, (channel: Channel) => channel.channelUsers, {onDelete: 'CASCADE', eager: true})
   channel: Channel;
 
   @ManyToOne(() => User, (user: User) => user.userChannels, {eager: true})

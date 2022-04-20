@@ -24,7 +24,7 @@ class Channel {
   @Column({nullable: true})
   public password: string;
 
-  @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.channel)
+  @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.channel, {cascade: true})
   channelUsers: ChannelUser[];
 
   @ManyToMany(() => User, (invited_member: User) => invited_member.invited_channels)

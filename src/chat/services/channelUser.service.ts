@@ -38,7 +38,7 @@ export class ChannelUsersService {
 
     async deleteChannelUser(id: number) {
       const delete_channel = await this.channelUsersRepository.delete(id);
-      if (delete_channel.affected) {
+      if (!delete_channel.affected) {
         throw new ChannelUserNotFoundException(id);
       }
     }

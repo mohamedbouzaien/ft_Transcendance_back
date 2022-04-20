@@ -43,6 +43,9 @@ export class ChatService {
   }
 
   async createChannel(channelData: CreateChannelDto, user: User) {
+    if (channelData.status === ChannelStatus.DIRECT_MESSAGE) {
+      throw new HttpException('bad channel type', HttpStatus.BAD_REQUEST);
+    }
     const channel = await this.channelsService.createChannel(channelData);
     const channelUser = await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
     return await this.channelsService.getChannelById(channel.id);
@@ -68,7 +71,7 @@ export class ChatService {
   }
 
   async isUserBannedFromChannel(channelUser: UpdateChannelUserDto) {
-    if (channelUser.sanction !== SanctionType.BAN) {
+    if (!channelUser || channelUser.sanction !== SanctionType.BAN) {
       return false;
     }
     else if (channelUser.end_of_sanction && channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
@@ -119,7 +122,10 @@ export class ChatService {
   }
 
   async deleteChannel(channel: Channel, user: User) {
-    const wanted_channel = await this.channelsService.getChannelById(channel.id)
+    const wanted_channel = await this.channelsService.getChannelById(channel.id);
+    if (wanted_channel.status === ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(user.id);
+    }
     const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === wanted_channel.id && userChannel.user.id === user.id);
     if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
       throw new UserUnauthorizedException(user.id);
@@ -129,6 +135,9 @@ export class ChatService {
 
   async joinChannel(channel: Channel, user: User) {
     let wanted_channel = await this.channelsService.getChannelById(channel.id);
+    if (wanted_channel.status === ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(user.id);
+    }
     const channelUser = wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
     let is_invited = wanted_channel.invited_members.find(member => member.id === user.id);
     if ((wanted_channel.status === 'private' && !is_invited) || await this.isUserBannedFromChannel(channelUser)) {
@@ -137,16 +146,20 @@ export class ChatService {
     if (channelUser) {
       throw new HttpException('user_already_member', HttpStatus.BAD_REQUEST);
     }
+    await this.channelsService.checkChannelPassword(channel.password, wanted_channel.password);
     if (is_invited) {
       wanted_channel.invited_members.splice(wanted_channel.invited_members.indexOf(is_invited), 1);
+      await this.channelsService.saveChannel(wanted_channel);
     }
-    await this.channelsService.checkChannelPassword(channel.password, wanted_channel.password);
     await this.channelUsersService.createChannelUser({channel: wanted_channel, user, role: ChannelUserRole.USER});
     return (this.channelsService.getChannelById(wanted_channel.id));
   }
 
   async leaveChannel(channel: Channel, user: User) {
     const wanted_channel = await this.channelsService.getChannelById(channel.id);
+    if (wanted_channel.status === ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(user.id);
+    }
     const channel_user =  wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
     if (!channel_user) {
       throw new UserUnauthorizedException(user.id);
@@ -173,6 +186,9 @@ export class ChatService {
   async manageInvitation(invitationData: ChannelInvitationDto, user: User) {
     const invited_user = await this.usersService.getById(invitationData.invited_user.id);
     let channel = await this.channelsService.getChannelById(invitationData.channel.id);
+    if (channel.status === ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(user.id);
+    }
     let invitation =  channel.invited_members.find(member => member.id === user.id);
     if (user.id === invited_user.id) {
       if (invitation) {
@@ -184,7 +200,7 @@ export class ChatService {
     }
     else {
       const channelUser = channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
-      if (!(channelUser) || this.isUserBannedFromChannel(channelUser)) {
+      if (!(channelUser) || await this.isUserBannedFromChannel(channelUser)) {
         throw new UserUnauthorizedException(user.id);
       }
       else if (!invitation) {
@@ -197,8 +213,12 @@ export class ChatService {
 
   async manageChannelUserSanction(punishment: UpdateChannelUserDto, user: User) {
     const channelPunished = await this.channelUsersService.getChannelUserById(punishment.id);
-    const channelPunisher = user.userChannels.find(userChannel => userChannel.user.id === user.id);
-    if (channelPunisher.sanction || 
+    const channel = await this.channelsService.getChannelById(channelPunished.channel.id);
+    if (channel.status === ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(user.id);
+    }
+    const channelPunisher = user.userChannels.find(userChannel => userChannel.channel.id === channel.id)
+    if (channelPunished.user.id === channelPunisher.user.id || channelPunisher.sanction || 
       !channelPunisher || channelPunisher.role === ChannelUserRole.USER || 
       (channelPunisher.role > ChannelUserRole.USER && channelPunisher.role < channelPunished.role)) {
         throw new UserUnauthorizedException(user.id);
@@ -208,6 +228,10 @@ export class ChatService {
 
   async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {
     const channelUser = await this.channelUsersService.getChannelUserById(channelUserData.id);
+    const channel = await this.channelsService.getChannelById(channelUser.channel.id);
+    if (channel.status === ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(user.id);
+    }
     const isChannelOwner = user.userChannels.find(userChannel => userChannel.channel.id === channelUser.channel.id);
     if (!isChannelOwner || isChannelOwner.role !== ChannelUserRole.OWNER) {
         throw new UserUnauthorizedException(user.id);
@@ -217,6 +241,9 @@ export class ChatService {
 
   async saveChannelMessage(messageData: CreateMessageDto, author: User) {
     const message_channel = await this.channelsService.getChannelById(messageData.channel.id);
+    if (message_channel.status === ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(author.id);
+    }
     const channelUser = await message_channel.channelUsers.find(channelUser => channelUser.user.id === author.id);
     if (!(channelUser)) {
       throw new UserUnauthorizedException(author.id);
