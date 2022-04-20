@@ -263,9 +263,9 @@ export class ChatService {
   }
 
   async getDirectMessagesChannel(applicant: User, recipient: User) {
-    let channelUser = applicant.userChannels.find(channelUser => {
-      if (channelUser.channel.status === ChannelStatus.DIRECT_MESSAGE &&
-      recipient.userChannels.find(chanUser => chanUser.channel.id === channelUser.channel.id)) {
+    let channelUser = applicant.userChannels.find(userChannel => {
+      if (userChannel.channel.status === ChannelStatus.DIRECT_MESSAGE &&
+      recipient.userChannels.find(recipChannel => recipChannel.channel.id === userChannel.channel.id)) {
         return channelUser;
       }
       });
@@ -280,7 +280,7 @@ export class ChatService {
 
     if (directMessageData.channel) {
       channel = await this.channelsService.getChannelById(directMessageData.channel.id);
-      if (!channel.channelUsers.find(userChannel => userChannel.user.id === author.id)) {
+      if (channel.status !== ChannelStatus.DIRECT_MESSAGE || !channel.channelUsers.find(userChannel => userChannel.user.id === author.id)) {
         throw new UserUnauthorizedException(author.id);
       }
     }
@@ -296,5 +296,19 @@ export class ChatService {
       channel,
       author
     }));
+  }
+
+  async manageBlockedUsers(to_be_blocked: User, user: User) {
+    to_be_blocked = await this.usersService.getById(to_be_blocked.id);
+    if (to_be_blocked.id === user.id) {
+      throw new UserUnauthorizedException(user.id);
+    }
+    if (user.blocked_users.find(blocked => blocked.id === to_be_blocked.id)) {
+      user.blocked_users.splice(user.blocked_users.indexOf(to_be_blocked), 1);
+    }
+    else {
+      user.blocked_users.splice(0, 0, to_be_blocked);
+    }
+    return await (await this.usersService.saveUser(user)).blocked_users;
   }
 }

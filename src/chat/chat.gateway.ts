@@ -194,6 +194,20 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @SubscribeMessage('send_channel_message')
+  async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
+    try {
+      const author = await this.chatsService.getUserFromSocket(socket);
+      const message = await this.chatsService.saveChannelMessage(messageData, author);
+      const channel = await this.channelsService.getChannelById(message.channel.id);
+      this.sendChannel(channel, 'receive_message');
+    }
+    catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
+  }
+
   // Direct Messages UwU
 
   @SubscribeMessage('get_direct_messages_channel')
@@ -204,20 +218,6 @@ export class ChatGateway implements OnGatewayConnection {
       const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
       console.log(channel);
       socket.emit('get_direct_messages_channel', channel);
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
-  }
-
-  @SubscribeMessage('send_channel_message')
-  async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const author = await this.chatsService.getUserFromSocket(socket);
-      const message = await this.chatsService.saveChannelMessage(messageData, author);
-      const channel = await this.channelsService.getChannelById(message.channel.id);
-      this.sendChannel(channel, 'receive_message');
     }
     catch (error) {
       console.log(error);
@@ -237,13 +237,28 @@ export class ChatGateway implements OnGatewayConnection {
 
       for (socket of sockets) {
         const user = await this.chatsService.getUserFromSocket(socket);
-        if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id)) {
-          socket.emit('receive_message', message);
-          return ;
-        }
+        if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id &&
+          !user.blocked_users.find(blocked_user => blocked_user.id === message.author.id))) {
+            console.log('emit to ', user.email);
+            socket.emit('receive_message', message);
+            return ;
+          }
       }
     }
     catch (error) {
+      console.log(error);
+      socket.emit('error', error);
+    }
+  }
+
+  @SubscribeMessage('manage_blocked_users')
+  async blockUser(@MessageBody() to_be_blocked: User, @ConnectedSocket() socket: Socket) {
+    try {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      const blocked_users = await this.chatsService.manageBlockedUsers(to_be_blocked, user);
+      console.log(blocked_users);
+      socket.emit('blocked_users', blocked_users);
+    } catch (error) {
       console.log(error);
       socket.emit('error', error);
     }

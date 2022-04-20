@@ -41,7 +41,7 @@ export class UsersService {
         const user = await this.usersRepository.findOne({
             id
         }, {
-            relations: ['invited_channels', 'userChannels']
+            relations: ['invited_channels', 'userChannels', 'blocked_users']
         });
         if (user) {
             return user;
@@ -88,5 +88,13 @@ export class UsersService {
         await this.usersRepository.update(userId, {
             avatarId: avatar.id
         });
+    }
+
+    async saveUser(user: User) {
+        const updated_user = await this.usersRepository.save(user);
+        if (!updated_user) {
+            throw new HttpException('user not found', HttpStatus.BAD_REQUEST);
+        }
+        return updated_user;
     }
 }

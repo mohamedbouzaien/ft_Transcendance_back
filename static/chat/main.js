@@ -39,7 +39,8 @@ const app = new Vue({
   },
 
   sendMessage() {
-    this.socket.emit('send_direct_message', {recipient: {id: 2}, content: 'hello'});
+    this.socket.emit('manage_blocked_users', {id: 2});
+    //this.socket.emit('send_direct_message', {recipient: {id: 2}, content: 'hello'});
     /*var d = new Date(); d.setMinutes(d.getMinutes() + 30);
     this.socket.emit('manage_channel_user_sanction', {
       id: 15,
