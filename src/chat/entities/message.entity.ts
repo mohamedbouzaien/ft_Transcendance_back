@@ -10,7 +10,7 @@ class Message {
   @Column()
   public content: string;
 
-  @ManyToOne(() => User, (author: User) => author.messages, {onDelete: 'CASCADE'})
+  @ManyToOne(() => User, (author: User) => author.messages, {eager: true, onDelete: 'CASCADE'})
   public author: User;
 
   @ManyToOne(() => Channel, (channel: Channel) => channel.messages, {onDelete: 'CASCADE'})

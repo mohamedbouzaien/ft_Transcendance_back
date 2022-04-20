@@ -58,6 +58,7 @@ export class ChatGateway implements OnGatewayConnection {
     try {
       const user = await this.chatsService.getUserFromSocket(socket);
       const channel = await this.chatsService.getChannelForUser(channelData, user);
+      console.log(channel);
       socket.emit('get_channel', channel);
     } catch (error) {
       console.log(error);

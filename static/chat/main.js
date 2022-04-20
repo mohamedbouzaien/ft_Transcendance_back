@@ -42,13 +42,13 @@ const app = new Vue({
     const id = Number(this.content);
     //this.socket.emit('manage_blocked_users', {id: 2});
     //this.socket.emit('send_direct_message', {recipient: {id: 2}, content: 'hello'});
-    var d = new Date(); d.setMinutes(d.getMinutes() + 1);
+    /*var d = new Date(); d.setMinutes(d.getMinutes() + 1);
     this.socket.emit('manage_channel_user_sanction', {
       id: 16,
       sanction: 'ban',
       end_of_sanction: d,
 
-    });
+    });*/
     //this.socket.emit('update_password', {id: 9, old_password: this.new_channel_password, new_password: 'test'});
     /*this.socket.emit('update_channel_user', {
       id: 3,
@@ -64,7 +64,7 @@ const app = new Vue({
     //this.socket.emit('leave_channel', {id});
     //this.join_channel({id});
     //this.deleteChannel({id});
-    //this.select_channel({id: 9});
+    this.select_channel({id});
     /*const invite =  {
       channel: {
         id: 1,
