@@ -1,9 +1,13 @@
-import { IsNotEmpty, IsOptional, IsString, MinLength, ValidateIf } from "class-validator";
-import User from "src/users/user.entity";
+import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
 import { ChannelStatus } from "../entities/channel.entity";
-import Message from "../entities/message.entity";
 
 class CreateChannelDto {
+
+  @IsNotEmpty()
+  @MinLength(3)
+  @MaxLength(12)
+  name: string;
+
   @IsNotEmpty()
   status: ChannelStatus;
 

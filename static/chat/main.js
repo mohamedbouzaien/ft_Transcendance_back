@@ -14,6 +14,7 @@ const app = new Vue({
   
   createChannel() {
     const message = {
+      name: this.new_channel_password,
       password: this.new_channel_password,
       status: this.new_channel_type,
       members: [],

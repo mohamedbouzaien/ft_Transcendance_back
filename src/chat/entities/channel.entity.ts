@@ -14,6 +14,9 @@ class Channel {
   @PrimaryGeneratedColumn()
   public id: number;
 
+  @Column()
+  public name: string;
+
   @Column({
     type: 'enum',
     enum: ChannelStatus,
@@ -27,7 +30,7 @@ class Channel {
   @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.channel, {cascade: true})
   channelUsers: ChannelUser[];
 
-  @ManyToMany(() => User, (invited_member: User) => invited_member.invited_channels)
+  @ManyToMany(() => User, (invited_member: User) => invited_member.invited_channels, {cascade: true})
   @JoinTable()
   public invited_members: User[];
   
