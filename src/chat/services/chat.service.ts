@@ -267,10 +267,10 @@ export class ChatService {
   }
 
   async getDirectMessagesChannel(applicant: User, recipient: User) {
-    let channelUser = applicant.userChannels.find(userChannel => {
+    let channelUser = await applicant.userChannels.find(userChannel => {
       if (userChannel.channel.status === ChannelStatus.DIRECT_MESSAGE &&
       recipient.userChannels.find(recipChannel => recipChannel.channel.id === userChannel.channel.id)) {
-        return channelUser;
+        return userChannel;
       }
       });
     if (!channelUser) {
@@ -289,7 +289,7 @@ export class ChatService {
       }
     }
     else {
-      const recipient = await this.usersService.getById(directMessageData.recipient.id);
+      const recipient = await this.usersService.getById(directMessageData.recipientId);
       channel = await this.getDirectMessagesChannel(author, recipient);
     }
     if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
@@ -298,16 +298,16 @@ export class ChatService {
     return await this.messagesService.saveMessage(directMessageData, author, channel);
   }
 
-  async manageBlockedUsers(to_be_blocked: User, user: User) {
-    to_be_blocked = await this.usersService.getById(to_be_blocked.id);
-    if (to_be_blocked.id === user.id) {
+  async manageBlockedUsers(to_be_blocked: FindOneParams, user: User) {
+    const target = await this.usersService.getById(to_be_blocked.id);
+    if (target.id === user.id) {
       throw new UserUnauthorizedException(user.id);
     }
-    if (user.blocked_users.find(blocked => blocked.id === to_be_blocked.id)) {
-      user.blocked_users.splice(user.blocked_users.indexOf(to_be_blocked), 1);
+    if (user.blocked_users.find(blocked => blocked.id === target.id)) {
+      user.blocked_users.splice(user.blocked_users.indexOf(target), 1);
     }
     else {
-      user.blocked_users.splice(0, 0, to_be_blocked);
+      user.blocked_users.splice(0, 0, target);
     }
     return await (await this.usersService.saveUser(user)).blocked_users;
   }

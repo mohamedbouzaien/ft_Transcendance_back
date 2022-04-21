@@ -14,7 +14,7 @@ class Channel {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @Column()
+  @Column({nullable: true})
   public name: string;
 
   @Column({

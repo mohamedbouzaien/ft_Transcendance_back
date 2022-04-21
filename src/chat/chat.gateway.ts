@@ -44,16 +44,12 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('request_all_channels')
   async requestAllChannels(@ConnectedSocket() socket: Socket) {
-    try {
-      const user = await this.chatsService.getUserFromSocket(socket);
-      const channels = await this.chatsService.getAllChannelsForUser(user);
-      socket.emit('get_all_channels', channels);
-    } catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
+    const user = await this.chatsService.getUserFromSocket(socket);
+    const channels = await this.chatsService.getAllChannelsForUser(user);
+    socket.emit('get_all_channels', channels);
   }
 
   @UsePipes(new ValidationPipe())
@@ -147,57 +143,40 @@ export class ChatGateway implements OnGatewayConnection {
 
   // Direct Messages UwU
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('get_direct_messages_channel')
-  async getDirectMessages(@MessageBody() userData: User , @ConnectedSocket() socket: Socket) {
-    try {
-      const applicant  = await this.chatsService.getUserFromSocket(socket);
-      const recipient = await this.usersService.getById(userData.id);
-      const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
-      console.log(channel);
-      socket.emit('get_direct_messages_channel', channel);
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
+  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) {
+    const applicant  = await this.chatsService.getUserFromSocket(socket);
+    const recipient = await this.usersService.getById(userData.id);
+    const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
+    console.log(channel);
+    socket.emit('get_direct_messages_channel', channel); 
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('send_direct_message')
   async listenForDirectMessages(@MessageBody() messageData: CreateDirectMessageDto, @ConnectedSocket() socket: Socket) {
-    try {
-      console.log(messageData);
-      const author = await this.chatsService.getUserFromSocket(socket);
-      const message = await this.chatsService.saveDirectMessage(messageData, author);
-      const channel = await this.channelsService.getChannelById(message.channel.id);
-      console.log(message);
-      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+    const author = await this.chatsService.getUserFromSocket(socket);
+    const message = await this.chatsService.saveDirectMessage(messageData, author);
+    const channel = await this.channelsService.getChannelById(message.channel.id);
+    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
-      for (socket of sockets) {
-        const user = await this.chatsService.getUserFromSocket(socket);
-        if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id &&
-          !user.blocked_users.find(blocked_user => blocked_user.id === message.author.id))) {
-            console.log('emit to ', user.email);
-            socket.emit('receive_message', message);
-            return ;
-          }
-      }
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
+    for (socket of sockets) {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id &&
+        !user.blocked_users.find(blocked_user => blocked_user.id === message.author.id))) {
+          socket.emit('receive_message', message);
+          return ;
+        }
     }
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('manage_blocked_users')
-  async blockUser(@MessageBody() to_be_blocked: User, @ConnectedSocket() socket: Socket) {
-    try {
-      const user = await this.chatsService.getUserFromSocket(socket);
-      const blocked_users = await this.chatsService.manageBlockedUsers(to_be_blocked, user);
-      console.log(blocked_users);
-      socket.emit('blocked_users', blocked_users);
-    } catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
+  async blockUser(@MessageBody() to_be_blocked: FindOneParams, @ConnectedSocket() socket: Socket) {
+    const user = await this.chatsService.getUserFromSocket(socket);
+    const blocked_users = await this.chatsService.manageBlockedUsers(to_be_blocked, user);
+    console.log(blocked_users);
+    socket.emit('blocked_users', blocked_users);
   }
 }
