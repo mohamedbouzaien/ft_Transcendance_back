@@ -212,21 +212,6 @@ export class ChatService {
     return await (await this.usersService.getById(invited_user.id)).invited_channels;;
   }
 
-  async manageChannelUserSanction(punishment: UpdateChannelUserDto, user: User) {
-    const channelPunished = await this.channelUsersService.getChannelUserById(punishment.id);
-    const channel = await this.channelsService.getChannelById(channelPunished.channel.id);
-    if (channel.status === ChannelStatus.DIRECT_MESSAGE) {
-      throw new UserUnauthorizedException(user.id);
-    }
-    const channelPunisher = user.userChannels.find(userChannel => userChannel.channel.id === channel.id)
-    if (channelPunished.user.id === channelPunisher.user.id || channelPunisher.sanction || 
-      !channelPunisher || channelPunisher.role === ChannelUserRole.USER || 
-      (channelPunisher.role > ChannelUserRole.USER && channelPunisher.role < channelPunished.role)) {
-        throw new UserUnauthorizedException(user.id);
-      }
-    return await this.channelUsersService.updateChannelUser(channelPunished.id, punishment);
-  }
-
   async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {
     const affectedChannelUser = await this.channelUsersService.getChannelUserById(channelUserData.id);
     const channel = await this.channelsService.getChannelById(affectedChannelUser.channel.id);

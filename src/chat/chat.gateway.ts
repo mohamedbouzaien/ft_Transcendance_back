@@ -133,20 +133,6 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
   }
-
-  @SubscribeMessage('manage_channel_user_sanction')
-  async manageChannelUserSanction(@MessageBody() punishmentData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const user = await this.chatsService.getUserFromSocket(socket);
-      console.log(punishmentData);
-      const punishment = await this.chatsService.manageChannelUserSanction(punishmentData, user);
-      console.log(punishment);
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
-  }
   
   @SubscribeMessage('update_password')
   async updateChannelPassword(@MessageBody() passwordData: UpdateChannelPasswordDto, @ConnectedSocket() socket: Socket) {
@@ -161,7 +147,7 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   @UsePipes(new ValidationPipe())
-  @SubscribeMessage('update_channel_user')
+  @SubscribeMessage('manage_channel_user')
   async updateChannelUser(@MessageBody() channelUserData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
     const user = await this.chatsService.getUserFromSocket(socket);
     const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
