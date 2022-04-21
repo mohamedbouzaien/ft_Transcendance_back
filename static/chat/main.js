@@ -14,7 +14,7 @@ const app = new Vue({
   
   createChannel() {
     const message = {
-      name: this.new_channel_password,
+      name: 'jeune',
       password: this.new_channel_password,
       status: this.new_channel_type,
       members: [],
@@ -51,13 +51,17 @@ const app = new Vue({
 
     });*/
     //this.socket.emit('update_password', {id: 9, old_password: this.new_channel_password, new_password: 'test'});
-    this.socket.emit('update_channel_user', {
+    /*this.socket.emit('update_channel_user', {
       id: 5,
       role: 1,
       sanction: 'ban',
       end_of_sanction: null
+    });*/
+    this.socket.emit('update_channel', {
+      id: 3,
+      password: '',
+      new_password: 'helloworld'
     });
-    //this.socket.emit('update_channel', {id: 4, password: 'lul', invited_members: [{id: 1}]});
     //this.socket.emit('leave_channel', {id});
     //this.join_channel({id});
     //this.deleteChannel({id});
@@ -73,12 +77,12 @@ const app = new Vue({
     }
     this.socket.emit('update_channel', up_chan);*/
     
-     const message = {
+     /*const message = {
        channelId: 2,
        content: this.content
      }
     this.socket.emit('send_channel_message', message)
-    this.content = '';
+    this.content = '';*/
   },
   receivedMessage(message) {
     this.messages.push(message)

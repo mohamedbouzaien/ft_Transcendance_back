@@ -7,9 +7,8 @@ import { ChannelInvitationDto } from "./dto/ChannelInvitation.dto";
 import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelDto from "./dto/updateChannel.dto";
-import UpdateChannelPasswordDto from "./dto/updateChannelPassword.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
-import Channel, { ChannelStatus } from "./entities/channel.entity";
+import Channel from "./entities/channel.entity";
 import { SanctionType } from "./entities/channelUser.entity";
 import User from "src/users/user.entity";
 import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
@@ -80,16 +79,12 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('update_channel')
   async updateChannel(@MessageBody() channelData: UpdateChannelDto, @ConnectedSocket() socket: Socket) {
-    try {
     const user = await this.chatsService.getUserFromSocket(socket);
     const updated_channel = await this.chatsService.updateChannel(channelData, user);
     this.sendChannel(updated_channel, 'updated_channel');
-    } catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
   }
 
   @UsePipes(new ValidationPipe())
@@ -131,18 +126,6 @@ export class ChatGateway implements OnGatewayConnection {
         socket.emit('invited_channels', invitations);
         return ;
       }
-    }
-  }
-  
-  @SubscribeMessage('update_password')
-  async updateChannelPassword(@MessageBody() passwordData: UpdateChannelPasswordDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const user = await this.chatsService.getUserFromSocket(socket);
-      const channel_user = await this.chatsService.updateChannelPassword(passwordData, user);
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
     }
   }
 

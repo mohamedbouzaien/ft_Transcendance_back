@@ -17,7 +17,6 @@ import { MessagesService } from './messages.service';
 import UpdateChannelDto from '../dto/updateChannel.dto';
 import * as bcrypt from 'bcrypt'
 import UpdateChannelUserDto from '../dto/updateChannelUser.dto';
-import UpdateChannelPasswordDto from '../dto/updateChannelPassword.dto';
 import CreateChannelUserDto from '../dto/createChannelUser.dto';
 import CreateDirectMessageDto from '../dto/createDirectMessage.dto';
 import { FindOneParams } from '../dto/findOneParams.dto';
@@ -59,14 +58,16 @@ export class ChatService {
      if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
        throw new UserUnauthorizedException(user.id);
       }
-      if ('password' in channelData) {
-        channelData.password = await bcrypt.hash(channelData.password, 10);
+      if ('new_password' in channelData) {
+        await this.channelsService.checkChannelPassword(channelData.password, channel.password);
+        if (channelData.new_password !== null) {
+          channelData.password = await bcrypt.hash(channelData.new_password, 10);
+        }
+        else {
+          channelData.password = null
+        }
+        delete channelData['new_password'];
       }
-      console.log(channelData);
-      if ('invited_members' in channelData) {
-        delete channelData['invited_members']
-      }
-      console.log(channelData);
       const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
       return updated_channel;
   }
@@ -166,22 +167,6 @@ export class ChatService {
       throw new UserUnauthorizedException(user.id);
     }
     await this.channelUsersService.deleteChannelUser(channel_user.id);
-  }
-
-  async updateChannelPassword(passwordData: UpdateChannelPasswordDto, user: User) {
-    const channel = await this.channelsService.getChannelById(passwordData.id);
-    const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === channel.id && userChannel.user.id === user.id);
-    if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
-      throw new UserUnauthorizedException(user.id);
-    }
-    await this.channelsService.checkChannelPassword(passwordData.old_password, channel.password);
-    const new_hashed_password = await bcrypt.hash(passwordData.new_password, 10);
-    let updateChannel: UpdateChannelDto;
-    updateChannel = {
-      id: channel.id,
-      password: new_hashed_password
-    }
-    return await this.channelsService.updateChannel(channel.id, updateChannel);
   }
 
   async manageInvitation(invitationData: ChannelInvitationDto, user: User) {
