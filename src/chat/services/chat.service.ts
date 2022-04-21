@@ -233,14 +233,18 @@ export class ChatService {
     if (channel.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(user.id);
     }
-    if (affectedChannelUser.role) {
-    const isChannelOwner = user.userChannels.find(userChannel => userChannel.channel.id === affectedChannelUser.channel.id);
-    if (!isChannelOwner || isChannelOwner.role !== ChannelUserRole.OWNER) {
+    const channelApplicant = user.userChannels.find(userChannel => userChannel.channel.id === affectedChannelUser.channel.id);
+    if (channelUserData.role) {
+      if (!channelApplicant || channelApplicant.role !== ChannelUserRole.OWNER) {
         throw new UserUnauthorizedException(user.id);
       }
     }
-    if (affectedChannelUser.sanction) {
-
+    if (channelUserData.sanction) {
+      if (affectedChannelUser.user.id === channelApplicant.user.id || channelApplicant.sanction || 
+        !channelApplicant || channelApplicant.role === ChannelUserRole.USER || 
+        (channelApplicant.role > ChannelUserRole.USER && channelApplicant.role < affectedChannelUser.role)) {
+          throw new UserUnauthorizedException(user.id);
+        }
     }
     return await this.channelUsersService.updateChannelUser(affectedChannelUser.id, channelUserData); 
   }

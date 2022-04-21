@@ -160,16 +160,11 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('update_channel_user')
   async updateChannelUser(@MessageBody() channelUserData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const user = await this.chatsService.getUserFromSocket(socket);
-      const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
+    const user = await this.chatsService.getUserFromSocket(socket);
+    const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
   }
 
   @SubscribeMessage('send_channel_message')
