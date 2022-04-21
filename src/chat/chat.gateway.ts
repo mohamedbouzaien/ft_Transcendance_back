@@ -1,4 +1,4 @@
-import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./services/channels.service";
@@ -13,7 +13,10 @@ import Channel, { ChannelStatus } from "./entities/channel.entity";
 import { SanctionType } from "./entities/channelUser.entity";
 import User from "src/users/user.entity";
 import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
+import {UseFilters, UsePipes, ValidationPipe } from "@nestjs/common";
+import { WsExceptionFilter } from "./exception/WsException.filter";
 
+@UseFilters(WsExceptionFilter)
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
@@ -66,11 +69,11 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('create_channel')
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
     try {
       const owner = await this.chatsService.getUserFromSocket(socket);
-      console.log(channelData);
       const channel = await this.chatsService.createChannel(channelData, owner);
       if (channel.status === 'public') {
        this.server.sockets.emit('channel_created', channel);

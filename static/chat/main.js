@@ -64,7 +64,7 @@ const app = new Vue({
     //this.socket.emit('leave_channel', {id});
     //this.join_channel({id});
     //this.deleteChannel({id});
-    this.select_channel({id});
+    //this.select_channel({id});
     /*const invite =  {
       channel: {
         id: 1,
@@ -122,6 +122,9 @@ const app = new Vue({
       this.receivedMessage(message)
     })
     console.log(this.messages);
+  });
+  this.socket.on('error', (message) => {
+    console.log(message);
   });
   this.socket.on('need_password_for_channel', (message) => {
     console.log('need_password_for_channel');
