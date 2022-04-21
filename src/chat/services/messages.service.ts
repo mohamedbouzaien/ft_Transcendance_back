@@ -7,6 +7,7 @@ import { Repository } from "typeorm";
 import { ChannelsService } from "./channels.service";
 import CreateMessageDto from "../dto/createMessage.dto";
 import Message from "../entities/message.entity";
+import Channel from "../entities/channel.entity";
 
 @Injectable()
 export class MessagesService {
@@ -17,8 +18,8 @@ export class MessagesService {
     private readonly channelsService: ChannelsService
   ) {
   }
-  async saveMessage(messageData: CreateMessageDto) {
-    const newMessage = await this.messagesRepository.create(messageData);
+  async saveMessage(messageData: CreateMessageDto, author: User, channel: Channel) {
+    const newMessage = await this.messagesRepository.create({...messageData, author, channel});
     await this.messagesRepository.save(newMessage);
     return newMessage;
   }

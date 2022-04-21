@@ -1,9 +1,14 @@
+import { IsNotEmpty, IsNumber } from "class-validator";
 import User from "src/users/user.entity";
 import Channel from "../entities/channel.entity";
 
 class CreateMessageDto {
-  author: User;
-  channel: Channel;
+
+  @IsNumber()
+  @IsNotEmpty()
+  channelId: number;
+
+  @IsNotEmpty()
   content: string;
 }
 

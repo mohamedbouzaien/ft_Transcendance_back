@@ -73,14 +73,12 @@ const app = new Vue({
     }
     this.socket.emit('update_channel', up_chan);*/
     
-     /*const message = {
-       channel: {
-         id: 9,
-       },
+     const message = {
+       channelId: 2,
        content: this.content
      }
-    this.socket.emit('send_message', message)
-    this.content = '';*/
+    this.socket.emit('send_channel_message', message)
+    this.content = '';
   },
   receivedMessage(message) {
     this.messages.push(message)

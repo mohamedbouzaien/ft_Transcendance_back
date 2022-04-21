@@ -153,18 +153,13 @@ export class ChatGateway implements OnGatewayConnection {
     const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('send_channel_message')
   async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const author = await this.chatsService.getUserFromSocket(socket);
-      const message = await this.chatsService.saveChannelMessage(messageData, author);
-      const channel = await this.channelsService.getChannelById(message.channel.id);
-      this.sendChannel(channel, 'receive_message');
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
+    const author = await this.chatsService.getUserFromSocket(socket);
+    const message = await this.chatsService.saveChannelMessage(messageData, author);
+    const channel = await this.channelsService.getChannelById(message.channel.id);
+    this.sendChannel(channel, 'receive_message');
   }
 
   // Direct Messages UwU

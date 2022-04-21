@@ -235,7 +235,7 @@ export class ChatService {
   }
 
   async saveChannelMessage(messageData: CreateMessageDto, author: User) {
-    const message_channel = await this.channelsService.getChannelById(messageData.channel.id);
+    const message_channel = await this.channelsService.getChannelById(messageData.channelId);
     if (message_channel.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(author.id);
     }
@@ -256,10 +256,7 @@ export class ChatService {
         throw new UserUnauthorizedException(author.id);
       }
     }
-    const newMessage = await this.messagesService.saveMessage({
-      ...messageData,
-      author
-    });
+    const newMessage = await this.messagesService.saveMessage(messageData, author, message_channel);
     return newMessage;
   }
 
@@ -300,9 +297,9 @@ export class ChatService {
   async saveDirectMessage(directMessageData: CreateDirectMessageDto, author: User) {
     let channel: Channel;
 
-    if (directMessageData.channel) {
-      channel = await this.channelsService.getChannelById(directMessageData.channel.id);
-      if (channel.status !== ChannelStatus.DIRECT_MESSAGE || !channel.channelUsers.find(userChannel => userChannel.user.id === author.id)) {
+    if (directMessageData.channelId) {
+      channel = await this.channelsService.getChannelById(directMessageData.channelId);
+      if (channel.status !== ChannelStatus.DIRECT_MESSAGE || !channel.channelUsers.find(userChannel => userChannel.user.id === author.id)) {
         throw new UserUnauthorizedException(author.id);
       }
     }
@@ -313,11 +310,7 @@ export class ChatService {
     if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(author.id);
     }
-    return await this.messagesService.saveMessage(({
-      content: directMessageData.content,
-      channel,
-      author
-    }));
+    return await this.messagesService.saveMessage(directMessageData, author, channel);
   }
 
   async manageBlockedUsers(to_be_blocked: User, user: User) {
