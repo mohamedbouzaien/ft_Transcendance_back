@@ -1,9 +1,10 @@
-import User from "src/users/user.entity";
-import Channel from "../entities/channel.entity";
+import { IsNumber, isNumber } from "class-validator";
 
-class ChannelInvitationDto {
-  invited_user: User;
-  channel: Channel;
+export class ChannelInvitationDto {
+  
+  @IsNumber()
+  invitedId: number;
+
+  @IsNumber()
+  channelId: number;
 }
-
-export default ChannelInvitationDto;

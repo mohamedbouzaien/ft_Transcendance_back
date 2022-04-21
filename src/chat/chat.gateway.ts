@@ -3,7 +3,7 @@ import { Server, Socket } from "socket.io";
 import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./services/channels.service";
 import { ChatService } from "./services/chat.service";
-import ChannelInvitation from "./dto/ChannelInvitation.dto";
+import { ChannelInvitationDto } from "./dto/ChannelInvitation.dto";
 import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelDto from "./dto/updateChannel.dto";
@@ -15,6 +15,7 @@ import User from "src/users/user.entity";
 import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
 import {UseFilters, UsePipes, ValidationPipe } from "@nestjs/common";
 import { WsExceptionFilter } from "./exception/WsException.filter";
+import { FindOneParams } from "./dto/findOneParams.dto";
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway()
@@ -56,34 +57,26 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('request_channel')
-  async requestChannel(@MessageBody() channelData: Channel, @ConnectedSocket() socket: Socket) {
-    try {
-      const user = await this.chatsService.getUserFromSocket(socket);
-      const channel = await this.chatsService.getChannelForUser(channelData, user);
-      console.log(channel);
-      socket.emit('get_channel', channel);
-    } catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
+  async requestChannel(@MessageBody() channelData: FindOneParams, @ConnectedSocket() socket: Socket) {
+    console.log(channelData);
+    const user = await this.chatsService.getUserFromSocket(socket);
+    const channel = await this.chatsService.getChannelForUser(channelData, user);
+    console.log(channel);
+    socket.emit('get_channel', channel);
   }
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('create_channel')
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const owner = await this.chatsService.getUserFromSocket(socket);
-      const channel = await this.chatsService.createChannel(channelData, owner);
-      if (channel.status === 'public') {
-       this.server.sockets.emit('channel_created', channel);
-      }
-      else {
-       socket.emit('channel_created', channel);
-      }
-    } catch(error) {
-      console.log(error);
-      socket.emit('error', error);
+    const owner = await this.chatsService.getUserFromSocket(socket);
+    const channel = await this.chatsService.createChannel(channelData, owner);
+    if (channel.status === 'public') {
+      this.server.sockets.emit('channel_created', channel);
+    }
+    else {
+      socket.emit('channel_created', channel);
     }
   }
 
@@ -99,66 +92,45 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('delete_channel')
-  async deleteChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
-    try {
-      console.log(channel);
-      const user = await this.chatsService.getUserFromSocket(socket);
-      await this.chatsService.deleteChannel(channel, user);
-      this.server.sockets.emit('channel_deleted', channel.id);
-    } catch (error) {
-      console.log('error', error);
-      socket.emit('error', error);
-    }
+  async deleteChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) {
+    const user = await this.chatsService.getUserFromSocket(socket);
+    await this.chatsService.deleteChannel(channel, user);
+    this.server.sockets.emit('channel_deleted', channel.id);
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('join_channel')
-  async joinChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
-    try {
-      const user = await this.chatsService.getUserFromSocket(socket);
-      const joined_channel = await this.chatsService.joinChannel(channel, user);
-      console.log(joined_channel);
-      this.sendChannel(joined_channel, 'updated_channel');
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
+  async joinChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) {
+    const user = await this.chatsService.getUserFromSocket(socket);
+    const joined_channel = await this.chatsService.joinChannel(channel, user);
+    console.log(joined_channel);
+    this.sendChannel(joined_channel, 'updated_channel');
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage('leave_channel')
-  async leaveChannel(@MessageBody() channel: Channel, @ConnectedSocket() socket: Socket) {
-    try {
-      const user = await this.chatsService.getUserFromSocket(socket);
-      await this.chatsService.leaveChannel(channel, user);
-      const updated_chan = await this.channelsService.getChannelById(channel.id);
-      this.sendChannel(updated_chan, 'updated_channel');
-    }
-    catch (error) {
-      console.log(error);
-      socket.emit('error', error);
-    }
+  async leaveChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) {
+    const user = await this.chatsService.getUserFromSocket(socket);
+    await this.chatsService.leaveChannel(channel, user);
+    const updated_chan = await this.channelsService.getChannelById(channel.id);
+    this.sendChannel(updated_chan, 'updated_channel');
   }
-  @SubscribeMessage('channel_invitation')
-  async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitation, @ConnectedSocket() socket: Socket) {
-    try {
-      console.log(invitationData);
-      const user = await this.chatsService.getUserFromSocket(socket);
-      const invited_user = await this.usersService.getById(invitationData.invited_user.id);
-      await this.chatsService.manageInvitation(invitationData, user);
-      const invited_channels = await (await this.usersService.getById(invitationData.invited_user.id)).invited_channels;
-      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
-      for (socket of sockets) {
-        const author = await this.chatsService.getUserFromSocket(socket);
-        if (invited_user.id === author.id) {
-          socket.emit('invited_channels', invited_channels);
-          return ;
-        }
+  @UsePipes(new ValidationPipe())
+  @SubscribeMessage('channel_invitation')
+  async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitationDto, @ConnectedSocket() socket: Socket) {
+    const user = await this.chatsService.getUserFromSocket(socket);
+    const invitations = await this.chatsService.manageInvitation(invitationData, user);
+    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+    for (socket of sockets) {
+      const author = await this.chatsService.getUserFromSocket(socket);
+      if (invitationData.invitedId === author.id) {
+        socket.emit('invited_channels', invitations);
+        return ;
       }
-    } catch (error) {
-      console.log(error);
-      socket.emit('error', error);
     }
   }
 
