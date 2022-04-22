@@ -1,3 +1,4 @@
+import { Exclude, Transform } from "class-transformer";
 import User from "src/users/user.entity";
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import ChannelUser from "./channelUser.entity";
@@ -25,6 +26,7 @@ class Channel {
   public status: ChannelStatus;
 
   @Column({nullable: true})
+  @Exclude()
   public password: string;
 
   @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.channel, {cascade: true})
