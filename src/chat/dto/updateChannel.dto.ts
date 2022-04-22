@@ -11,12 +11,12 @@ class UpdateChannelDto {
   @MaxLength(12)
   name: string;
 
-  @ValidateIf(o => Boolean(o.password))
+  @ValidateIf(o => ('password' in o || 'new_password' in o ) && o.password !== null )
   @MinLength(7)
   @IsString()
   password: string;
 
-  @ValidateIf(o => Boolean(o.new_password))
+  @ValidateIf(o => ('password' in o || 'new_password' in o) && o.new_password !== null)
   @MinLength(7)
   @IsString()
   new_password: string

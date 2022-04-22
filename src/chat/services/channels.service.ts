@@ -41,8 +41,11 @@ export class ChannelsService {
   }
 
   async checkChannelPassword(plain_password: string, hashed_password: string) {
-    if (!hashed_password) {
+    if (hashed_password === null) {
       return true;
+    }
+    if (plain_password === null) {
+      throw new HttpException('need_password_for_channel', HttpStatus.BAD_REQUEST);
     }
     const isPasswordMatching = await bcrypt.compare(plain_password, hashed_password);
     if (!isPasswordMatching) {

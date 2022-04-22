@@ -11,7 +11,7 @@ class CreateChannelDto {
   @IsNotEmpty()
   status: ChannelStatus;
 
-  @ValidateIf(o => Boolean(o.password))
+  @ValidateIf(o => o.password !== null)
   @MinLength(7)
   @IsString()
   password: string;
