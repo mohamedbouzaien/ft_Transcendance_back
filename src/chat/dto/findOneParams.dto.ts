@@ -1,7 +1,7 @@
-import { IsNumber, IsNumberString, IsOptional } from 'class-validator';
+import { IsNumber, isNumberString, IsNumberString, IsOptional, isString } from 'class-validator';
 
 export class FindOneParams {
-  @IsNumber()
+  @IsNumberString()
   id: number;
 
   @IsOptional()
