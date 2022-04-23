@@ -27,9 +27,8 @@ export class ftStrategy extends PassportStrategy(Strategy)
         profile: Profile
     ) {
         const userData = {
-            name: profile.displayName,
+            username: profile.username,
             email: profile.emails[0].value,
-            phoneNumber: profile.phoneNumbers[0].value,
             password: '0000',
             intra_id: profile.id
         }
