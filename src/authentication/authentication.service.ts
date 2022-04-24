@@ -32,9 +32,9 @@ export class AuthenticationService {
         }
     }
 
-    public async getAuthenticatedUser(email: string, hashedPassword: string) {
+    public async getAuthenticatedUser(username: string, hashedPassword: string) {
         try {
-            const user = await this.usersService.getByEmail(email);
+            const user = await this.usersService.getByUsername(username);
             await this.verifyPassword(user.password, hashedPassword);
             user.password = undefined;
             return user;

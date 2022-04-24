@@ -10,14 +10,14 @@ class User {
     public id?: number;
     @Column({unique: true})
     public email: string;
-    @Column()
+    @Column({unique: true})
     public username: string;
     @Column()
     public password: string;
     @Column({ nullable: true})
     @Exclude()
     public currentHashedRefreshToken?: string;
-    @Column({nullable: true, unique: true})
+    @Column({nullable: true})
     @Exclude()
     public intra_id: string;
     @Column({nullable: true})
