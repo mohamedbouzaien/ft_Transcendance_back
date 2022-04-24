@@ -8,9 +8,7 @@ import CreateChannelDto from "./dto/createChannel.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelDto from "./dto/updateChannel.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
-import Channel from "./entities/channel.entity";
 import { SanctionType } from "./entities/channelUser.entity";
-import User from "src/users/user.entity";
 import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
 import {UseFilters, UsePipes, ValidationPipe } from "@nestjs/common";
 import { WsExceptionFilter } from "./exception/WsException.filter";
@@ -33,13 +31,13 @@ export class ChatGateway implements OnGatewayConnection {
     this.requestAllChannels(socket);
   }
 
-  async sendChannel(channel: Channel, event: string) {
+  async sendToUsers(channelId: number, event: string, to_send: any) {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
       const user = await this.chatsService.getUserFromSocket(socket);
-      if (channel.channelUsers.find(channelUser => channelUser.user.id === user.id && channelUser.sanction !== SanctionType.BAN)) {
-        socket.emit(event, channel);
+      if (user.userChannels.find(userChannel => userChannel.channel.id === channelId && userChannel.sanction !== SanctionType.BAN)) {
+        socket.emit(event, to_send);
       }
     }
   }
@@ -80,7 +78,7 @@ export class ChatGateway implements OnGatewayConnection {
   async updateChannel(@MessageBody() channelData: UpdateChannelDto, @ConnectedSocket() socket: Socket) {
     const user = await this.chatsService.getUserFromSocket(socket);
     const updated_channel = await this.chatsService.updateChannel(channelData, user);
-    this.sendChannel(updated_channel, 'updated_channel');
+    this.sendToUsers(updated_channel.id, 'updated_channel', updated_channel);
   }
 
   @UsePipes(new ValidationPipe())
@@ -96,8 +94,7 @@ export class ChatGateway implements OnGatewayConnection {
   async joinChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) {
     const user = await this.chatsService.getUserFromSocket(socket);
     const joined_channel = await this.chatsService.joinChannel(channel, user);
-    console.log(joined_channel);
-    this.sendChannel(joined_channel, 'updated_channel');
+    this.sendToUsers(joined_channel.id, 'updated_channel', joined_channel);
   }
 
   @UsePipes(new ValidationPipe())
@@ -106,7 +103,7 @@ export class ChatGateway implements OnGatewayConnection {
     const user = await this.chatsService.getUserFromSocket(socket);
     await this.chatsService.leaveChannel(channel, user);
     const updated_chan = await this.channelsService.getChannelById(channel.id);
-    this.sendChannel(updated_chan, 'updated_channel');
+    this.sendToUsers(updated_chan.id, 'updated_channel', updated_chan);
   }
 
   @UsePipes(new ValidationPipe())
@@ -130,6 +127,7 @@ export class ChatGateway implements OnGatewayConnection {
   async updateChannelUser(@MessageBody() channelUserData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
     const user = await this.chatsService.getUserFromSocket(socket);
     const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
+    this.sendToUsers(channel_user.channel.id, 'channel_user_updated', channel_user);
   }
 
   @UsePipes(new ValidationPipe())
@@ -138,7 +136,7 @@ export class ChatGateway implements OnGatewayConnection {
     const author = await this.chatsService.getUserFromSocket(socket);
     const message = await this.chatsService.saveChannelMessage(messageData, author);
     const channel = await this.channelsService.getChannelById(message.channel.id);
-    this.sendChannel(channel, 'receive_message');
+    this.sendToUsers(channel.id, 'receive_message', message);
   }
 
   // Direct Messages UwU
@@ -149,7 +147,6 @@ export class ChatGateway implements OnGatewayConnection {
     const applicant  = await this.chatsService.getUserFromSocket(socket);
     const recipient = await this.usersService.getById(userData.id);
     const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
-    console.log(channel);
     socket.emit('get_direct_messages_channel', channel); 
   }
 
@@ -176,7 +173,6 @@ export class ChatGateway implements OnGatewayConnection {
   async blockUser(@MessageBody() to_be_blocked: FindOneParams, @ConnectedSocket() socket: Socket) {
     const user = await this.chatsService.getUserFromSocket(socket);
     const blocked_users = await this.chatsService.manageBlockedUsers(to_be_blocked, user);
-    console.log(blocked_users);
     socket.emit('blocked_users', blocked_users);
   }
 }
