@@ -30,7 +30,6 @@ export class TwoFactorAuthenticationService {
     }
     
     public isTwoFactorAuthenticationCodeValid(twoFactorAuthenticationCode: string, user: User) {
-        console.log(user);
         return authenticator.verify({
             token: twoFactorAuthenticationCode,
             secret: user.twoFactorAuthenticationSecret

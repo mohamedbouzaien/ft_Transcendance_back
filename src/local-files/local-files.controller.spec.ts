@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LocalFilesController } from './local-files.controller';
+import  LocalFilesController  from './local-files.controller';
 
 describe('LocalFilesController', () => {
   let controller: LocalFilesController;

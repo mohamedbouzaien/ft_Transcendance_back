@@ -7,8 +7,8 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { TwoFactorAuthenticationModule } from './two-factor-authentication/two-factor-authentication.module';
-import { LocalFilesService } from './local-files/local-files.service';
 import { LocalFilesModule } from './local-files/local-files.module';
+import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
 import * as Joi from '@hapi/joi';
 import { ChatModule } from './chat/chat.module';
 
@@ -31,7 +31,7 @@ import { ChatModule } from './chat/chat.module';
       TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
       UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule],
   controllers: [AppController],
   providers: [AppService],
 })

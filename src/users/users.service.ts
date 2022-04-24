@@ -37,21 +37,32 @@ export class UsersService {
         throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
     }
 
+    async   getByUsername(username: string)
+    {
+        const user = await this.usersRepository.findOne({username});
+        if (user)
+            return user;
+        throw new HttpException('User with this username does not exist', HttpStatus.NOT_FOUND);
+    }
+
     async getById(id: number) {
         const user = await this.usersRepository.findOne({
             id
-        }, {
-            relations: ['invited_channels', 'userChannels', 'blocked_users']
-        });
+        },{
+            relations: [
+                'sent_relationships', 
+                'received_relationships',
+                'invited_channels', 'userChannels', 'blocked_users'
+            ]});
         if (user) {
             return user;
         }
         throw new HttpException('User with this id does not exist', HttpStatus.NOT_FOUND);
     }
 
-    async   getByIntraId(intraId: string)
+    async   getByIntraId(intra_id: string)
     {
-        const user = await this.usersRepository.findOne({intraId});
+        const user = await this.usersRepository.findOne({intra_id});
         if (user)
             return user;
         return undefined;
@@ -86,7 +97,7 @@ export class UsersService {
     async addAvatar(userId: number, fileData: LocalFileDto) {
         const avatar = await this.localFilesService.saveLocalFileData(fileData);
         await this.usersRepository.update(userId, {
-            avatarId: avatar.id
+            avatar_id: avatar.id
         });
     }
 
@@ -96,5 +107,12 @@ export class UsersService {
             throw new HttpException('user not found', HttpStatus.BAD_REQUEST);
         }
         return updated_user;
+    }
+    
+    async getRelationships(userId: number) {
+        const user = this.usersRepository.findOne(userId, {
+            relations: [
+                'sent_relationships']
+            });
     }
 }
