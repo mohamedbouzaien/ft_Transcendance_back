@@ -10,6 +10,7 @@ import { TwoFactorAuthenticationModule } from './two-factor-authentication/two-f
 import { LocalFilesModule } from './local-files/local-files.module';
 import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
 import * as Joi from '@hapi/joi';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [TodosModule, ConfigModule.forRoot({
@@ -30,7 +31,7 @@ import * as Joi from '@hapi/joi';
       TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
       UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, UserRelationshipsModule],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule],
   controllers: [AppController],
   providers: [AppService],
 })

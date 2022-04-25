@@ -1,7 +1,10 @@
 import { Exclude } from "class-transformer";
 import LocalFile from "src/local-files/local-file.entity";
+import Message from "src/chat/entities/message.entity";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import Channel from "src/chat/entities/channel.entity";
+import ChannelUser from "src/chat/entities/channelUser.entity";
 import UserRelationship from "src/user-relationships/user-relationship.entity"
-import { Column, Entity, JoinColumn, JoinTable, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { UserStatus } from "./user-status.enum";
 
 @Entity()
@@ -32,6 +35,22 @@ class User {
     public avatar?: LocalFile;
     @Column({nullable: true})
     public avatar_id?: number;
+
+    @ManyToMany(() => User, (blocked_user: User) => blocked_user.blocked_by_users)
+    @JoinTable()
+    public blocked_users: User[];
+
+    @ManyToMany(() => User, (blocked_by_user: User) => blocked_by_user.blocked_users)
+    public blocked_by_users: User[];
+
+    @OneToMany(() => ChannelUser, (channelUser: ChannelUser) => channelUser.user)
+    public userChannels: ChannelUser[];
+
+    @ManyToMany(() => Channel, (invited_channel: Channel) => invited_channel.invited_members)
+    public invited_channels: Channel[];
+
+    @OneToMany(() => Message, (message: Message) => message.author)
+    public messages: Message[];
 
     @Column({
         type: "enum",

@@ -51,7 +51,8 @@ export class UsersService {
         },{
             relations: [
                 'sent_relationships', 
-                'received_relationships'
+                'received_relationships',
+                'invited_channels', 'userChannels', 'blocked_users'
             ]});
         if (user) {
             return user;
@@ -100,6 +101,14 @@ export class UsersService {
         });
     }
 
+    async saveUser(user: User) {
+        const updated_user = await this.usersRepository.save(user);
+        if (!updated_user) {
+            throw new HttpException('user not found', HttpStatus.BAD_REQUEST);
+        }
+        return updated_user;
+    }
+    
     async getRelationships(userId: number) {
         const user = this.usersRepository.findOne(userId, {
             relations: [
