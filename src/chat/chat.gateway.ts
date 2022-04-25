@@ -15,7 +15,13 @@ import { WsExceptionFilter } from "./exception/WsException.filter";
 import { FindOneParams } from "./dto/findOneParams.dto";
 
 @UseFilters(WsExceptionFilter)
-@WebSocketGateway()
+@WebSocketGateway(
+  { cors: {
+  origin: "http://localhost:3008",
+  methods: ["GET", "POST"],
+  credentials: true
+}}
+)
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
