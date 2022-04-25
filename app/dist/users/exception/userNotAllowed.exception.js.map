@@ -1,0 +1,1 @@
+{"version":3,"file":"userNotAllowed.exception.js","sourceRoot":"","sources":["../../../src/users/exception/userNotAllowed.exception.ts"],"names":[],"mappings":";;;AAAA,2CAAuD;AAEvD,MAAa,uBAAwB,SAAQ,8BAAqB;IAChE,YAAY,MAAc;QACxB,KAAK,CAAE,gBAAgB,MAAM,eAAe,CAAC,CAAC;IAChD,CAAC;CACF;AAJD,0DAIC"}

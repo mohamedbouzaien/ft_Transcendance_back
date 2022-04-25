@@ -1,0 +1,42 @@
+import { AuthenticationService } from '../authentication/authentication.service';
+import { Socket } from 'socket.io';
+import CreateChannelDto from './dto/createChannel.dto';
+import User from 'src/users/user.entity';
+import { ChannelsService } from './channels.service';
+import { ChannelUsersService } from './channelUser.service';
+import ChannelUser from './entities/channelUser.entity';
+import Channel from './entities/channel.entity';
+import ChannelInvitationDto from './dto/ChannelInvitation.dto';
+import { UsersService } from 'src/users/users.service';
+import CreateMessageDto from './dto/createMessage.dto';
+import { MessagesService } from './messages.service';
+import UpdateChannelDto from './dto/updateChannel.dto';
+import UpdateChannelUserDto from './dto/updateChannelUser.dto';
+import UpdateChannelPasswordDto from './dto/updateChannelPassword.dto';
+export declare class ChatService {
+    private readonly authenticationService;
+    private readonly channelsService;
+    private readonly usersService;
+    private readonly channelUsersService;
+    private readonly messagesService;
+    constructor(authenticationService: AuthenticationService, channelsService: ChannelsService, usersService: UsersService, channelUsersService: ChannelUsersService, messagesService: MessagesService);
+    getUserFromSocket(socket: Socket): Promise<User>;
+    createChannel(channelData: CreateChannelDto, user: User): Promise<Channel>;
+    updateChannel(channelData: UpdateChannelDto, user: User): Promise<Channel>;
+    isUserBannedFromChannel(channelUser: UpdateChannelUserDto): Promise<boolean>;
+    exctractAllChannelsForUser(user: User): Promise<Channel[]>;
+    getAllChannelsForUser(user: User): Promise<{
+        user_channels: Channel[];
+        avalaible_channels: Channel[];
+        invited_channels: Channel[];
+    }>;
+    getChannelForUser(channel: Channel, user: User): Promise<Channel>;
+    deleteChannel(channel: Channel, user: User): Promise<void>;
+    joinChannel(channel: Channel, user: User): Promise<Channel>;
+    leaveChannel(channel: Channel, user: User): Promise<void>;
+    updateChannelPassword(passwordData: UpdateChannelPasswordDto, user: User): Promise<Channel>;
+    manageInvitation(invitationData: ChannelInvitationDto, user: User): Promise<Channel>;
+    manageChannelUserSanction(punishment: UpdateChannelUserDto, user: User): Promise<ChannelUser>;
+    updateChannelUser(channelUserData: UpdateChannelUserDto, user: User): Promise<ChannelUser>;
+    saveMessage(messageData: CreateMessageDto, author: User): Promise<import("./entities/message.entity").default>;
+}

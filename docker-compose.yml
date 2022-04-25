@@ -25,6 +25,22 @@ services:
     - docker.env
     networks:
     - postgres
+
+  app:
+    links: 
+    - postgres:postgres
+    container_name: app
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: app
+    ports:
+    - "3000:3000"
+    volumes:
+    - ./app:/app
+    networks:
+    - postgres
+  
  
 networks:
   postgres:

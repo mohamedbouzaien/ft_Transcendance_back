@@ -1,0 +1,34 @@
+import { OnGatewayConnection } from "@nestjs/websockets";
+import { Server, Socket } from "socket.io";
+import { UsersService } from "src/users/users.service";
+import { ChannelsService } from "./services/channels.service";
+import { ChatService } from "./services/chat.service";
+import { ChannelInvitationDto } from "./dto/ChannelInvitation.dto";
+import CreateChannelDto from "./dto/createChannel.dto";
+import CreateMessageDto from "./dto/createMessage.dto";
+import UpdateChannelDto from "./dto/updateChannel.dto";
+import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
+import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
+import { FindOneParams } from "./dto/findOneParams.dto";
+export declare class ChatGateway implements OnGatewayConnection {
+    private readonly chatsService;
+    private readonly channelsService;
+    private readonly usersService;
+    server: Server;
+    constructor(chatsService: ChatService, channelsService: ChannelsService, usersService: UsersService);
+    handleConnection(socket: Socket): Promise<void>;
+    sendToUsers(channelId: number, event: string, to_send: any): Promise<void>;
+    requestAllChannels(socket: Socket): Promise<void>;
+    requestChannel(channelData: FindOneParams, socket: Socket): Promise<void>;
+    createChannel(channelData: CreateChannelDto, socket: Socket): Promise<void>;
+    updateChannel(channelData: UpdateChannelDto, socket: Socket): Promise<void>;
+    deleteChannel(channel: FindOneParams, socket: Socket): Promise<void>;
+    joinChannel(channel: FindOneParams, socket: Socket): Promise<void>;
+    leaveChannel(channel: FindOneParams, socket: Socket): Promise<void>;
+    manageChannelInvitation(invitationData: ChannelInvitationDto, socket: Socket): Promise<void>;
+    updateChannelUser(channelUserData: UpdateChannelUserDto, socket: Socket): Promise<void>;
+    listenForMessages(messageData: CreateMessageDto, socket: Socket): Promise<void>;
+    getDirectMessages(userData: FindOneParams, socket: Socket): Promise<void>;
+    listenForDirectMessages(messageData: CreateDirectMessageDto, socket: Socket): Promise<void>;
+    blockUser(to_be_blocked: FindOneParams, socket: Socket): Promise<void>;
+}
