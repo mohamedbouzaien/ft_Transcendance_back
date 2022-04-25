@@ -7,6 +7,7 @@ import { ChannelNotFoundException } from "../exception/channelNotFound.exception
 import * as bcrypt from 'bcrypt'
 import UpdateChannelDto from "../dto/updateChannel.dto";
 import { ChannelUsersService } from "./channelUser.service";
+import { PasswordErrorException } from "../exception/passwordError.exception";
 
 @Injectable()
 export class ChannelsService {
@@ -45,12 +46,12 @@ export class ChannelsService {
       return true;
     }
     if (plain_password === null) {
-      throw new HttpException('need_password_for_channel', HttpStatus.BAD_REQUEST);
+      throw new PasswordErrorException('need_password_for_channel');
     }
     const isPasswordMatching = await bcrypt.compare(plain_password, hashed_password);
     if (!isPasswordMatching) {
       let error_message = (plain_password === '' ) ? 'need_password_for_channel' : 'wrong_password_for_channel';
-      throw new HttpException(error_message, HttpStatus.BAD_REQUEST);
+      throw new PasswordErrorException(error_message);
     }
     return true;
   }
