@@ -40,7 +40,7 @@ const app = new Vue({
   },
 
   sendMessage() {
-    const id = Number(this.content);
+    const id = this.content;
     //this.socket.emit('manage_blocked_users', {id: 2});
     //this.socket.emit('get_direct_messages_channel', {id: 2});
     //this.socket.emit('send_direct_message', {channelId: 2, content: 'hello'});
@@ -58,13 +58,13 @@ const app = new Vue({
       sanction: 'ban',
       end_of_sanction: null
     });*/
-    this.socket.emit('update_channel', {
+    /*this.socket.emit('update_channel', {
       id: 9,
       password: 'opopopop',
       new_password: 'topitoo'
-    });
+    });*/
     //this.socket.emit('leave_channel', {id});
-    //this.join_channel({id});
+    this.join_channel({id});
     //this.deleteChannel({id});
     //this.select_channel({id});
     /*const invite =  {
