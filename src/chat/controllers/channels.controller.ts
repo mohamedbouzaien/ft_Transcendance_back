@@ -41,7 +41,6 @@ export class ChannelsController {
   @Patch(':id')
   @UseGuards(JwtAuthenticationGuard)
   async updateChannel(@Req() request: RequestWithUser, @Param() channelData: UpdateChannelDto) {
-    console.log('gereee');
     const user = await this.usersService.getById(request.user.id);
     return await this.chatsService.updateChannel(channelData, user);
   }
