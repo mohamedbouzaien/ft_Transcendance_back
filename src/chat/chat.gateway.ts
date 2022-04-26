@@ -161,7 +161,7 @@ export class ChatGateway implements OnGatewayConnection {
   async listenForDirectMessages(@MessageBody() messageData: CreateDirectMessageDto, @ConnectedSocket() socket: Socket) {
     const author = await this.chatsService.getUserFromSocket(socket);
     const message = await this.chatsService.saveDirectMessage(messageData, author);
-    const channel = await this.channelsService.getChannelById(message.channel.id);
+    const channel = await this.channelsService.getChannelById(message.channelId);
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (socket of sockets) {

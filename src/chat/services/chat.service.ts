@@ -323,6 +323,12 @@ export class ChatService {
     if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(author.id);
     }
+    for (let key in author) {
+      if (key != 'id' && key != 'username' && key != 'avatar_id'
+      && key != 'status' && key != 'victories' && key != 'defeats') {
+        delete author[key];
+      }
+    }
     return await this.messagesService.saveMessage(directMessageData, author, channel);
   }
 
