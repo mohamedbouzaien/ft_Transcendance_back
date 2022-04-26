@@ -18,7 +18,6 @@ const app = new Vue({
       password: this.new_channel_password,
       status: this.new_channel_type,
     }
-    console.log(message);
     this.socket.emit('create_channel', message);
     this.new_channel_password = null;
     this.new_channel_type = '';
@@ -71,9 +70,9 @@ const app = new Vue({
     });*/
     this.socket.emit('update_channel', {
       id: '2',
-      status: 'public',
+      status: this.new_channel_type,
       password: this.new_channel_password,
-      new_password: 'helloworld'
+      new_password: 'helloworlde'
     });
     //this.socket.emit('leave_channel', {id});
     //this.join_channel({id});

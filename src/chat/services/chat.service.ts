@@ -46,6 +46,9 @@ export class ChatService {
     if (channelData.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new HttpException('bad channel type', HttpStatus.BAD_REQUEST);
     }
+    if (channelData.status !== ChannelStatus.PROTECTED) {
+      channelData.password = null;
+    }
     const channel = await this.channelsService.createChannel(channelData);
     const channelUser = await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
     return await this.channelsService.getChannelById(channel.id);
@@ -80,7 +83,7 @@ export class ChatService {
       channelData.password = await bcrypt.hash(channelData.new_password, 10);
       delete channelData['new_password'];
     }
-    if (channelData.status !== ChannelStatus.PROTECTED) {
+    if (channelData.status && channelData.status !== ChannelStatus.PROTECTED) {
       channelData.password = null;
     }
     const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
