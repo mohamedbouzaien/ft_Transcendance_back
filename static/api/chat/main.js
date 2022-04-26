@@ -68,13 +68,13 @@ const app = new Vue({
       sanction: 'ban',
       end_of_sanction: null
     });*/
-    this.socket.emit('update_channel', {
+    /*this.socket.emit('update_channel', {
       id: '2',
       status: this.new_channel_type,
       name: 'lol',
       password: '',
       new_password: ''
-    });
+    });*/
     //this.socket.emit('leave_channel', {id});
     //this.join_channel({id});
     //this.deleteChannel({id});
@@ -90,12 +90,12 @@ const app = new Vue({
     }
     this.socket.emit('update_channel', up_chan);*/
     
-     /*const message = {
+     const message = {
        channelId: 2,
        content: this.content
      }
     this.socket.emit('send_channel_message', message)
-    this.content = '';*/
+    this.content = '';
   },
   receivedMessage(message) {
     this.messages.push(message)
