@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import CreateChannelDto from "../dto/createChannel.dto";
 import Channel, { ChannelStatus } from "../entities/channel.entity";
 import { ChannelNotFoundException } from "../exception/channelNotFound.exception";
@@ -19,7 +19,7 @@ export class ChannelsService {
   }
 
   async createChannel(channelData: CreateChannelDto) {
-    if (channelData.password) {
+    if (channelData.status === ChannelStatus.PROTECTED) {
       const hashedPassword = await bcrypt.hash(channelData.password, 10);
       channelData.password = hashedPassword;
     }
@@ -45,7 +45,7 @@ export class ChannelsService {
     if (hashed_password === null) {
       return true;
     }
-    if (plain_password === null) {
+    if (!plain_password) {
       throw new PasswordErrorException('need_password_for_channel');
     }
     const isPasswordMatching = await bcrypt.compare(plain_password, hashed_password);
@@ -65,10 +65,10 @@ export class ChannelsService {
       status: ChannelStatus.DIRECT_MESSAGE,
     }})
   }
-  async getAllPublicChannels() {
+  async getAllAccessibleChannels() {
     return await this.channelsRepository.find({
       where: {
-        status: 'public',
+        status: In(['public', 'protected']),
       }
     })
   }

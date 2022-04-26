@@ -1,4 +1,4 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, Patch, Post, Redirect, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import JwtAuthenticationGuard from "src/authentication/jwt-authentication.guard";
 import RequestWithUser from "src/authentication/request-with-user.interface";
 import { UsersService } from "src/users/users.service";
@@ -41,6 +41,7 @@ export class ChannelsController {
   @Patch(':id')
   @UseGuards(JwtAuthenticationGuard)
   async updateChannel(@Req() request: RequestWithUser, @Param() channelData: UpdateChannelDto) {
+    console.log('gereee');
     const user = await this.usersService.getById(request.user.id);
     return await this.chatsService.updateChannel(channelData, user);
   }

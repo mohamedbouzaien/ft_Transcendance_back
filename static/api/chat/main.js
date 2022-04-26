@@ -17,34 +17,45 @@ const app = new Vue({
       name: 'jeune',
       password: this.new_channel_password,
       status: this.new_channel_type,
-      members: [],
-      invited_members: [],
     }
+    console.log(message);
     this.socket.emit('create_channel', message);
     this.new_channel_password = null;
     this.new_channel_type = '';
   }, 
 
-  select_channel(channel) {
-    channel.password = this.new_channel_password;
+  select_channel() {
+    let channel = {
+      id: this.content,
+      password: this.new_channel_password,
+    };
     this.socket.emit('request_channel', channel);
   },
 
-  join_channel(channel) {
-    channel.password = this.new_channel_password;
+  join_channel() {
+    let channel = {
+      id: this.content,
+      password: this.new_channel_password,
+    };
     this.socket.emit('join_channel', channel);
   },
 
   deleteChannel(channel) {
+    const id = this.content;
     this.socket.emit('delete_channel', channel);
   },
 
+  leaveChannel() {
+    console.log('here');
+    const id = this.content;
+    this.socket.emit('leave_channel', {id});
+  },
   sendMessage() {
     const id = this.content;
     //this.socket.emit('manage_blocked_users', {id: 2});
     //this.socket.emit('get_direct_messages_channel', {id: 2});
     //this.socket.emit('send_direct_message', {channelId: 2, content: 'hello'});
-    var d = new Date(); d.setMinutes(d.getMinutes() + 1);
+    //var d = new Date(); d.setMinutes(d.getMinutes() + 1);
     /*this.socket.emit('manage_channel_user_sanction', {
       id: 16,
       sanction: 'ban',
@@ -58,13 +69,14 @@ const app = new Vue({
       sanction: 'ban',
       end_of_sanction: null
     });*/
-    /*this.socket.emit('update_channel', {
-      id: 9,
-      password: 'opopopop',
-      new_password: 'topitoo'
-    });*/
+    this.socket.emit('update_channel', {
+      id: '2',
+      status: 'public',
+      password: this.new_channel_password,
+      new_password: 'helloworld'
+    });
     //this.socket.emit('leave_channel', {id});
-    this.join_channel({id});
+    //this.join_channel({id});
     //this.deleteChannel({id});
     //this.select_channel({id});
     /*const invite =  {

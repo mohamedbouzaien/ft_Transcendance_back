@@ -7,6 +7,7 @@ import Message from "./message.entity";
 export enum ChannelStatus {
   PRIVATE = 'private',
   PUBLIC = 'public',
+  PROTECTED = 'protected',
   DIRECT_MESSAGE = 'direct_message'
 }
 
