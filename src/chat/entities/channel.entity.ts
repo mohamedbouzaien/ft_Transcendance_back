@@ -7,6 +7,7 @@ import Message from "./message.entity";
 export enum ChannelStatus {
   PRIVATE = 'private',
   PUBLIC = 'public',
+  PROTECTED = 'protected',
   DIRECT_MESSAGE = 'direct_message'
 }
 
@@ -25,7 +26,7 @@ class Channel {
   })
   public status: ChannelStatus;
 
-  @Column({nullable: true})
+  @Column()
   @Exclude()
   public password: string;
 

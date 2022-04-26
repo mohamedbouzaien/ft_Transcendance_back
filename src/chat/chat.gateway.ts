@@ -13,6 +13,7 @@ import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
 import {UseFilters, UsePipes, ValidationPipe } from "@nestjs/common";
 import { WsExceptionFilter } from "./exception/WsException.filter";
 import { FindOneParams } from "./dto/findOneParams.dto";
+import { ChannelStatus } from "./entities/channel.entity";
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway(
@@ -71,7 +72,7 @@ export class ChatGateway implements OnGatewayConnection {
   async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
     const owner = await this.chatsService.getUserFromSocket(socket);
     const channel = await this.chatsService.createChannel(channelData, owner);
-    if (channel.status === 'public') {
+    if (channel.status === ChannelStatus.PUBLIC) {
       this.server.sockets.emit('channel_created', channel);
     }
     else {

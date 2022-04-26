@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthenticationService } from '../../authentication/authentication.service';
 import { Socket } from 'socket.io';
 import { parse } from 'cookie';
@@ -7,7 +7,7 @@ import CreateChannelDto from '../dto/createChannel.dto';
 import User from 'src/users/user.entity';
 import { ChannelsService } from './channels.service';
 import { ChannelUsersService } from './channelUser.service';
-import ChannelUser, { ChannelUserRole, SanctionType } from '../entities/channelUser.entity';
+import { ChannelUserRole, SanctionType } from '../entities/channelUser.entity';
 import Channel, { ChannelStatus } from '../entities/channel.entity';
 import { UserUnauthorizedException } from 'src/users/exception/userUnauthorized.exception';
 import { ChannelInvitationDto } from '../dto/ChannelInvitation.dto';
@@ -46,30 +46,47 @@ export class ChatService {
     if (channelData.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new HttpException('bad channel type', HttpStatus.BAD_REQUEST);
     }
+    if (channelData.status !== ChannelStatus.PROTECTED) {
+      channelData.password = '';
+    }
     const channel = await this.channelsService.createChannel(channelData);
-    const channelUser = await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
+    await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
     return await this.channelsService.getChannelById(channel.id);
   }
 
   async updateChannel(channelData: UpdateChannelDto, user: User) {
     const channel = await this.channelsService.getChannelById(channelData.id);
-    const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === channel.id && userChannel.user.id
-     === user.id);
-     if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
-       throw new UserUnauthorizedException(user.id);
+    const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === channel.id && userChannel.user.id === user.id);
+    if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
+      throw new UserUnauthorizedException(user.id);
+    }
+    for (let key in channelData) {
+      if(channelData[key] === null || channel[key] === undefined || channelData[key] === '') {
+        delete channelData[key];
       }
-      if ('new_password' in channelData) {
+    }
+    if (channelData.status && channelData.status !== ChannelStatus.PROTECTED && 'new_password' in channelData) {
+      delete channelData['new_password'];
+    }
+    console.log(channelData);
+    if (channelData.new_password) {
+      if (!(channel.status === ChannelStatus.PROTECTED  || channelData.status === ChannelStatus.PROTECTED)) {
+        throw new BadRequestException();
+      }
+      if (channel.status === ChannelStatus.PROTECTED) {
         await this.channelsService.checkChannelPassword(channelData.password, channel.password);
-        if (channelData.new_password !== null) {
-          channelData.password = await bcrypt.hash(channelData.new_password, 10);
-        }
-        else {
-          channelData.password = null
-        }
-        delete channelData['new_password'];
       }
-      const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
-      return updated_channel;
+      channelData.password = await bcrypt.hash(channelData.new_password, 10);
+      delete channelData['new_password'];
+    }
+    if (channelData.status && channelData.status !== ChannelStatus.PROTECTED) {
+      channelData.password = '';
+    }
+    if ('new_password' in channelData) {
+      delete channelData['new_password'];
+    } 
+    const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
+    return updated_channel;
   }
 
   async isUserBannedFromChannel(channelUser: UpdateChannelUserDto) {
@@ -102,7 +119,7 @@ export class ChatService {
 
   async getAllChannelsForUser(user: User) {
     const user_channels = await this.exctractAllChannelsForUser(user);
-    const public_channels = await this.channelsService.getAllPublicChannels();
+    const public_channels = await this.channelsService.getAllAccessibleChannels();
     const channels_ids = new Set(user_channels.map(channel => channel.id));
     const avalaible_channels = [...user_channels, ...public_channels.filter(channel => !channels_ids.has(channel.id))];
     const invited_channels = user.invited_channels;
@@ -119,6 +136,9 @@ export class ChatService {
     const channelUser = await wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
     if((!channelUser && wanted_channel.status === ChannelStatus.PRIVATE) || await this.isUserBannedFromChannel(channelUser)) {
       throw new UserUnauthorizedException(user.id);
+    }
+    else if (!channelUser && wanted_channel.status === ChannelStatus.PROTECTED) {
+      await this.channelsService.checkChannelPassword(channel.password, wanted_channel.password);
     }
     return (await this.channelsService.getChannelById(channel.id));
   }
@@ -142,13 +162,15 @@ export class ChatService {
     }
     const channelUser = wanted_channel.channelUsers.find(channelUser => channelUser.user.id === user.id);
     let is_invited = wanted_channel.invited_members.find(member => member.id === user.id);
-    if ((wanted_channel.status === 'private' && !is_invited) || await this.isUserBannedFromChannel(channelUser)) {
+    if ((wanted_channel.status === ChannelStatus.PRIVATE && !is_invited) || await this.isUserBannedFromChannel(channelUser)) {
       throw new UserUnauthorizedException(user.id);
     }
     if (channelUser) {
       throw new HttpException('user_already_member', HttpStatus.BAD_REQUEST);
     }
-    await this.channelsService.checkChannelPassword(channel.password, wanted_channel.password);
+    if (wanted_channel.status === ChannelStatus.PROTECTED) {
+      await this.channelsService.checkChannelPassword(channel.password, wanted_channel.password);
+    }
     if (is_invited) {
       wanted_channel.invited_members.splice(wanted_channel.invited_members.indexOf(is_invited), 1);
       await this.channelsService.saveChannel(wanted_channel);
