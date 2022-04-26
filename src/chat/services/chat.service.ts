@@ -263,6 +263,12 @@ export class ChatService {
         throw new UserUnauthorizedException(author.id);
       }
     }
+    for (let key in author) {
+      if (key != 'id' && key != 'username' && key != 'avatar_id'
+      && key != 'status' && key != 'victories' && key != 'defeats') {
+        delete author[key];
+      }
+    }
     const newMessage = await this.messagesService.saveMessage(messageData, author, message_channel);
     return newMessage;
   }

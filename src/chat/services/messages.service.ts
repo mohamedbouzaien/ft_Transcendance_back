@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { AuthenticationService } from "src/authentication/authentication.service";
-import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import User from "src/users/user.entity";
 import { Repository } from "typeorm";
 import { ChannelsService } from "./channels.service";
@@ -19,7 +18,7 @@ export class MessagesService {
   ) {
   }
   async saveMessage(messageData: CreateMessageDto, author: User, channel: Channel) {
-    const newMessage = await this.messagesRepository.create({...messageData, author, channel});
+    const newMessage = await this.messagesRepository.create({...messageData, author, channelId: channel.id});
     await this.messagesRepository.save(newMessage);
     return newMessage;
   }
