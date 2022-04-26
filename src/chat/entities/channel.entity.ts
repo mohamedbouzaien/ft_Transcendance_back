@@ -26,7 +26,7 @@ class Channel {
   })
   public status: ChannelStatus;
 
-  @Column({nullable: true})
+  @Column()
   @Exclude()
   public password: string;
 

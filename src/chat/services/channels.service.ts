@@ -24,7 +24,7 @@ export class ChannelsService {
       channelData.password = hashedPassword;
     }
     else {
-      delete channelData.password;
+      channelData.password = '';
     }
     const newChannel = await this.channelsRepository.create({
       ...channelData,
@@ -42,7 +42,7 @@ export class ChannelsService {
   }
 
   async checkChannelPassword(plain_password: string, hashed_password: string) {
-    if (hashed_password === null) {
+    if (hashed_password === '') {
       return true;
     }
     if (!plain_password) {

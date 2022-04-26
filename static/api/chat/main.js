@@ -71,8 +71,9 @@ const app = new Vue({
     this.socket.emit('update_channel', {
       id: '2',
       status: this.new_channel_type,
-      password: this.new_channel_password,
-      new_password: 'helloworlde'
+      name: 'lol',
+      password: '',
+      new_password: ''
     });
     //this.socket.emit('leave_channel', {id});
     //this.join_channel({id});

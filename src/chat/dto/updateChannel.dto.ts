@@ -15,11 +15,11 @@ class UpdateChannelDto {
   @IsOptional()
   status: ChannelStatus;
 
-  @ValidateIf(o => (o.password))  
+  @ValidateIf(o => (o.password !== ''))
   @MinLength(7)
   password: string;
 
-  @ValidateIf(o => (o.status === ChannelStatus.PROTECTED || o.password))
+  @ValidateIf(o => (o.status === ChannelStatus.PROTECTED || o.password !== ''))
   @MinLength(7)
   new_password: string
 }

@@ -7,7 +7,7 @@ import CreateChannelDto from '../dto/createChannel.dto';
 import User from 'src/users/user.entity';
 import { ChannelsService } from './channels.service';
 import { ChannelUsersService } from './channelUser.service';
-import ChannelUser, { ChannelUserRole, SanctionType } from '../entities/channelUser.entity';
+import { ChannelUserRole, SanctionType } from '../entities/channelUser.entity';
 import Channel, { ChannelStatus } from '../entities/channel.entity';
 import { UserUnauthorizedException } from 'src/users/exception/userUnauthorized.exception';
 import { ChannelInvitationDto } from '../dto/ChannelInvitation.dto';
@@ -47,10 +47,10 @@ export class ChatService {
       throw new HttpException('bad channel type', HttpStatus.BAD_REQUEST);
     }
     if (channelData.status !== ChannelStatus.PROTECTED) {
-      channelData.password = null;
+      channelData.password = '';
     }
     const channel = await this.channelsService.createChannel(channelData);
-    const channelUser = await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
+    await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
     return await this.channelsService.getChannelById(channel.id);
   }
 
@@ -60,20 +60,16 @@ export class ChatService {
     if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
       throw new UserUnauthorizedException(user.id);
     }
-    if ('name' in channelData && !channelData.name) {
-      delete channelData['name'];
-    }
-    if ('status' in channelData && !channelData.status) {
-      delete channelData['status'];
-    }
-    if ('password' in channelData && !channelData.password) {
-      delete channelData['password'];
+    for (let key in channelData) {
+      if(channelData[key] === null || channel[key] === undefined || channelData[key] === '') {
+        delete channelData[key];
+      }
     }
     if (channelData.status && channelData.status !== ChannelStatus.PROTECTED && 'new_password' in channelData) {
       delete channelData['new_password'];
     }
     console.log(channelData);
-    if (channelData.new_password && channelData.new_password !== '') {
+    if (channelData.new_password) {
       if (!(channel.status === ChannelStatus.PROTECTED  || channelData.status === ChannelStatus.PROTECTED)) {
         throw new BadRequestException();
       }
@@ -84,8 +80,11 @@ export class ChatService {
       delete channelData['new_password'];
     }
     if (channelData.status && channelData.status !== ChannelStatus.PROTECTED) {
-      channelData.password = null;
+      channelData.password = '';
     }
+    if ('new_password' in channelData) {
+      delete channelData['new_password'];
+    } 
     const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
     return updated_channel;
   }
