@@ -90,12 +90,13 @@ const app = new Vue({
     }
     this.socket.emit('update_channel', up_chan);*/
     
-     const message = {
+     /*const message = {
        channelId: 2,
        content: this.content
      }
     this.socket.emit('send_channel_message', message)
-    this.content = '';
+    this.content = '';*/
+    this.socket.emit('events', {lol: 'lolilol'});
   },
   receivedMessage(message) {
     this.messages.push(message)
@@ -136,9 +137,10 @@ const app = new Vue({
   });
   this.socket.on('need_password_for_channel', (message) => {
     console.log('need_password_for_channel');
-  }) ;
+  });
   this.socket.on('wrong_password_for_channel', (message) => {
     console.log('wrong_password_for_channel');
-  })
+  }); 
+  this.socket.on('channel_created', data => console.log(data));
   },
 })

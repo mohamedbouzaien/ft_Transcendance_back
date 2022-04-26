@@ -1,4 +1,4 @@
-import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException, WsResponse } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./services/channels.service";
@@ -10,12 +10,24 @@ import UpdateChannelDto from "./dto/updateChannel.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
 import { SanctionType } from "./entities/channelUser.entity";
 import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
-import {UseFilters, UsePipes, ValidationPipe } from "@nestjs/common";
+import {ClassSerializerInterceptor, UseFilters, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { WsExceptionFilter } from "./exception/WsException.filter";
 import { FindOneParams } from "./dto/findOneParams.dto";
 import { ChannelStatus } from "./entities/channel.entity";
+import User from "src/users/user.entity";
+
+export class WsResponseImplementation<T> implements WsResponse {
+  event: any;
+  data: any;
+
+  constructor(event: any, data: T) {
+    this.event = event;
+    this.data = data;
+  }
+}
 
 @UseFilters(WsExceptionFilter)
+@UseInterceptors(ClassSerializerInterceptor)
 @WebSocketGateway(
   { cors: {
   origin: "http://localhost:3008",
@@ -38,6 +50,7 @@ export class ChatGateway implements OnGatewayConnection {
     this.requestAllChannels(socket);
   }
 
+
   async sendToUsers(channelId: number, event: string, to_send: any) {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
@@ -47,6 +60,13 @@ export class ChatGateway implements OnGatewayConnection {
         socket.emit(event, to_send);
       }
     }
+  }
+
+  @SubscribeMessage('events')
+  async handleEvent(@ConnectedSocket() socket: Socket): Promise<WsResponseImplementation<any>> {
+    const user = await this.chatsService.getUserFromSocket(socket);
+    const event = 'events';
+    return { event, data: user };
   }
 
   @UsePipes(new ValidationPipe())
@@ -69,15 +89,16 @@ export class ChatGateway implements OnGatewayConnection {
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('create_channel')
-  async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket) {
+  async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket): Promise<WsResponseImplementation<any>> {
     const owner = await this.chatsService.getUserFromSocket(socket);
     const channel = await this.chatsService.createChannel(channelData, owner);
     if (channel.status === ChannelStatus.PUBLIC) {
       this.server.sockets.emit('channel_created', channel);
     }
     else {
-      socket.emit('channel_created', channel);
+      return { event: 'channel_created', data: channel };
     }
+    return { event: 'channel_created', data: channel };
   }
 
   @UsePipes(new ValidationPipe())
