@@ -147,7 +147,7 @@ export class ChatService {
     if (wanted_channel.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(user.id);
     }
-    const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === wanted_channel.id && userChannel.user.id === user.id);
+    const userChannel = user.userChannels.find(userChannel => userChannel.channelId === wanted_channel.id && userChannel.user.id === user.id);
     if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
       throw new UserUnauthorizedException(user.id);
     }
