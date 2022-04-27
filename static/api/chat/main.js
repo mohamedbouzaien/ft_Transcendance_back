@@ -45,7 +45,6 @@ const app = new Vue({
   },
 
   leaveChannel() {
-    console.log('here');
     const id = this.content;
     this.socket.emit('leave_channel', {id});
   },
@@ -142,5 +141,8 @@ const app = new Vue({
     console.log('wrong_password_for_channel');
   }); 
   this.socket.on('channel_created', data => console.log(data));
+  this.socket.on('updated_channel', chan => console.log(chan));
+  this.socket.on('channel', chan => console.log(chan));
+  this.socket.on('leaved_channel', msg => console.log(msg));
   },
 })

@@ -1,3 +1,4 @@
+import { Exclude } from "class-transformer";
 import User from "src/users/user.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import Channel from "./channel.entity";
@@ -36,9 +37,12 @@ class ChannelUser {
   @Column({ type: 'timestamptz', nullable: true })
   end_of_sanction: Date;
 
-  @ManyToOne(() => Channel, (channel: Channel) => channel.channelUsers, {onDelete: 'CASCADE', eager: true})
+  @ManyToOne(() => Channel, (channel: Channel) => channel.channelUsers, {onDelete: 'CASCADE'})
   channel: Channel;
 
+  @Column()
+  channelId: number;
+  
   @ManyToOne(() => User, (user: User) => user.userChannels, {eager: true})
   user: User;
 }

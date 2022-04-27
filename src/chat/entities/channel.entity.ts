@@ -34,6 +34,7 @@ class Channel {
   channelUsers: ChannelUser[];
 
   @ManyToMany(() => User, (invited_member: User) => invited_member.invited_channels, {cascade: true})
+  @Exclude()
   @JoinTable()
   public invited_members: User[];
   

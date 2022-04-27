@@ -50,7 +50,7 @@ export class ChatService {
       channelData.password = '';
     }
     const channel = await this.channelsService.createChannel(channelData);
-    await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
+    await this.channelUsersService.createChannelUser({user, channelId: channel.id, role: ChannelUserRole.OWNER});   
     return await this.channelsService.getChannelById(channel.id);
   }
 
@@ -175,8 +175,7 @@ export class ChatService {
       wanted_channel.invited_members.splice(wanted_channel.invited_members.indexOf(is_invited), 1);
       await this.channelsService.saveChannel(wanted_channel);
     }
-    await this.channelUsersService.createChannelUser({channel: wanted_channel, user, role: ChannelUserRole.USER});
-    return (this.channelsService.getChannelById(wanted_channel.id));
+    return await this.channelUsersService.createChannelUser({channelId: wanted_channel.id, user, role: ChannelUserRole.USER});
   }
 
   async leaveChannel(channel: FindOneParams, user: User) {
@@ -189,6 +188,7 @@ export class ChatService {
       throw new UserUnauthorizedException(user.id);
     }
     await this.channelUsersService.deleteChannelUser(channel_user.id);
+    return channel_user;
   }
 
   async manageInvitation(invitationData: ChannelInvitationDto, user: User) {
@@ -286,7 +286,7 @@ export class ChatService {
     let channelUserData: CreateChannelUserDto = {
       user: applicant,
       role: ChannelUserRole.USER,
-      channel
+      channelId: channel.id,
     };
     await this.channelUsersService.createChannelUser(channelUserData);
     channelUserData.user = recipient;
