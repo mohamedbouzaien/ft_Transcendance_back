@@ -1,4 +1,4 @@
-import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException, WsResponse } from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer} from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./services/channels.service";
@@ -45,9 +45,14 @@ export class ChatGateway implements OnGatewayConnection {
     return user;
   }
 
-  async serializeBroadcastedChannelUsers(channelUser: ChannelUser) {
-    channelUser.user = await this.serializeBroadcastedUsers(channelUser.user);
-    return channelUser;
+  async serializeBroadcastedEntity(data: any) {
+    if (data.user) {
+      data.user = await this.serializeBroadcastedUsers(data.user);
+    }
+    else if (data.author) {
+      data.author = await this.serializeBroadcastedUsers(data.author);
+    }
+    return data;
   }
 
   async handleConnection(socket: Socket) {
@@ -70,7 +75,7 @@ export class ChatGateway implements OnGatewayConnection {
   async joinChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<WsResponseImplementation<any>>{
     const user = await this.chatsService.getUserFromSocket(socket);
     const channelUser = await this.chatsService.joinChannel(channel, user);
-    this.sendToUsers(channelUser.channelId, 'updated_channel', await this.serializeBroadcastedChannelUsers(channelUser));
+    this.sendToUsers(channelUser.channelId, 'channel_user', await this.serializeBroadcastedEntity(channelUser));
     return { event: 'channel', data: await this.channelsService.getChannelById(channelUser.channelId)};
   }
 
@@ -80,7 +85,7 @@ export class ChatGateway implements OnGatewayConnection {
     const user = await this.chatsService.getUserFromSocket(socket);
     const data = await this.chatsService.leaveChannel(channel, user);
     this.sendToUsers(channel.id, 'updated_channel', data);
-    socket.emit('leaved_channel', await this.serializeBroadcastedChannelUsers(data));
+    socket.emit('leaved_channel', await this.serializeBroadcastedEntity(data));
     return { event: 'leaved_channel', data};
   }
 
@@ -89,6 +94,7 @@ export class ChatGateway implements OnGatewayConnection {
   async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitationDto, @ConnectedSocket() socket: Socket) {
     const user = await this.chatsService.getUserFromSocket(socket);
     const invitations = await this.chatsService.manageInvitation(invitationData, user);
+    console.log(invitations);
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (socket of sockets) {
@@ -105,7 +111,7 @@ export class ChatGateway implements OnGatewayConnection {
   async updateChannelUser(@MessageBody() channelUserData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
     const user = await this.chatsService.getUserFromSocket(socket);
     const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
-    this.sendToUsers(channel_user.channel.id, 'channel_user_updated', channel_user);
+    this.sendToUsers(channel_user.channelId, 'channel_user', await this.serializeBroadcastedEntity(channel_user));
   }
 
   @UsePipes(new ValidationPipe())
@@ -113,18 +119,18 @@ export class ChatGateway implements OnGatewayConnection {
   async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
     const author = await this.chatsService.getUserFromSocket(socket);
     const message = await this.chatsService.saveChannelMessage(messageData, author);
-    this.sendToUsers(message.channelId, 'receive_message', message);
+    this.sendToUsers(message.channelId, 'receive_message', await this.serializeBroadcastedEntity(message));
   }
 
   // Direct Messages UwU
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('get_direct_messages_channel')
-  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) {
+  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<WsResponseImplementation<any>>{
     const applicant  = await this.chatsService.getUserFromSocket(socket);
     const recipient = await this.usersService.getById(userData.id);
     const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
-    return {event: 'get_direct_messages_channel', data: channel};
+    return {event: 'channel', data: channel};
   }
 
   @UsePipes(new ValidationPipe())
@@ -139,7 +145,7 @@ export class ChatGateway implements OnGatewayConnection {
       const user = await this.chatsService.getUserFromSocket(socket);
       if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id &&
         !user.blocked_users.find(blocked_user => blocked_user.id === message.author.id))) {
-          socket.emit('receive_message', message);
+          socket.emit('receive_message', await this.serializeBroadcastedEntity(message));
           return ;
         }
     }

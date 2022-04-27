@@ -109,16 +109,18 @@ export class ChatService {
   async exctractAllChannelsForUser(user: User) {
     let user_channels : Channel[];
     user_channels = [];
-     user.userChannels.forEach(userChannel => {
-       if (userChannel.sanction !== SanctionType.BAN || !this.isUserBannedFromChannel(userChannel)) {
-        user_channels.splice(user_channels.length, 0, userChannel.channel);
-       }
-     });
+    for (const userChannel of user.userChannels) {
+      if (userChannel.sanction !== SanctionType.BAN || !this.isUserBannedFromChannel(userChannel)) {
+       user_channels.splice(user_channels.length, 0, await this.channelsService.getChannelById(userChannel.channelId));
+      }
+    }
      return user_channels
   }
 
   async getAllChannelsForUser(user: User) {
     const user_channels = await this.exctractAllChannelsForUser(user);
+    console.log(user.userChannels);
+    console.log(user_channels);
     const public_channels = await this.channelsService.getAllAccessibleChannels();
     const channels_ids = new Set(user_channels.map(channel => channel.id));
     const avalaible_channels = [...user_channels, ...public_channels.filter(channel => !channels_ids.has(channel.id))];
@@ -216,16 +218,16 @@ export class ChatService {
       }
     }
     const updated_channel = await this.channelsService.saveChannel(channel);
-    return await (await this.usersService.getById(invited_user.id)).invited_channels;;
+    return await (await this.usersService.getById(invited_user.id)).invited_channels;
   }
 
   async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {
     const affectedChannelUser = await this.channelUsersService.getChannelUserById(channelUserData.id);
-    const channel = await this.channelsService.getChannelById(affectedChannelUser.channel.id);
+    const channel = await this.channelsService.getChannelById(affectedChannelUser.channelId);
     if (channel.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(user.id);
     }
-    const channelApplicant = user.userChannels.find(userChannel => userChannel.channel.id === affectedChannelUser.channel.id);
+    const channelApplicant = user.userChannels.find(userChannel => userChannel.channelId === affectedChannelUser.channelId);
     if (channelUserData.role) {
       if (!channelApplicant || channelApplicant.role !== ChannelUserRole.OWNER) {
         throw new UserUnauthorizedException(user.id);
@@ -263,12 +265,6 @@ export class ChatService {
         throw new UserUnauthorizedException(author.id);
       }
     }
-    for (let key in author) {
-      if (key != 'id' && key != 'username' && key != 'avatar_id'
-      && key != 'status' && key != 'victories' && key != 'defeats') {
-        delete author[key];
-      }
-    }
     const newMessage = await this.messagesService.saveMessage(messageData, author, message_channel);
     return newMessage;
   }
@@ -295,16 +291,11 @@ export class ChatService {
   }
 
   async getDirectMessagesChannel(applicant: User, recipient: User) {
-    let channelUser = await applicant.userChannels.find(userChannel => {
-      if (userChannel.channel.status === ChannelStatus.DIRECT_MESSAGE &&
-      recipient.userChannels.find(recipChannel => recipChannel.channel.id === userChannel.channel.id)) {
-        return userChannel;
-      }
-      });
-    if (!channelUser) {
+    const channel = await this.channelsService.getDirectMessagesChannel(applicant.id, recipient.id);
+    if (!channel) {
       return await this.createDirectMessagesChannel(applicant, recipient);
     }
-    return await this.channelsService.getChannelById(channelUser.channel.id);
+    return await this.channelsService.getChannelById(channel.id);
   }
 
   async saveDirectMessage(directMessageData: CreateDirectMessageDto, author: User) {
@@ -322,12 +313,6 @@ export class ChatService {
     }
     if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(author.id);
-    }
-    for (let key in author) {
-      if (key != 'id' && key != 'username' && key != 'avatar_id'
-      && key != 'status' && key != 'victories' && key != 'defeats') {
-        delete author[key];
-      }
     }
     return await this.messagesService.saveMessage(directMessageData, author, channel);
   }

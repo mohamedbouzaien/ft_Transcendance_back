@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt'
 import UpdateChannelDto from "../dto/updateChannel.dto";
 import { ChannelUsersService } from "./channelUser.service";
 import { PasswordErrorException } from "../exception/passwordError.exception";
+import { filter } from "rxjs";
 
 @Injectable()
 export class ChannelsService {
@@ -39,6 +40,15 @@ export class ChannelsService {
       throw new ChannelNotFoundException(id);
     }
     return channel;
+  }
+
+  async getDirectMessagesChannel(userId1: number, userId2: number) {
+    return await this.channelsRepository.createQueryBuilder("channel")
+    .innerJoinAndSelect("channel.channelUsers", "channelUser")
+    .where("channelUser.user.id = :userId1", { userId1 })
+    .where("channelUser.user.id = :userId2", { userId2 })
+    .andWhere("channel.status = :status", {status: 'direct_message'})
+    .getOne();
   }
 
   async checkChannelPassword(plain_password: string, hashed_password: string) {

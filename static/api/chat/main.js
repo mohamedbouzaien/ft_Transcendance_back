@@ -50,9 +50,9 @@ const app = new Vue({
   },
   sendMessage() {
     const id = this.content;
-    //this.socket.emit('manage_blocked_users', {id: 2});
-    //this.socket.emit('get_direct_messages_channel', {id: 2});
-    //this.socket.emit('send_direct_message', {channelId: 2, content: 'hello'});
+    this.socket.emit('manage_blocked_users', {id: '2'});
+    //this.socket.emit('get_direct_messages_channel', {id: '2'});
+    //this.socket.emit('send_direct_message', {channelId: 14, content: 'hello'});
     //var d = new Date(); d.setMinutes(d.getMinutes() + 1);
     /*this.socket.emit('manage_channel_user_sanction', {
       id: 16,
@@ -61,10 +61,9 @@ const app = new Vue({
 
     });*/
     //this.socket.emit('update_password', {id: 9, old_password: this.new_channel_password, new_password: 'test'});
-    /*this.socket.emit('update_channel_user', {
-      id: 5,
-      role: 1,
-      sanction: 'ban',
+    /*this.socket.emit('manage_channel_user', {
+      id: 51,
+      sanction: null,
       end_of_sanction: null
     });*/
     /*this.socket.emit('update_channel', {
@@ -89,13 +88,11 @@ const app = new Vue({
     }
     this.socket.emit('update_channel', up_chan);*/
     
-     /*const message = {
+    /* const message = {
        channelId: 2,
        content: this.content
      }
-    this.socket.emit('send_channel_message', message)
-    this.content = '';*/
-    this.socket.emit('events', {lol: 'lolilol'});
+    this.socket.emit('send_channel_message', message)*/
   },
   receivedMessage(message) {
     this.messages.push(message)
@@ -140,9 +137,10 @@ const app = new Vue({
   this.socket.on('wrong_password_for_channel', (message) => {
     console.log('wrong_password_for_channel');
   }); 
-  this.socket.on('channel_created', data => console.log(data));
+  this.socket.on('channel_user', data => console.log(data));
   this.socket.on('updated_channel', chan => console.log(chan));
   this.socket.on('channel', chan => console.log(chan));
   this.socket.on('leaved_channel', msg => console.log(msg));
+  this.socket.on('blocked_users', msg => console.log(msg));
   },
 })
