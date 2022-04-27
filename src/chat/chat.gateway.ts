@@ -6,14 +6,13 @@ import { ChatService } from "./services/chat.service";
 import { ChannelInvitationDto } from "./dto/ChannelInvitation.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
-import ChannelUser, { SanctionType } from "./entities/channelUser.entity";
+import { SanctionType } from "./entities/channelUser.entity";
 import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
 import {ClassSerializerInterceptor, UseFilters, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { WsExceptionFilter } from "./exception/WsException.filter";
 import { FindOneParams } from "./dto/findOneParams.dto";
 import { WsResponseImplementation } from "./serialisationTools/wsResponse.implementation";
 import User from "src/users/user.entity";
-import Channel from "./entities/channel.entity";
 
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -84,8 +83,7 @@ export class ChatGateway implements OnGatewayConnection {
   async leaveChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<WsResponseImplementation<any>>{
     const user = await this.chatsService.getUserFromSocket(socket);
     const data = await this.chatsService.leaveChannel(channel, user);
-    this.sendToUsers(channel.id, 'updated_channel', data);
-    socket.emit('leaved_channel', await this.serializeBroadcastedEntity(data));
+    this.sendToUsers(channel.id, 'leaved_channel', data);
     return { event: 'leaved_channel', data};
   }
 

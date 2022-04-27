@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import CreateChannelDto from "../dto/createChannel.dto";
@@ -8,7 +8,6 @@ import * as bcrypt from 'bcrypt'
 import UpdateChannelDto from "../dto/updateChannel.dto";
 import { ChannelUsersService } from "./channelUser.service";
 import { PasswordErrorException } from "../exception/passwordError.exception";
-import { filter } from "rxjs";
 
 @Injectable()
 export class ChannelsService {
@@ -42,6 +41,13 @@ export class ChannelsService {
     return channel;
   }
 
+  async getVanillaChannelById(id: number) {
+    const channel =  await this.channelsRepository.findOne(id);
+    if (!channel) {
+      throw new ChannelNotFoundException(id);
+    }
+    return channel;
+  }
   async getDirectMessagesChannel(userId1: number, userId2: number) {
     return await this.channelsRepository.createQueryBuilder("channel")
     .innerJoinAndSelect("channel.channelUsers", "channelUser")
@@ -67,7 +73,7 @@ export class ChannelsService {
   }
 
   async getAllChannels() {
-    return await this.channelsRepository.find({relations: ['owner', 'channelUsers', 'messages']});
+    return await this.channelsRepository.find({relations: ['channelUsers', 'messages']});
   }
 
   async getAllDirectMessagesChannels() {

@@ -1,4 +1,4 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, Patch, Post, Redirect, Req, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import JwtAuthenticationGuard from "src/authentication/jwt-authentication.guard";
 import RequestWithUser from "src/authentication/request-with-user.interface";
 import { UsersService } from "src/users/users.service";

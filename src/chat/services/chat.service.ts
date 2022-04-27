@@ -68,7 +68,6 @@ export class ChatService {
     if (channelData.status && channelData.status !== ChannelStatus.PROTECTED && 'new_password' in channelData) {
       delete channelData['new_password'];
     }
-    console.log(channelData);
     if (channelData.new_password) {
       if (!(channel.status === ChannelStatus.PROTECTED  || channelData.status === ChannelStatus.PROTECTED)) {
         throw new BadRequestException();
@@ -111,7 +110,7 @@ export class ChatService {
     user_channels = [];
     for (const userChannel of user.userChannels) {
       if (userChannel.sanction !== SanctionType.BAN || !this.isUserBannedFromChannel(userChannel)) {
-       user_channels.splice(user_channels.length, 0, await this.channelsService.getChannelById(userChannel.channelId));
+       user_channels.splice(user_channels.length, 0, await this.channelsService.getVanillaChannelById(userChannel.channelId));
       }
     }
      return user_channels
@@ -119,11 +118,9 @@ export class ChatService {
 
   async getAllChannelsForUser(user: User) {
     const user_channels = await this.exctractAllChannelsForUser(user);
-    console.log(user.userChannels);
-    console.log(user_channels);
-    const public_channels = await this.channelsService.getAllAccessibleChannels();
+    const accessible_channels = await this.channelsService.getAllAccessibleChannels();
     const channels_ids = new Set(user_channels.map(channel => channel.id));
-    const avalaible_channels = [...user_channels, ...public_channels.filter(channel => !channels_ids.has(channel.id))];
+    const avalaible_channels = [...user_channels, ...accessible_channels.filter(channel => !channels_ids.has(channel.id))];
     const invited_channels = user.invited_channels;
     const channels = {
       user_channels,
