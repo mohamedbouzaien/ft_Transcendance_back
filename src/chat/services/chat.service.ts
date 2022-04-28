@@ -315,7 +315,8 @@ export class ChatService {
     if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(author.id);
     }
-    return await this.messagesService.saveMessage(directMessageData, author, channel);
+    const message = await this.messagesService.saveMessage(directMessageData, author, channel);
+    return message;
   }
 
   async manageBlockedUsers(to_be_blocked: FindOneParams, user: User) {

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
+import { IsDate, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
 import { ChannelStatus } from "../entities/channel.entity";
 
 class UpdateChannelDto {
@@ -14,6 +14,10 @@ class UpdateChannelDto {
   @ValidateIf(o => Boolean(o.status))
   @IsOptional()
   status: ChannelStatus;
+
+  @IsOptional()
+  @IsDate()
+  last_message_at: Date;
 
   @ValidateIf(o => (o.password !== ''))
   @MinLength(7)

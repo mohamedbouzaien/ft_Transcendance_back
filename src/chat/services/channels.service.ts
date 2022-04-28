@@ -48,6 +48,7 @@ export class ChannelsService {
     }
     return channel;
   }
+  
   async getDirectMessagesChannel(userId1: number, userId2: number) {
     return await this.channelsRepository.createQueryBuilder("channel")
     .innerJoinAndSelect("channel.channelUsers", "channelUser")

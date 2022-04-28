@@ -1,6 +1,6 @@
 import { Exclude, Transform } from "class-transformer";
 import User from "src/users/user.entity";
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import ChannelUser from "./channelUser.entity";
 import Message from "./message.entity";
 
@@ -40,6 +40,9 @@ class Channel {
   
   @OneToMany(() => Message, (message: Message) => message.channel)
   public messages: Message[];
+
+  @UpdateDateColumn({type: 'timestamptz', nullable: true})
+  last_message_at: Date;
 }
 
 export default Channel;
