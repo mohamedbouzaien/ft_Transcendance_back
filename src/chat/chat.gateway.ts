@@ -71,20 +71,20 @@ export class ChatGateway implements OnGatewayConnection {
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('join_channel')
-  async joinChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<WsResponseImplementation<any>>{
+  async joinChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<any>{
     const user = await this.chatsService.getUserFromSocket(socket);
     const channelUser = await this.chatsService.joinChannel(channel, user);
     this.sendToUsers(channelUser.channelId, 'channel_user', await this.serializeBroadcastedEntity(channelUser));
-    return { event: 'channel', data: await this.channelsService.getChannelById(channelUser.channelId)};
+    return await this.channelsService.getChannelById(channelUser.channelId);
   }
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('leave_channel')
-  async leaveChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<WsResponseImplementation<any>>{
+  async leaveChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<any>{
     const user = await this.chatsService.getUserFromSocket(socket);
     const data = await this.chatsService.leaveChannel(channel, user);
     this.sendToUsers(channel.id, 'leaved_channel', data);
-    return { event: 'leaved_channel', data};
+    return data;
   }
 
   @UsePipes(new ValidationPipe())
@@ -124,11 +124,11 @@ export class ChatGateway implements OnGatewayConnection {
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('get_direct_messages_channel')
-  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<WsResponseImplementation<any>>{
+  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<any>{
     const applicant  = await this.chatsService.getUserFromSocket(socket);
     const recipient = await this.usersService.getById(userData.id);
     const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
-    return {event: 'channel', data: channel};
+    return channel;
   }
 
   @UsePipes(new ValidationPipe())
