@@ -110,7 +110,11 @@ export class ChatService {
     user_channels = [];
     for (const userChannel of user.userChannels) {
       if (userChannel.sanction !== SanctionType.BAN || !this.isUserBannedFromChannel(userChannel)) {
-       user_channels.splice(user_channels.length, 0, await this.channelsService.getVanillaChannelById(userChannel.channelId));
+        let channel = await this.channelsService.getChannelByIdWithSelectedRelations(userChannel.channelId, ['channelUsers']);
+        if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
+          delete channel.channelUsers
+        }
+       user_channels.splice(user_channels.length, 0, channel);
       }
     }
      return user_channels
@@ -120,11 +124,11 @@ export class ChatService {
     const user_channels = await this.exctractAllChannelsForUser(user);
     const accessible_channels = await this.channelsService.getAllAccessibleChannels();
     const channels_ids = new Set(user_channels.map(channel => channel.id));
-    const avalaible_channels = [...user_channels, ...accessible_channels.filter(channel => !channels_ids.has(channel.id))];
+    const available_channels = [...user_channels, ...accessible_channels.filter(channel => !channels_ids.has(channel.id))];
     const invited_channels = user.invited_channels;
     const channels = {
       user_channels,
-      avalaible_channels,
+      available_channels,
       invited_channels
     }
     return (channels);

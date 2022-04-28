@@ -41,8 +41,8 @@ export class ChannelsService {
     return channel;
   }
 
-  async getVanillaChannelById(id: number) {
-    const channel =  await this.channelsRepository.findOne(id);
+  async getChannelByIdWithSelectedRelations(id: number, relations: string[]) {
+    const channel =  await this.channelsRepository.findOne(id, {relations});
     if (!channel) {
       throw new ChannelNotFoundException(id);
     }
