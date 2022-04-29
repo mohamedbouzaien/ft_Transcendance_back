@@ -190,7 +190,9 @@ export class ChatService {
     if (!channel_user) {
       throw new UserUnauthorizedException(user.id);
     }
-    await this.channelUsersService.deleteChannelUser(channel_user.id);
+    if (await (await this.channelUsersService.deleteChannelUser(channel_user.id)).affected && wanted_channel.channelUsers.length == 1) {
+      this.channelsService.deleteChannel(wanted_channel.id);
+    }
     return channel_user;
   }
 
