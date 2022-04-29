@@ -13,6 +13,7 @@ import { WsExceptionFilter } from "./exception/WsException.filter";
 import { FindOneParams } from "./dto/findOneParams.dto";
 import { WsResponseImplementation } from "./serialisationTools/wsResponse.implementation";
 import User from "src/users/user.entity";
+import Channel from "./entities/channel.entity";
 
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -34,7 +35,7 @@ export class ChatGateway implements OnGatewayConnection {
     ) {
   }
 
-  async serializeBroadcastedUsers(user: User) {
+  async serializeBroadcastedUser(user: User) {
     for (let key in user) {
       if (key != 'id' && key != 'username' && key != 'avatar_id'
       && key != 'status' && key != 'victories' && key != 'defeats') {
@@ -44,12 +45,19 @@ export class ChatGateway implements OnGatewayConnection {
     return user;
   }
 
+  async serializeBroadcastedInvitations(invitations: Channel[]) {
+    invitations.forEach(invitation => {
+      delete invitation['password'], delete invitation['last_message_at']
+    });
+    return invitations;
+  }
+
   async serializeBroadcastedEntity(data: any) {
     if (data.user) {
-      data.user = await this.serializeBroadcastedUsers(data.user);
+      data.user = await this.serializeBroadcastedUser(data.user);
     }
     else if (data.author) {
-      data.author = await this.serializeBroadcastedUsers(data.author);
+      data.author = await this.serializeBroadcastedUser(data.author);
     }
     return data;
   }
@@ -92,13 +100,11 @@ export class ChatGateway implements OnGatewayConnection {
   async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitationDto, @ConnectedSocket() socket: Socket) {
     const user = await this.chatsService.getUserFromSocket(socket);
     const invitations = await this.chatsService.manageInvitation(invitationData, user);
-    console.log(invitations);
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
-
     for (socket of sockets) {
       const author = await this.chatsService.getUserFromSocket(socket);
       if (invitationData.invitedId === author.id) {
-        socket.emit('invited_channels', invitations);
+        socket.emit('invited_channels', await this.serializeBroadcastedInvitations(invitations));
         return ;
       }
     }

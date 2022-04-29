@@ -50,7 +50,7 @@ const app = new Vue({
   },
   sendMessage() {
     const id = this.content;
-    this.socket.emit('manage_blocked_users', {id: '2'});
+    //this.socket.emit('manage_blocked_users', {id: '2'});
     //this.socket.emit('get_direct_messages_channel', {id: '2'});
     //this.socket.emit('send_direct_message', {channelId: 14, content: 'hello'});
     //var d = new Date(); d.setMinutes(d.getMinutes() + 1);
@@ -77,22 +77,17 @@ const app = new Vue({
     //this.join_channel({id});
     //this.deleteChannel({id});
     //this.select_channel({id});
-    /*const invite =  {
+    const invite =  {
       invitedId: 2,
-      channelId: 2
+      channelId: 21
     }
-    this.socket.emit('channel_invitation', invite);*/
-    /*const up_chan = {
-      id: 1,
-      admins_id: [10],
-    }
-    this.socket.emit('update_channel', up_chan);*/
+    this.socket.emit('channel_invitation', invite);
     
-     const message = {
+     /*const message = {
        channelId: 3,
        content: this.content
      }
-    this.socket.emit('send_channel_message', message)
+    this.socket.emit('send_channel_message', message)*/
   },
   receivedMessage(message) {
     this.messages.push(message)
@@ -142,5 +137,7 @@ const app = new Vue({
   this.socket.on('channel', chan => console.log(chan));
   this.socket.on('leaved_channel', msg => console.log(msg));
   this.socket.on('blocked_users', msg => console.log(msg));
+  this.socket.on('invited_channels', msg => console.log(msg));
+
   },
 })
