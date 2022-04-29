@@ -13,7 +13,7 @@ export class ChannelUsersService {
     ) {}
 
     async getChannelUserById(id: number) {
-      const channelUser = this.channelUsersRepository.findOne(id, {relations: ['user', 'channel']});
+      const channelUser = this.channelUsersRepository.findOne(id, {relations: ['user']});
       if (!channelUser) {
         throw new ChannelUserNotFoundException(id);
       }
@@ -37,9 +37,10 @@ export class ChannelUsersService {
     }
 
     async deleteChannelUser(id: number) {
-      const delete_channel = await this.channelUsersRepository.delete(id);
-      if (!delete_channel.affected) {
+      const deleted_channelUser = await this.channelUsersRepository.delete(id);
+      if (!deleted_channelUser.affected) {
         throw new ChannelUserNotFoundException(id);
       }
+      return deleted_channelUser;
     }
 }

@@ -50,7 +50,7 @@ export class ChatService {
       channelData.password = '';
     }
     const channel = await this.channelsService.createChannel(channelData);
-    await this.channelUsersService.createChannelUser({user, channel, role: ChannelUserRole.OWNER});   
+    await this.channelUsersService.createChannelUser({user, channelId: channel.id, role: ChannelUserRole.OWNER});   
     return await this.channelsService.getChannelById(channel.id);
   }
 
@@ -68,7 +68,6 @@ export class ChatService {
     if (channelData.status && channelData.status !== ChannelStatus.PROTECTED && 'new_password' in channelData) {
       delete channelData['new_password'];
     }
-    console.log(channelData);
     if (channelData.new_password) {
       if (!(channel.status === ChannelStatus.PROTECTED  || channelData.status === ChannelStatus.PROTECTED)) {
         throw new BadRequestException();
@@ -109,23 +108,27 @@ export class ChatService {
   async exctractAllChannelsForUser(user: User) {
     let user_channels : Channel[];
     user_channels = [];
-     user.userChannels.forEach(userChannel => {
-       if (userChannel.sanction !== SanctionType.BAN || !this.isUserBannedFromChannel(userChannel)) {
-        user_channels.splice(user_channels.length, 0, userChannel.channel);
-       }
-     });
+    for (const userChannel of user.userChannels) {
+      if (userChannel.sanction !== SanctionType.BAN || !this.isUserBannedFromChannel(userChannel)) {
+        let channel = await this.channelsService.getChannelByIdWithSelectedRelations(userChannel.channelId, ['channelUsers']);
+        if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
+          delete channel.channelUsers
+        }
+       user_channels.splice(user_channels.length, 0, channel);
+      }
+    }
      return user_channels
   }
 
   async getAllChannelsForUser(user: User) {
     const user_channels = await this.exctractAllChannelsForUser(user);
-    const public_channels = await this.channelsService.getAllAccessibleChannels();
+    const accessible_channels = await this.channelsService.getAllAccessibleChannels();
     const channels_ids = new Set(user_channels.map(channel => channel.id));
-    const avalaible_channels = [...user_channels, ...public_channels.filter(channel => !channels_ids.has(channel.id))];
+    const available_channels = [...accessible_channels.filter(channel => !channels_ids.has(channel.id))];
     const invited_channels = user.invited_channels;
     const channels = {
       user_channels,
-      avalaible_channels,
+      available_channels,
       invited_channels
     }
     return (channels);
@@ -148,7 +151,7 @@ export class ChatService {
     if (wanted_channel.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(user.id);
     }
-    const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === wanted_channel.id && userChannel.user.id === user.id);
+    const userChannel = user.userChannels.find(userChannel => userChannel.channelId === wanted_channel.id && userChannel.user.id === user.id);
     if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
       throw new UserUnauthorizedException(user.id);
     }
@@ -175,8 +178,7 @@ export class ChatService {
       wanted_channel.invited_members.splice(wanted_channel.invited_members.indexOf(is_invited), 1);
       await this.channelsService.saveChannel(wanted_channel);
     }
-    await this.channelUsersService.createChannelUser({channel: wanted_channel, user, role: ChannelUserRole.USER});
-    return (this.channelsService.getChannelById(wanted_channel.id));
+    return await this.channelUsersService.createChannelUser({channelId: wanted_channel.id, user, role: ChannelUserRole.USER});
   }
 
   async leaveChannel(channel: FindOneParams, user: User) {
@@ -188,7 +190,10 @@ export class ChatService {
     if (!channel_user) {
       throw new UserUnauthorizedException(user.id);
     }
-    await this.channelUsersService.deleteChannelUser(channel_user.id);
+    if (await (await this.channelUsersService.deleteChannelUser(channel_user.id)).affected && wanted_channel.channelUsers.length == 1) {
+      this.channelsService.deleteChannel(wanted_channel.id);
+    }
+    return channel_user;
   }
 
   async manageInvitation(invitationData: ChannelInvitationDto, user: User) {
@@ -216,16 +221,16 @@ export class ChatService {
       }
     }
     const updated_channel = await this.channelsService.saveChannel(channel);
-    return await (await this.usersService.getById(invited_user.id)).invited_channels;;
+    return await (await this.usersService.getById(invited_user.id)).invited_channels;
   }
 
   async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {
     const affectedChannelUser = await this.channelUsersService.getChannelUserById(channelUserData.id);
-    const channel = await this.channelsService.getChannelById(affectedChannelUser.channel.id);
+    const channel = await this.channelsService.getChannelById(affectedChannelUser.channelId);
     if (channel.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(user.id);
     }
-    const channelApplicant = user.userChannels.find(userChannel => userChannel.channel.id === affectedChannelUser.channel.id);
+    const channelApplicant = user.userChannels.find(userChannel => userChannel.channelId === affectedChannelUser.channelId);
     if (channelUserData.role) {
       if (!channelApplicant || channelApplicant.role !== ChannelUserRole.OWNER) {
         throw new UserUnauthorizedException(user.id);
@@ -263,12 +268,6 @@ export class ChatService {
         throw new UserUnauthorizedException(author.id);
       }
     }
-    for (let key in author) {
-      if (key != 'id' && key != 'username' && key != 'avatar_id'
-      && key != 'status' && key != 'victories' && key != 'defeats') {
-        delete author[key];
-      }
-    }
     const newMessage = await this.messagesService.saveMessage(messageData, author, message_channel);
     return newMessage;
   }
@@ -286,7 +285,7 @@ export class ChatService {
     let channelUserData: CreateChannelUserDto = {
       user: applicant,
       role: ChannelUserRole.USER,
-      channel
+      channelId: channel.id,
     };
     await this.channelUsersService.createChannelUser(channelUserData);
     channelUserData.user = recipient;
@@ -295,16 +294,11 @@ export class ChatService {
   }
 
   async getDirectMessagesChannel(applicant: User, recipient: User) {
-    let channelUser = await applicant.userChannels.find(userChannel => {
-      if (userChannel.channel.status === ChannelStatus.DIRECT_MESSAGE &&
-      recipient.userChannels.find(recipChannel => recipChannel.channel.id === userChannel.channel.id)) {
-        return userChannel;
-      }
-      });
-    if (!channelUser) {
+    const channel = await this.channelsService.getDirectMessagesChannel(applicant.id, recipient.id);
+    if (!channel) {
       return await this.createDirectMessagesChannel(applicant, recipient);
     }
-    return await this.channelsService.getChannelById(channelUser.channel.id);
+    return await this.channelsService.getChannelById(channel.id);
   }
 
   async saveDirectMessage(directMessageData: CreateDirectMessageDto, author: User) {
@@ -323,13 +317,8 @@ export class ChatService {
     if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(author.id);
     }
-    for (let key in author) {
-      if (key != 'id' && key != 'username' && key != 'avatar_id'
-      && key != 'status' && key != 'victories' && key != 'defeats') {
-        delete author[key];
-      }
-    }
-    return await this.messagesService.saveMessage(directMessageData, author, channel);
+    const message = await this.messagesService.saveMessage(directMessageData, author, channel);
+    return message;
   }
 
   async manageBlockedUsers(to_be_blocked: FindOneParams, user: User) {

@@ -1,5 +1,5 @@
 import User from "src/users/user.entity";
-import { Column, Entity, JoinColumn, JoinTable, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import Channel from "./channel.entity";
 
 @Entity()
@@ -18,6 +18,9 @@ class Message {
   
   @Column()
   channelId: number;
+
+  @CreateDateColumn({type: 'timestamptz'})
+  created_at: Date;
 }
 
 export default Message

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import CreateChannelDto from "../dto/createChannel.dto";
@@ -41,6 +41,23 @@ export class ChannelsService {
     return channel;
   }
 
+  async getChannelByIdWithSelectedRelations(id: number, relations: string[]) {
+    const channel =  await this.channelsRepository.findOne(id, {relations});
+    if (!channel) {
+      throw new ChannelNotFoundException(id);
+    }
+    return channel;
+  }
+  
+  async getDirectMessagesChannel(userId1: number, userId2: number) {
+    return await this.channelsRepository.createQueryBuilder("channel")
+    .innerJoinAndSelect("channel.channelUsers", "channelUser")
+    .where("channelUser.user.id = :userId1", { userId1 })
+    .where("channelUser.user.id = :userId2", { userId2 })
+    .andWhere("channel.status = :status", {status: 'direct_message'})
+    .getOne();
+  }
+
   async checkChannelPassword(plain_password: string, hashed_password: string) {
     if (hashed_password === '') {
       return true;
@@ -57,7 +74,7 @@ export class ChannelsService {
   }
 
   async getAllChannels() {
-    return await this.channelsRepository.find({relations: ['owner', 'channelUsers', 'messages']});
+    return await this.channelsRepository.find({relations: ['channelUsers', 'messages']});
   }
 
   async getAllDirectMessagesChannels() {

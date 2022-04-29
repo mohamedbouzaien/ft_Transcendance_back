@@ -16,6 +16,7 @@ class User {
     @Column({unique: true})
     public username: string;
     @Column()
+    @Exclude()
     public password: string;
     @Column({ nullable: true})
     @Exclude()
@@ -24,8 +25,10 @@ class User {
     @Exclude()
     public intra_id: string;
     @Column({nullable: true})
+    @Exclude()
     public twoFactorAuthenticationSecret?: string;
     @Column({default: false})
+    @Exclude()
     public isTwoFactorAuthenticationEnabled: boolean;
     @JoinColumn({name: 'avatar_id'})
     @OneToOne(() => LocalFile,
@@ -50,6 +53,7 @@ class User {
     public invited_channels: Channel[];
 
     @OneToMany(() => Message, (message: Message) => message.author)
+    @Exclude()
     public messages: Message[];
 
     @Column({
