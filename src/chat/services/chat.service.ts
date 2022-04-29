@@ -124,7 +124,7 @@ export class ChatService {
     const user_channels = await this.exctractAllChannelsForUser(user);
     const accessible_channels = await this.channelsService.getAllAccessibleChannels();
     const channels_ids = new Set(user_channels.map(channel => channel.id));
-    const available_channels = [...user_channels, ...accessible_channels.filter(channel => !channels_ids.has(channel.id))];
+    const available_channels = [...accessible_channels.filter(channel => !channels_ids.has(channel.id))];
     const invited_channels = user.invited_channels;
     const channels = {
       user_channels,
