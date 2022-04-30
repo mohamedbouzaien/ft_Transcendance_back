@@ -28,7 +28,7 @@ const app = new Vue({
       id: this.content,
       password: this.new_channel_password,
     };
-    this.socket.emit('request_channel', channel);
+    this.socket.emit('request_channel', channel,  elem => console.log(elem));
   },
 
   join_channel() {
@@ -36,7 +36,7 @@ const app = new Vue({
       id: this.content,
       password: this.new_channel_password,
     };
-    this.socket.emit('join_channel', channel);
+    this.socket.emit('join_channel', channel, elem => console.log(elem));
   },
 
   deleteChannel(channel) {
@@ -46,7 +46,7 @@ const app = new Vue({
 
   leaveChannel() {
     const id = this.content;
-    this.socket.emit('leave_channel', {id});
+    this.socket.emit('leave_channel', {id},  elem => console.log(elem));
   },
   sendMessage() {
     const id = this.content;
