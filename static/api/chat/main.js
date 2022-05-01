@@ -138,6 +138,7 @@ const app = new Vue({
   this.socket.on('leaved_channel', msg => console.log(msg));
   this.socket.on('blocked_users', msg => console.log(msg));
   this.socket.on('invited_channels', msg => console.log(msg));
+  this.socket.on('deleted_channel', msg => console.log(msg));
 
   },
 })

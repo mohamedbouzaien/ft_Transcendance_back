@@ -6,7 +6,7 @@ import { ChatService } from "./services/chat.service";
 import { ChannelInvitationDto } from "./dto/ChannelInvitation.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
-import { SanctionType } from "./entities/channelUser.entity";
+import ChannelUser, { SanctionType } from "./entities/channelUser.entity";
 import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
 import {ClassSerializerInterceptor, UseFilters, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { WsExceptionFilter } from "./exception/WsException.filter";
@@ -66,12 +66,23 @@ export class ChatGateway implements OnGatewayConnection {
     //this.requestAllChannels(socket);
   }
 
+  async sendDeletiontoUsers(channelUsers: ChannelUser[], id: number) {
+    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+    for (let socket of sockets) {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      if (channelUsers.find(channelUser => channelUser.user.id == user.id && channelUser.sanction !== SanctionType.BAN)) {
+        socket.emit('deleted_channel', {id});
+      }
+    }
+  }
+
   async sendToUsers(channelId: number, event: string, to_send: any) {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
       const user = await this.chatsService.getUserFromSocket(socket);
-      if (user.userChannels.find(userChannel => userChannel.channelId === channelId && userChannel.sanction !== SanctionType.BAN)) {
+      if (user.userChannels.find(userChannel => userChannel.channelId == channelId && userChannel.sanction !== SanctionType.BAN)) {
         socket.emit(event, to_send);
       }
     }

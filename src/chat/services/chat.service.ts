@@ -56,7 +56,7 @@ export class ChatService {
 
   async updateChannel(channelData: UpdateChannelDto, user: User) {
     const channel = await this.channelsService.getChannelById(channelData.id);
-    const userChannel = user.userChannels.find(userChannel => userChannel.channel.id === channel.id && userChannel.user.id === user.id);
+    const userChannel = user.userChannels.find(userChannel => userChannel.channelId === channel.id && userChannel.user.id === user.id);
     if (userChannel && userChannel.role !== ChannelUserRole.OWNER) {
       throw new UserUnauthorizedException(user.id);
     }
