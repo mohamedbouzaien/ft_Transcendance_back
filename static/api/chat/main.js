@@ -61,7 +61,8 @@ const app = new Vue({
     
     var data = `{
       "id": "30",
-      "status": ""
+      "status": "protected",
+      "password": "worldhello"
     }`;
     
     xhr.send(data);

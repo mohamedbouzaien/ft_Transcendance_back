@@ -65,25 +65,14 @@ export class ChatService {
         delete channelData[key];
       }
     }
-
-    if (channelData.status && channelData.status !== ChannelStatus.PROTECTED && 'new_password' in channelData) {
-      delete channelData['new_password'];
+    if (channelData.password && (channel.status == ChannelStatus.PROTECTED || channelData.status == ChannelStatus.PROTECTED)) {
+      channelData.password = await bcrypt.hash(channelData.password, 10);
     }
-    if (channelData.new_password) {
-      if (!(channel.status === ChannelStatus.PROTECTED  || channelData.status === ChannelStatus.PROTECTED)) {
-        throw new BadRequestException();
-      }
-      if (channel.status === ChannelStatus.PROTECTED) {
-        await this.channelsService.checkChannelPassword(channelData.password, channel.password);
-      }
-      channelData.password = await bcrypt.hash(channelData.new_password, 10);
-      delete channelData['new_password'];
+    else {
+      delete channelData['password'];
     }
     if (channelData.status && channelData.status !== ChannelStatus.PROTECTED) {
       channelData.password = '';
-    }
-    if ('new_password' in channelData) {
-      delete channelData['new_password'];
     }
     const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
     return updated_channel;
