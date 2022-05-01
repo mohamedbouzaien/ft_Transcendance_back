@@ -19,7 +19,7 @@ class UpdateChannelDto {
   @IsDate()
   last_message_at?: Date;
 
-  @ValidateIf(o => (o.password && o.password != ''))
+  @ValidateIf(o => (!o.status && (o.new_password && o.new_password != '')))
   @MinLength(7)
   password?: string;
 

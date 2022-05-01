@@ -44,6 +44,29 @@ const app = new Vue({
     this.socket.emit('delete_channel', channel);
   },
 
+  updateChannel() {
+    var url = "http://localhost:3000/api/channels/30";
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("PATCH", url);
+    
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    
+    xhr.onreadystatechange = function () {
+       if (xhr.readyState === 4) {
+          console.log(xhr.status);
+          console.log(xhr.responseText);
+       }};
+    
+    var data = `{
+      "id": "30",
+      "status": ""
+    }`;
+    
+    xhr.send(data);
+    
+  },
   leaveChannel() {
     const id = this.content;
     this.socket.emit('leave_channel', {id},  elem => console.log(elem));
@@ -77,11 +100,11 @@ const app = new Vue({
     //this.join_channel({id});
     //this.deleteChannel({id});
     //this.select_channel({id});
-    const invite =  {
+    /*const invite =  {
       invitedId: 2,
       channelId: 21
     }
-    this.socket.emit('channel_invitation', invite);
+    this.socket.emit('channel_invitation', invite);*/
     
      /*const message = {
        channelId: 3,

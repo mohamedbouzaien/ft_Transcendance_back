@@ -61,10 +61,11 @@ export class ChatService {
       throw new UserUnauthorizedException(user.id);
     }
     for (let key in channelData) {
-      if(channelData[key] === null || channel[key] === undefined || channelData[key] === '') {
+      if(!channelData[key]) {
         delete channelData[key];
       }
     }
+
     if (channelData.status && channelData.status !== ChannelStatus.PROTECTED && 'new_password' in channelData) {
       delete channelData['new_password'];
     }
@@ -83,7 +84,7 @@ export class ChatService {
     }
     if ('new_password' in channelData) {
       delete channelData['new_password'];
-    } 
+    }
     const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
     return updated_channel;
   }

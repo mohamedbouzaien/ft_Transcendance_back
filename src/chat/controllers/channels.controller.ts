@@ -42,7 +42,7 @@ export class ChannelsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthenticationGuard)
-  async updateChannel(@Req() request: RequestWithUser, @Param() channelData: UpdateChannelDto) {
+  async updateChannel(@Req() request: RequestWithUser, @Body() channelData: UpdateChannelDto) {
     const user = await this.usersService.getById(request.user.id);
     const channel = await this.chatsService.updateChannel(channelData, user);
     this.chatGateway.sendToUsers(channel.id, 'updated_channel', channel);
