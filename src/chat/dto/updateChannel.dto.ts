@@ -8,7 +8,7 @@ class UpdateChannelDto {
 
   @ValidateIf(o => Boolean(o.name))
   @MinLength(3)
-  @MaxLength(12)
+  @MaxLength(20)
   name?: string;
 
   @ValidateIf(o => Boolean(o.status))
