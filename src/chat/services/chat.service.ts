@@ -75,7 +75,8 @@ export class ChatService {
       channelData.password = '';
     }
     const updated_channel = await this.channelsService.updateChannel(channel.id, channelData);
-    return updated_channel;
+    delete channelData['password'];
+    return channelData;
   }
 
   async isUserBannedFromChannel(channelUser: UpdateChannelUserDto) {
