@@ -6,6 +6,7 @@ import Channel from "src/chat/entities/channel.entity";
 import ChannelUser from "src/chat/entities/channelUser.entity";
 import UserRelationship from "src/user-relationships/user-relationship.entity"
 import { UserStatus } from "./user-status.enum";
+import Game from "src/pong/entities/game.entity";
 
 @Entity()
 class User {
@@ -69,6 +70,9 @@ class User {
     @OneToMany(() => UserRelationship, (userRelationship: UserRelationship) =>userRelationship.receiver)
     @JoinTable()
     public received_relationships: UserRelationship[];
+
+    @OneToMany(() => Game, (game: Game) => game.user)
+    public games: Game[];
 
     @Column({default: 0})
     public victories: number;
