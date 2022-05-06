@@ -11,6 +11,7 @@ import { LocalFilesModule } from './local-files/local-files.module';
 import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
 import * as Joi from '@hapi/joi';
 import { ChatModule } from './chat/chat.module';
+import { PongModule } from './pong/pong.module';
 
 @Module({
   imports: [TodosModule, ConfigModule.forRoot({
@@ -31,7 +32,7 @@ import { ChatModule } from './chat/chat.module';
       TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
       UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule],
   controllers: [AppController],
   providers: [AppService],
 })
