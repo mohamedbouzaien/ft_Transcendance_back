@@ -12,9 +12,10 @@ import { UserRelationshipsModule } from './user-relationships/user-relationships
 import * as Joi from '@hapi/joi';
 import { ChatModule } from './chat/chat.module';
 import { PongModule } from './pong/pong.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [TodosModule, ConfigModule.forRoot({
+  imports: [TodosModule, ScheduleModule.forRoot(), ConfigModule.forRoot({
     validationSchema: Joi.object({
       POSTGRES_HOST: Joi.string().required(),
       POSTGRES_PORT: Joi.number().required(),
@@ -32,7 +33,7 @@ import { PongModule } from './pong/pong.module';
       TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
       UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule,],
   controllers: [AppController],
   providers: [AppService],
 })

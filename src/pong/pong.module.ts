@@ -6,6 +6,7 @@ import Game from "./entities/game.entity";
 import { PongGateway } from "./pong.gateway";
 import { GamesService } from "./services/games.service";
 import { PongService } from "./services/pong.service";
+import { TasksService } from "./tasks/tasks.service";
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { PongService } from "./services/pong.service";
     TypeOrmModule.forFeature([Game]),
 
   ],
-  providers: [PongGateway, PongService, GamesService]
+  providers: [PongGateway, PongService, GamesService, TasksService]
 })
 export class PongModule {};
