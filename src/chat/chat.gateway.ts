@@ -107,7 +107,7 @@ export class ChatGateway implements OnGatewayConnection {
     try {
       const user = await this.chatsService.getUserFromSocket(socket);
       const data = await this.chatsService.leaveChannel(channel, user);
-      this.sendToUsers(channel.id, 'leaved_channel', data);
+      this.sendToUsers(channel.id, 'left_channel', data);
       return data;
     } catch (error) {
       return {error, channel};
