@@ -32,20 +32,23 @@ export class UsersController {
         });
     }
 
-    @Get(':email')
+    @Get('check_mail/:email')
     @UseGuards(JwtTwoFactornGuard)
-    async   checkIfEmailExists(@Param('email') email: string) {
-        return this.usersService.checkIfExistsByEmail(email)
+    async   checkIfEmailExists(@Param('email') email: string, @Req() request: RequestWithUser) {
+        if (email != request.user.email)
+            return this.usersService.checkIfExistsByEmail(email)
     }
 
-    @Get(':username')
+    @Get('check_username/:username')
     @UseGuards(JwtTwoFactornGuard)
-    async   checkIfUsernameExists(@Param('username') username: string) {
-        return this.usersService.checkIfExistsByUsername(username);
+    async   checkIfUsernameExists(@Param('username') username: string, @Req() request: RequestWithUser) {
+        if (username != request.user.username)
+            return this.usersService.checkIfExistsByUsername(username);
     }
 
     @Patch()
-    updateUser(@Req() request: RequestWithUser, @Body() todo: CreateUserDto) {
-        //return this.todosService.update(+id, todo);
+    @UseGuards(JwtTwoFactornGuard)
+    updateUser(@Req() request: RequestWithUser, @Body() user: CreateUserDto) {
+        return this.usersService.update(+request.user.id, user);
     }
 }

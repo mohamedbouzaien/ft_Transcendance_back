@@ -135,11 +135,18 @@ export class UsersService {
     }
 
     async update(id:number, user: CreateUserDto) {
-        await this.usersRepository.update(id, user);
-        const updatedTodo = await this.usersRepository.findOne(id);
-        if (updatedTodo) {
-            return updatedTodo;
+        if (user.password == "")
+            await this.usersRepository.update(id, {email: user.email, username: user.username});
+        else
+        {
+            const hashedPassword = await bcrypt.hash(user.password, 10);
+            user.password = hashedPassword;
+            await this.usersRepository.update(id, user);
         }
-        throw new HttpException('Todo not found', HttpStatus.NOT_FOUND);
+        const updatedUser = await this.usersRepository.findOne(id);
+        if (updatedUser) {
+            return updatedUser;
+        }
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 }
