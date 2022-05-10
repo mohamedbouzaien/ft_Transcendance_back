@@ -1,12 +1,13 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import CreateChannelDto from "../dto/createChannel.dto";
 import Channel, { ChannelStatus } from "../entities/channel.entity";
 import { ChannelNotFoundException } from "../exception/channelNotFound.exception";
 import * as bcrypt from 'bcrypt'
 import UpdateChannelDto from "../dto/updateChannel.dto";
 import { ChannelUsersService } from "./channelUser.service";
+import { PasswordErrorException } from "../exception/passwordError.exception";
 
 @Injectable()
 export class ChannelsService {
@@ -18,12 +19,12 @@ export class ChannelsService {
   }
 
   async createChannel(channelData: CreateChannelDto) {
-    if (channelData.password) {
+    if (channelData.status === ChannelStatus.PROTECTED) {
       const hashedPassword = await bcrypt.hash(channelData.password, 10);
       channelData.password = hashedPassword;
     }
     else {
-      delete channelData.password;
+      channelData.password = '';
     }
     const newChannel = await this.channelsRepository.create({
       ...channelData,
@@ -40,23 +41,40 @@ export class ChannelsService {
     return channel;
   }
 
+  async getChannelByIdWithSelectedRelations(id: number, relations: string[]) {
+    const channel =  await this.channelsRepository.findOne(id, {relations});
+    if (!channel) {
+      throw new ChannelNotFoundException(id);
+    }
+    return channel;
+  }
+  
+  async getDirectMessagesChannel(userId1: number, userId2: number) {
+    return await this.channelsRepository.createQueryBuilder("channel")
+    .innerJoinAndSelect("channel.channelUsers", "channelUser")
+    .where("channelUser.user.id = :userId1", { userId1 })
+    .where("channelUser.user.id = :userId2", { userId2 })
+    .andWhere("channel.status = :status", {status: 'direct_message'})
+    .getOne();
+  }
+
   async checkChannelPassword(plain_password: string, hashed_password: string) {
-    if (hashed_password === null) {
+    if (hashed_password === '') {
       return true;
     }
-    if (plain_password === null) {
-      throw new HttpException('need_password_for_channel', HttpStatus.BAD_REQUEST);
+    if (!plain_password) {
+      throw new PasswordErrorException('need_password_for_channel');
     }
     const isPasswordMatching = await bcrypt.compare(plain_password, hashed_password);
     if (!isPasswordMatching) {
       let error_message = (plain_password === '' ) ? 'need_password_for_channel' : 'wrong_password_for_channel';
-      throw new HttpException(error_message, HttpStatus.BAD_REQUEST);
+      throw new PasswordErrorException(error_message);
     }
     return true;
   }
 
   async getAllChannels() {
-    return await this.channelsRepository.find({relations: ['owner', 'channelUsers', 'messages']});
+    return await this.channelsRepository.find({relations: ['channelUsers', 'messages']});
   }
 
   async getAllDirectMessagesChannels() {
@@ -64,10 +82,10 @@ export class ChannelsService {
       status: ChannelStatus.DIRECT_MESSAGE,
     }})
   }
-  async getAllPublicChannels() {
+  async getAllAccessibleChannels() {
     return await this.channelsRepository.find({
       where: {
-        status: 'public',
+        status: In(['public', 'protected']),
       }
     })
   }

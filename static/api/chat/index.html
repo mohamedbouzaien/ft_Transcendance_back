@@ -33,6 +33,7 @@
                         <option disabled value="">Choisissez</option>
                         <option>public</option>
                         <option>private</option>
+                        <option>protected</option>
                       </select>
                     <input v-model="new_channel_password"></input>
                     <button id="send" class="btn" @click.prevent="createChannel">Create channel</button>
@@ -56,6 +57,12 @@
                         <textarea id="textarea" class="form-control" v-model="content" placeholder="Enter message..."></textarea>
                         <br>
                         <button id="send" class="btn" @click.prevent="sendMessage">Send</button>
+                        <button id="delete" class="btn" @click.prevent="deleteChannel">delete</button>
+                        <button id="join" class="btn" @click.prevent="join_channel">join</button>
+                        <button id="select" class="btn" @click.prevent="select_channel">select</button>
+                        <button id="leave" class="btn" @click.prevent="leaveChannel">leave</button>
+                        <button id="update" class="btn" @click.prevent="updateChannel">update</button>
+
                     </div> 
                 </div>
             </div>

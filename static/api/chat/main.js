@@ -17,34 +17,66 @@ const app = new Vue({
       name: 'jeune',
       password: this.new_channel_password,
       status: this.new_channel_type,
-      members: [],
-      invited_members: [],
     }
     this.socket.emit('create_channel', message);
     this.new_channel_password = null;
     this.new_channel_type = '';
   }, 
 
-  select_channel(channel) {
-    channel.password = this.new_channel_password;
-    this.socket.emit('request_channel', channel);
+  select_channel() {
+    let channel = {
+      id: this.content,
+      password: this.new_channel_password,
+    };
+    this.socket.emit('request_channel', channel,  elem => console.log(elem));
   },
 
-  join_channel(channel) {
-    channel.password = this.new_channel_password;
-    this.socket.emit('join_channel', channel);
+  join_channel() {
+    let channel = {
+      id: this.content,
+      password: this.new_channel_password,
+    };
+    this.socket.emit('join_channel', channel, elem => console.log(elem));
   },
 
   deleteChannel(channel) {
+    const id = this.content;
     this.socket.emit('delete_channel', channel);
   },
 
+  updateChannel() {
+    var url = "http://localhost:3000/api/channels/30";
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("PATCH", url);
+    
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    
+    xhr.onreadystatechange = function () {
+       if (xhr.readyState === 4) {
+          console.log(xhr.status);
+          console.log(xhr.responseText);
+       }};
+    
+    var data = `{
+      "id": "30",
+      "name": "bgboysclub"
+    }`;
+    
+    xhr.send(data);
+    
+  },
+  leaveChannel() {
+    const id = this.content;
+    this.socket.emit('leave_channel', {id},  elem => console.log(elem));
+  },
   sendMessage() {
-    const id = Number(this.content);
-    //this.socket.emit('manage_blocked_users', {id: 2});
-    //this.socket.emit('get_direct_messages_channel', {id: 2});
-    //this.socket.emit('send_direct_message', {channelId: 2, content: 'hello'});
-    var d = new Date(); d.setMinutes(d.getMinutes() + 1);
+    const id = this.content;
+    //this.socket.emit('manage_blocked_users', {id: '2'});
+    //this.socket.emit('get_direct_messages_channel', {id: '2'});
+    //this.socket.emit('send_direct_message', {channelId: 14, content: 'hello'});
+    //var d = new Date(); d.setMinutes(d.getMinutes() + 1);
     /*this.socket.emit('manage_channel_user_sanction', {
       id: 16,
       sanction: 'ban',
@@ -52,38 +84,33 @@ const app = new Vue({
 
     });*/
     //this.socket.emit('update_password', {id: 9, old_password: this.new_channel_password, new_password: 'test'});
-    /*this.socket.emit('update_channel_user', {
-      id: 5,
-      role: 1,
-      sanction: 'ban',
+    /*this.socket.emit('manage_channel_user', {
+      id: 51,
+      sanction: null,
       end_of_sanction: null
     });*/
-    this.socket.emit('update_channel', {
-      id: 9,
-      password: 'opopopop',
-      new_password: 'topitoo'
-    });
+    /*this.socket.emit('update_channel', {
+      id: '2',
+      status: this.new_channel_type,
+      name: 'lol',
+      password: '',
+      new_password: ''
+    });*/
     //this.socket.emit('leave_channel', {id});
     //this.join_channel({id});
     //this.deleteChannel({id});
     //this.select_channel({id});
     /*const invite =  {
       invitedId: 2,
-      channelId: 2
+      channelId: 21
     }
     this.socket.emit('channel_invitation', invite);*/
-    /*const up_chan = {
-      id: 1,
-      admins_id: [10],
-    }
-    this.socket.emit('update_channel', up_chan);*/
     
      /*const message = {
-       channelId: 2,
+       channelId: 3,
        content: this.content
      }
-    this.socket.emit('send_channel_message', message)
-    this.content = '';*/
+    this.socket.emit('send_channel_message', message)*/
   },
   receivedMessage(message) {
     this.messages.push(message)
@@ -124,9 +151,17 @@ const app = new Vue({
   });
   this.socket.on('need_password_for_channel', (message) => {
     console.log('need_password_for_channel');
-  }) ;
+  });
   this.socket.on('wrong_password_for_channel', (message) => {
     console.log('wrong_password_for_channel');
-  })
+  }); 
+  this.socket.on('channel_user', data => console.log(data));
+  this.socket.on('updated_channel', chan => console.log(chan));
+  this.socket.on('channel', chan => console.log(chan));
+  this.socket.on('leaved_channel', msg => console.log(msg));
+  this.socket.on('blocked_users', msg => console.log(msg));
+  this.socket.on('invited_channels', msg => console.log(msg));
+  this.socket.on('deleted_channel', msg => console.log(msg));
+
   },
 })

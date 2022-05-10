@@ -5,15 +5,14 @@ class CreateChannelDto {
 
   @IsNotEmpty()
   @MinLength(3)
-  @MaxLength(12)
+  @MaxLength(20)
   name: string;
 
   @IsNotEmpty()
   status: ChannelStatus;
 
-  @ValidateIf(o => o.password !== null)
+  @ValidateIf(o => o.status === ChannelStatus.PROTECTED)
   @MinLength(7)
-  @IsString()
   password: string;
 }
 

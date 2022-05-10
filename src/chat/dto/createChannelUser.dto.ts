@@ -4,7 +4,7 @@ import Channel from "../entities/channel.entity";
 import { ChannelUserRole } from "../entities/channelUser.entity";
 
 class CreateChannelUserDto {
-  channel: Channel;
+  channelId: number;
   user: User;
   role: ChannelUserRole
 }

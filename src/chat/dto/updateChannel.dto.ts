@@ -1,25 +1,27 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
+import { IsDate, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
+import { ChannelStatus } from "../entities/channel.entity";
 
 class UpdateChannelDto {
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
   id: number;
 
   @ValidateIf(o => Boolean(o.name))
-  @IsNotEmpty()
   @MinLength(3)
-  @MaxLength(12)
-  name: string;
+  @MaxLength(20)
+  name?: string;
 
-  @ValidateIf(o => ('password' in o || 'new_password' in o ) && o.password !== null )
-  @MinLength(7)
-  @IsString()
-  password: string;
+  @ValidateIf(o => Boolean(o.status))
+  @IsOptional()
+  status?: ChannelStatus;
 
-  @ValidateIf(o => ('password' in o || 'new_password' in o) && o.new_password !== null)
+  @IsOptional()
+  @IsDate()
+  last_message_at?: Date;
+
+  @ValidateIf(o => (o.status == ChannelStatus.PROTECTED || (o.password && o.password != '')))
   @MinLength(7)
-  @IsString()
-  new_password: string
+  password?: string;
 }
 
 export default UpdateChannelDto;
