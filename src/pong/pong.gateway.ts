@@ -1,15 +1,7 @@
-import { Body } from "@nestjs/common";
-import { Interval } from "@nestjs/schedule";
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
-import { interval } from "rxjs";
 import { Socket, Server } from "socket.io";
-import { AuthenticationService } from "src/authentication/authentication.service";
-import User from "src/users/user.entity";
-import { UsersService } from "src/users/users.service";
 import BallInterface from "./interfaces/ball.interface";
 import PlayerInterface from "./interfaces/player.interface";
-import { GamesService } from "./services/games.service";
-import { PongService } from "./services/pong.service";
 
 @WebSocketGateway({namespace: 'pong'})
 export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -20,17 +12,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   players: PlayerInterface[] = [];
   b: BallInterface;
 
-
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly authenticationService: AuthenticationService,
-    private readonly gamesService: GamesService,
-    private readonly pongService: PongService
-    ) {
-  }
-
   heartBeat() {
-    this.server.emit('heartBeat', this.players);
+    this.server.emit('heartbeat', this.players);
   }
 
   heartbeatBall(){
@@ -42,14 +25,14 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(this.connections.length);
   }
   
-  async handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
-    console.log("a user connected with id " + client.id);
-    this.connections.push(client);
+  async handleConnection(@ConnectedSocket() socket: Socket, ...args: any[]) {
+    console.log('new user ' + socket.id);
+    this.connections.push(socket);
     this.getCounter();
   }
 
-  async handleDisconnect(client: Socket) {
-    this.connections.splice(this.connections.indexOf(client),1);
+  async handleDisconnect(socket: Socket) {
+    this.connections.splice(this.connections.indexOf(socket),1);
 		console.log("disconnected");
   }
   

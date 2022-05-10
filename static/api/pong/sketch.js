@@ -13,7 +13,7 @@ function setup(){
     b = new Ball(width/2,height/2,4,4,15);
     socket.on('getCounter',function(data){
       counter = data;
-      console.log(counter);
+      print(counter);
       if(p1 === undefined){
       if(counter % 2 === 0 )
         p1 = new Player(0);
@@ -47,6 +47,8 @@ function setup(){
 
   socket.on('heartbeat',function(data){
     players = data;
+    console.log('hre');
+    console.log(players);
   });
 
   socket.on('heartbeatBall',function(data){
@@ -134,3 +136,4 @@ function showPoints(p){
     }
   }
 }
+
