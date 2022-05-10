@@ -67,6 +67,10 @@ const app = new Vue({
     xhr.send(data);
     
   },
+  getDmChannel() {
+    const id = this.content;
+    this.socket.emit('get_direct_messages_channel', {id},  elem => console.log(elem));
+  },
   leaveChannel() {
     const id = this.content;
     this.socket.emit('leave_channel', {id},  elem => console.log(elem));
