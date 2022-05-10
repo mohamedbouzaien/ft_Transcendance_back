@@ -37,12 +37,30 @@ export class UsersService {
         throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
     }
 
+    async   checkIfExistsByEmail(email: string)
+    {
+        const user = await this.usersRepository.findOne({email});
+        if (user)
+            throw new HttpException('User with this email exists', HttpStatus.NOT_FOUND);
+        else
+            return false;
+    }
+
     async   getByUsername(username: string)
     {
         const user = await this.usersRepository.findOne({username});
         if (user)
             return user;
-        throw new HttpException('User with this username does not exist', HttpStatus.NOT_FOUND);
+        throw new HttpException('User with this username does not exist', HttpStatus.CONFLICT);
+    }
+
+    async   checkIfExistsByUsername(username: string)
+    {
+        const user = await this.usersRepository.findOne({username});
+        if (user)
+            throw new HttpException('User with this username exists', HttpStatus.CONFLICT);
+        else
+            return false;
     }
 
     async getById(id: number) {
@@ -114,5 +132,21 @@ export class UsersService {
             relations: [
                 'sent_relationships']
             });
+    }
+
+    async update(id:number, user: CreateUserDto) {
+        if (user.password == "")
+            await this.usersRepository.update(id, {email: user.email, username: user.username});
+        else
+        {
+            const hashedPassword = await bcrypt.hash(user.password, 10);
+            user.password = hashedPassword;
+            await this.usersRepository.update(id, user);
+        }
+        const updatedUser = await this.usersRepository.findOne(id);
+        if (updatedUser) {
+            return updatedUser;
+        }
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 }
