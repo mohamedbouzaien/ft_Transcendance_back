@@ -17,12 +17,12 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-ref
             return request?.cookies?.Refresh;
         }]),
             secretOrKey: configService.get('JWT_REFRESH_TOKEN_SECRET'),
-            passReqToCallBack: true
+            passReqToCallback: true
         });
     }
 
     async validate(request: Request, payload: TokenPayload) {
-        const refreshToken = request.cookies?.refresh;
+        const refreshToken = request.cookies?.Refresh;
         return this.usersService.getUserIfRefreshTokenMatches(refreshToken, payload.userId);
     }
 }
