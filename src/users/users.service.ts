@@ -48,7 +48,12 @@ export class UsersService {
 
     async   getByUsername(username: string)
     {
-        const user = await this.usersRepository.findOne({username});
+        const user = await this.usersRepository.findOne({username},{
+            relations: [
+                'sent_relationships', 
+                'received_relationships',
+                'invited_channels', 'userChannels', 'blocked_users'
+            ]});
         if (user)
             return user;
         throw new HttpException('User with this username does not exist', HttpStatus.CONFLICT);
