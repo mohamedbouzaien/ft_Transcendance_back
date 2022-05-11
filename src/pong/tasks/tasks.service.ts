@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, Interval, Timeout } from '@nestjs/schedule';
-import { PongGateway } from '../pong.gateway';
+import { PongGateway } from '../pong.gateway'
 
 @Injectable()
 export class TasksService {
@@ -8,7 +8,7 @@ export class TasksService {
     private readonly pongGateway: PongGateway,
   ) {}
 
-  @Interval(33)
+  @Interval(15)
   heartBeat() {
     this.pongGateway.heartBeat();
   }

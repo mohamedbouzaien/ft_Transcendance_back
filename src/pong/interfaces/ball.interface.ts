@@ -1,10 +1,11 @@
 class BallInterface {
-  id: number;
   x: number;
   y: number;
-  xv: number;
-  yv: number;
   r: number;
+  speed: {
+    x: number;
+    y: number;
+  }
 }
 
 export default BallInterface;

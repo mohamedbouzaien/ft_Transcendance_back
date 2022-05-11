@@ -2,10 +2,7 @@ class PlayerInterface {
   id: string;
   x: number;
   y: number;
-  v: number;
-  w: number;
-  h: number;
-  points: number;
+  score: number;
 }
 
 export default PlayerInterface;

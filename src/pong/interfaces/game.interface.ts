@@ -3,7 +3,8 @@ import PlayerInterface from "./player.interface";
 
 class GameInterface {
   id: string;
-  players?: PlayerInterface[];
+  player?: PlayerInterface;
+  computer?: PlayerInterface
   ball?: BallInterface
 }
 
