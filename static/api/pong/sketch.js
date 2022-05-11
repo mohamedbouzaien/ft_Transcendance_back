@@ -1,4 +1,5 @@
 var socket;
+var game;
 var p1;
 var b;
 var lastPos;
@@ -46,21 +47,9 @@ function setup(){
       
 
   socket.on('heartbeat',function(data){
+    game = data;
     players = data;
-    console.log('hre');
-    console.log(players);
   });
-
-  socket.on('heartbeatBall',function(data){
-    if(data !== null){
-      b.x = data.x,
-      b.y = data.y,
-      b.xv = data.xv,
-      b.yv = data.yv,
-      b.r = data.r
-  }
-  });
-
 }
 
 function draw(){
@@ -71,15 +60,16 @@ function draw(){
       text("Waiting for other player.", width/2 - 200, height/2);
     fill(0, 102, 153);
     if(go === true){
-    for(var i = 0; i < players.length; i++){
-      var id = players[i].id;
+    for(var i = 0; i < game.players.length; i++){
+      var id = game.players[i].id;
+      console.log(game.players[i]);
       if(id !== socket.id){
         fill(255,0,0);
         rectMode(CENTER);
-        rect(players[i].x,players[i].y,players[i].w,players[i].h);
+        rect(game.players[i].x,game.players[i].y,game.players[i].w,game.players[i].h);
       }
     }
-    showPoints(players);
+    showPoints(game.players);
     p1.show();
     p1.move();
     b.show();
@@ -99,7 +89,9 @@ function draw(){
           p1.points++;
     }
     print(p1.points);
-    var data = {
+    var data = [];
+    data[0] = {
+      id: socket.id,
     x:p1.x,
     y:p1.y,
     w:p1.w,
@@ -107,7 +99,7 @@ function draw(){
     points:p1.points
   };
 
-  socket.emit('update',data);
+  socket.emit('update',{id: game.id, players: data});
 
   var data = {
     x:b.x,
@@ -116,7 +108,8 @@ function draw(){
     yv:b.yv,
     r:b.r
   };
-  socket.emit('updateBall',data);
+  game.ball = data
+  socket.emit('updateBall',game);
 }}
 
 function throwBall(){

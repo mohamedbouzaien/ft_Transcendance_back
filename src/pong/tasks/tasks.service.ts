@@ -12,9 +12,4 @@ export class TasksService {
   heartBeat() {
     this.pongGateway.heartBeat();
   }
-
-  @Interval(33)
-  heartbeatBall(){
-    this.pongGateway.heartbeatBall();
-  }
 }
