@@ -11,9 +11,10 @@ import { LocalFilesModule } from './local-files/local-files.module';
 import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
 import * as Joi from '@hapi/joi';
 import { ChatModule } from './chat/chat.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [TodosModule, ConfigModule.forRoot({
+  imports: [ScheduleModule.forRoot(), TodosModule, ConfigModule.forRoot({
     validationSchema: Joi.object({
       POSTGRES_HOST: Joi.string().required(),
       POSTGRES_PORT: Joi.number().required(),

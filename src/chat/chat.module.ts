@@ -11,6 +11,7 @@ import Channel from "./entities/channel.entity";
 import ChannelUser from "./entities/channelUser.entity";
 import Message from "./entities/message.entity";
 import { ChannelsController } from "./controllers/channels.controller";
+import { ChatTasksService } from "./tasks/chatTasks.service";
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { ChannelsController } from "./controllers/channels.controller";
     UsersModule
   ],
   controllers: [ChannelsController],
-  providers: [ChatGateway, ChatService, ChannelsService, MessagesService, ChannelUsersService],
+  providers: [ChatGateway, ChatService, ChannelsService, MessagesService, ChannelUsersService, ChatTasksService],
 })
 export class ChatModule {};

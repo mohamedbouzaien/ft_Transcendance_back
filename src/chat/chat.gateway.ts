@@ -14,6 +14,7 @@ import { FindOneParams } from "./dto/findOneParams.dto";
 import { WsResponseImplementation } from "./serialisationTools/wsResponse.implementation";
 import User from "src/users/user.entity";
 import Channel from "./entities/channel.entity";
+import { ChannelUsersService } from "./services/channelUser.service";
 
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -31,6 +32,7 @@ export class ChatGateway implements OnGatewayConnection {
   constructor(
     private readonly chatsService: ChatService, 
     private readonly channelsService: ChannelsService,
+    private readonly channelUsersService: ChannelUsersService,
     private readonly usersService: UsersService,
     ) {
   }
@@ -84,6 +86,20 @@ export class ChatGateway implements OnGatewayConnection {
       const user = await this.chatsService.getUserFromSocket(socket);
       if (user.userChannels.find(userChannel => userChannel.channelId == channelId && userChannel.sanction !== SanctionType.BAN)) {
         socket.emit(event, to_send);
+      }
+    }
+  }
+
+  async checkChannelUserSanction() {
+    let sanctionned = await this.channelUsersService.getTemporarySanctionnedChannelUsers();
+    for (const channelUser of sanctionned) {
+      if (channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
+        let updated = await this.channelUsersService.updateChannelUser(channelUser.id, {
+          ...channelUser,
+          sanction: null,
+          end_of_sanction: null
+        })
+        this.sendToUsers(updated.channelId, 'channel_user', await this.serializeBroadcastedEntity(updated));
       }
     }
   }
