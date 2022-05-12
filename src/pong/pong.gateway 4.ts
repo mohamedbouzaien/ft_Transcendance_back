@@ -14,7 +14,9 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
   waiting: Socket = null;
   games: GameInterface[] = [];
-
+  PLAYER_HEIGHT = 100;
+  PLAYER_WIDTH = 5;
+  canvas =  {height: 480, width: 640}
 
   constructor(
     private readonly gamesService: GamesService,
@@ -48,7 +50,32 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.waiting = socket;
     }
     socket.join(this.games.length.toString());
-    let game = this.gamesService.createGame((this.games.length > 0 ? (this.games[this.games.length].id + 1) : 0).toString(), this.waiting.id);
+    let game = {
+      id: this.games.length.toString(),
+      status: GameStatus.RUNNING,
+      max_points: 1,
+      player: {
+        id: this.waiting.id,
+        x: 0,
+        y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2,
+        score: 0
+      },
+      computer: {
+        id: "2",
+        y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2,
+        x: this.canvas.width - this.PLAYER_WIDTH,
+        score: 0
+      },
+      ball: {
+        x: this.canvas.width / 2,
+        y: this.canvas.height / 2,
+        r: 5,
+        speed: {
+          x: 1.1,
+          y: 1.1
+        }
+      }
+    };
     this.games.push(game);
     this.server.to(game.id).emit("startGame", game);
   }

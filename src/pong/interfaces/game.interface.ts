@@ -3,7 +3,8 @@ import PlayerInterface from "./player.interface";
 
 export enum GameStatus {
   RUNNING = 'running',
-  STOPPED = 'stopped'
+  STOPPED = 'stopped',
+  ENDED = 'ended'
 };
 
 class GameInterface {
