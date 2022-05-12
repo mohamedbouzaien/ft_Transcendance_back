@@ -48,7 +48,10 @@ export class UsersService {
 
     async   getByUsername(username: string)
     {
-        const user = await this.usersRepository.findOne({username});
+        const user = await this.usersRepository.findOne({
+            where: username,
+            relations: ['invited_channels'],
+        });
         if (user)
             return user;
         throw new HttpException('User with this username does not exist', HttpStatus.CONFLICT);
