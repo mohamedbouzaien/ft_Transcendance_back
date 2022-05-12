@@ -1,7 +1,7 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Socket, Server } from "socket.io";
 import BallInterface from "./interfaces/ball.interface";
-import GameInterface from "./interfaces/game.interface";
+import GameInterface, { GameStatus } from "./interfaces/game.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
 import PlayerInterface from "./interfaces/player.interface";
 
@@ -42,10 +42,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Update score
       if (player == game.player) {
         game.computer.score++;
-        document.querySelector('#computer-score').textContent = game.computer.score;
       } else {
         game.player.score++;
-        document.querySelector('#player-score').textContent = game.player.score;
       }
     } else {
       // Increase speed and change direction
@@ -73,15 +71,22 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   updateGame(game) {
     this.computerMove(game);
-
     this.ballMove(game);
     return game;
   }
 
   heartBeat() {
     for (let game of this.games) {
-      this.updateGame(game);
-      this.server.to(game.id).emit('update', game);
+      if (game.status = GameStatus.RUNNING) {
+        this.updateGame(game);
+        if (game.player.score == game.max_points || game.computer.score == game.max_points) {
+          game.status = GameStatus.STOPPED;
+          this.server.to(game.id).emit('endGame', game);
+          this.games.splice(this.games.indexOf(game), 1);
+        }
+        else
+         this.server.to(game.id).emit('update', game);
+      }
     }
   }
   
@@ -101,6 +106,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket.join(this.games.length.toString());
     let game = {
       id: this.games.length.toString(),
+      status: GameStatus.RUNNING,
+      max_points: 1,
       player: {
         id: this.waiting.id,
         x: 0,
@@ -124,7 +131,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     };
     this.games.push(game);
-    this.server.to(game.id).emit("startGame", await game);
+    this.server.to(game.id).emit("startGame", game);
   }
   @SubscribeMessage("start")
   async start(@ConnectedSocket() socket: Socket, @MessageBody() data: PlayerInterface) {

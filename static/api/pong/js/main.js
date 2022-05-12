@@ -38,7 +38,8 @@ function draw() {
 
 function sendMouse(event) {
   console.log(event);
-  socket.emit('mousemove', {id: game.id, canvasLocation: canvas.getBoundingClientRect(), clientY: event.clientY});
+  if (game && game.status == 'running')
+    socket.emit('mousemove', {id: game.id, canvasLocation: canvas.getBoundingClientRect(), clientY: event.clientY});
 }
 
 function start() {
@@ -50,7 +51,19 @@ function start() {
   canvas.addEventListener('mousemove', sendMouse);
   socket.on('update', function (msg) {
     game = msg;
+    document.querySelector('#computer-score').textContent = game.computer.score;
+    document.querySelector('#player-score').textContent = game.player.score;
     draw();
+  })
+  socket.on('endGame', function(msg) {
+    console.log(msg);
+    game= msg;
+    draw();
+    if (game.player.score > game.computer.score) 
+      document.querySelector('#winner').textContent = "Winner is player";
+    else
+    document.querySelector('#winner').textContent = "Computer will destroy humanity";
+
   })
 }
 
