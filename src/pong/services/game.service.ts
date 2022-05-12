@@ -14,12 +14,12 @@ export class GamesService {
     // Set ball and players to the center
     game.ball.x = this.canvas.width / 2;
     game.ball.y = this.canvas.height / 2;
-    game.player.y = this.canvas.height / 2 - this.PLAYER_HEIGHT / 2;
-    game.computer.y = this.canvas.height / 2 - this.PLAYER_HEIGHT / 2;
+    game.player1.y = this.canvas.height / 2 - this.PLAYER_HEIGHT / 2;
+    game.player2.y = this.canvas.height / 2 - this.PLAYER_HEIGHT / 2;
   
     // Reset speed
-    game.ball.speed.x = 3;
-    game.ball.speed.y = Math.random() * 3;
+    game.ball.speed.x = 2;
+    game.ball.speed.y = Math.random() * 2;
   }
 
   changeDirection(game, playerPosition) {
@@ -33,10 +33,10 @@ export class GamesService {
     if (game.ball.y < player.y || game.ball.y > player.y + this.PLAYER_HEIGHT) {
       this.reset(game);
       // Update score
-      if (player == game.player) {
-        game.computer.score++;
+      if (player == game.player1) {
+        game.player2.score++;
       } else {
-        game.player.score++;
+        game.player1.score++;
       }
     } else {
       // Increase speed and change direction
@@ -52,49 +52,49 @@ export class GamesService {
     game.ball.x += game.ball.speed.x;
     game.ball.y += game.ball.speed.y;
     if (game.ball.x > this.canvas.width - this.PLAYER_WIDTH) {
-      this.collide(game, game.computer);
+      this.collide(game, game.player2);
     } else if (game.ball.x < this.PLAYER_WIDTH) {
-      this.collide(game, game.player);
+      this.collide(game, game.player1);
     }
   }
 
-  computerMove(game) {
-    game.computer.y += game.ball.speed.y * 0.85;
-  }
-
   updateGame(game) {
-    this.computerMove(game);
     this.ballMove(game);
-    if (game.player.score == game.max_points || game.computer.score == game.max_points) {
+    if (game.player1.score == game.max_points || game.player2.score == game.max_points) {
       game.status = GameStatus.ENDED;
     }
     return game;
   }
 
-  mouseUpdate(game, data: MouseMoveInterface) {
+  mouseUpdate(game, playerId: string, data: MouseMoveInterface) {
+    let player;
+    if (game.player1.id == playerId)
+      player = game.player1;
+    else
+      player = game.player2;
     var mouseLocation = data.clientY - data.canvasLocation.y;
     if (mouseLocation < this.PLAYER_HEIGHT / 2) {
-      game.player.y = 0;
+      player.y = 0;
     } else if (mouseLocation > this.canvas.height - this.PLAYER_HEIGHT / 2) {
-      game.player.y = this.canvas.height - this.PLAYER_HEIGHT;
+      player.y = this.canvas.height - this.PLAYER_HEIGHT;
     } else {
-      game.player.y = mouseLocation - this.PLAYER_HEIGHT / 2;
+      player.y = mouseLocation - this.PLAYER_HEIGHT / 2;
     }
   }
 
-  createGame(gameId: string, playerId: string, ) {
+  createGame(gameId: string, player1Id: string, player2Id: string) {
     let game = {
       id: gameId,
       status: GameStatus.RUNNING,
-      max_points: 1,
-      player: {
-        id: playerId,
+      max_points: 5,
+      player1: {
+        id: player1Id,
         x: 0,
         y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2,
         score: 0
       },
-      computer: {
-        id: "2",
+      player2: {
+        id: player2Id,
         y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2,
         x: this.canvas.width - this.PLAYER_WIDTH,
         score: 0
@@ -104,8 +104,8 @@ export class GamesService {
         y: this.canvas.height / 2,
         r: 5,
         speed: {
-          x: 1.1,
-          y: 1.1
+          x: 2,
+          y: 2
         }
       }
     };

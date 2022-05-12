@@ -26,8 +26,8 @@ function draw() {
   //Draw players
 
   context.fillStyle = 'white';
-  context.fillRect(0, game.player.y, PLAYER_WIDTH, PLAYER_HEIGHT);
-  context.fillRect(canvas.width - PLAYER_WIDTH, game.computer.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+  context.fillRect(0, game.player1.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+  context.fillRect(canvas.width - PLAYER_WIDTH, game.player2.y, PLAYER_WIDTH, PLAYER_HEIGHT);
 
   //Draw Ball
   context.beginPath();
@@ -51,18 +51,18 @@ function start() {
   canvas.addEventListener('mousemove', sendMouse);
   socket.on('update', function (msg) {
     game = msg;
-    document.querySelector('#computer-score').textContent = game.computer.score;
-    document.querySelector('#player-score').textContent = game.player.score;
+    document.querySelector('#computer-score').textContent = game.player2.score;
+    document.querySelector('#player-score').textContent = game.player1.score;
     draw();
   })
   socket.on('endGame', function(msg) {
     console.log(msg);
     game= msg;
     draw();
-    if (game.player.score > game.computer.score) 
-      document.querySelector('#winner').textContent = "Winner is player";
+    if (game.player1.score > game.player2.score) 
+      document.querySelector('#winner').textContent = "Winner is player1";
     else
-    document.querySelector('#winner').textContent = "Computer will destroy humanity";
+    document.querySelector('#winner').textContent = "Winner is player2";
 
   })
 }
@@ -72,11 +72,11 @@ function stop () {
   reset();
 
     // Init score
-    game.computer.score = 0;
-    game.player.score = 0;
+    game.player2.score = 0;
+    game.player1.score = 0;
 
-  document.querySelector('#computer-score').textContent = game.computer.score;
-  document.querySelector('#player-score').textContent = game.player.score;
+  document.querySelector('#computer-score').textContent = game.player2.score;
+  document.querySelector('#player-score').textContent = game.player1.score;
   draw();
 }
 

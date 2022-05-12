@@ -46,10 +46,13 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async joinQueue(@ConnectedSocket() socket: Socket) {
     if (this.waiting == null) {
       this.waiting = socket;
+      return ;
     }
-    socket.join(this.games.length.toString());
-    let game = this.gamesService.createGame((this.games.length > 0 ? (this.games[this.games.length].id + 1) : 0).toString(), this.waiting.id);
+    const gameId = (this.games.length > 0 ? (this.games[this.games.length].id + 1) : 0).toString();
+    let game = this.gamesService.createGame(gameId, this.waiting.id, socket.id);
     this.games.push(game);
+    socket.join(gameId);
+    this.waiting.join(gameId);
     this.server.to(game.id).emit("startGame", game);
   }
   @SubscribeMessage("start")
@@ -60,6 +63,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('mousemove')
   async mouseMove(@ConnectedSocket() socket: Socket, @MessageBody() data: MouseMoveInterface) {
     let game = this.games.find(g => g.id == data.id);
-    this.gamesService.mouseUpdate(game, data);
+    this.gamesService.mouseUpdate(game, socket.id, data);
   }
 }

@@ -11,9 +11,9 @@ class GameInterface {
   id: string;
   max_points: number;
   status: GameStatus;
-  player?: PlayerInterface;
-  computer?: PlayerInterface
-  ball?: BallInterface
+  player1: PlayerInterface;
+  player2: PlayerInterface
+  ball: BallInterface
 }
 
 export default GameInterface;
