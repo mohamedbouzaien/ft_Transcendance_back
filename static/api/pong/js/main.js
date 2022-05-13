@@ -42,8 +42,20 @@ function sendMouse(event) {
 
 function start() {
   socket.emit('joinQueue');
+  socket.on('setupGame', function (msg) {
+    game = msg;
+    if (game.status != 'running') { 
+      if (socket.id == game.player1.id) {
+        game.playerHeight = 50;
+        game.player1.isReady = true;
+        game.player2.isReady = true;
+        socket.emit('setupGame', game);
+     }
+    }
+  })
   socket.on('startGame', function (msg) {
     game = msg;
+    console.log(game);
     draw();
   });
   canvas.addEventListener('mousemove', sendMouse);

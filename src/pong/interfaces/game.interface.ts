@@ -34,7 +34,7 @@ class GameInterface {
   playerWidth: number;
   player1: PlayerInterface;
   player2: PlayerInterface;
-  ball: BallInterface
+  ball?: BallInterface
 }
 
 export default GameInterface;

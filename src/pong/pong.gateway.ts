@@ -39,7 +39,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log(socket.id);
     if (this.waiting && this.waiting.id == socket.id) {
       this.waiting = null;
     }
@@ -52,12 +51,27 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.waiting = socket;
       return ;
     }
-    const gameId = (this.games.length > 0 ? (this.games[this.games.length].id + 1) : 0).toString();
-    let game = this.gamesService.createGame(gameId, this.waiting.id, socket.id);
+    const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
+    let game = this.gamesService.initGame(gameId, this.waiting.id, socket.id);
     this.games.push(game);
     socket.join(gameId);
     this.waiting.join(gameId);
-    this.server.to(game.id).emit("startGame", game);
+    this.server.to(game.id).emit("setupGame", game);
+    this.waiting = null;
+  }
+
+  @SubscribeMessage("setupGame") 
+  async setupGame(@ConnectedSocket() socket: Socket, @MessageBody() gameData: GameInterface) {
+    if (gameData.player1.isReady == true && gameData.player2.isReady == true) {
+      console.log(gameData);
+      let game = this.games.find(g => g.id == gameData.id);
+      let index = this.games.indexOf(game);
+      this.games[index] = this.gamesService.launchGame(gameData);
+      this.server.to(gameData.id).emit('startGame', game);
+    }
+    else {
+      this.server.to(gameData.id).emit('setupGame', gameData);
+    }
   }
   @SubscribeMessage("start")
   async start(@ConnectedSocket() socket: Socket, @MessageBody() data: PlayerInterface) {

@@ -81,13 +81,55 @@ export class GamesService {
     }
   }
 
+  initGame(gameId: string, player1Id: string, player2Id: string) {
+    let game : GameInterface = {
+      id: gameId,
+      status: GameStatus.STOPPED,
+      maxPoints: GameMaxPoints.FIVE,
+      ballSpeed: GameBallSpeed.MEDIUM,
+      playerHeight: GamePlayerHeight.MEDIUM,
+      playerWidth: 5,
+      player1: {
+        id: player1Id,
+        isReady: false
+      },
+      player2: {
+        id: player2Id,
+        isReady: false
+      }
+    }
+    return (game);
+  }
+
+  launchGame(game) {
+    game.player1.x = 0;
+    game.player1.y = this.canvas.height / 2 - game.playerHeight / 2;
+    game.player1.score = 0;
+  
+    game.player2.x = this.canvas.width - game.playerWidth;
+    game.player2.y = this.canvas.height / 2 - game.playerHeight / 2;
+    game.player2.score = 0;
+
+    game.ball = {
+      x: this.canvas.width / 2,
+      y: this.canvas.height / 2,
+      r: 5,
+      speed: {
+        x: game.ballSpeed,
+        y: game.ballSpeed
+      }
+    }
+    game.status = GameStatus.RUNNING;
+    return game;
+  }
+
   createGame(gameId: string, player1Id: string, player2Id: string) {
     let game : GameInterface = {
       id: gameId,
       status: GameStatus.RUNNING,
       maxPoints: GameMaxPoints.FIVE,
       ballSpeed: GameBallSpeed.MEDIUM,
-      playerHeight: GamePlayerHeight.SMALL,
+      playerHeight: GamePlayerHeight.MEDIUM,
       playerWidth: 5,
       player1: {
         id: player1Id,
@@ -99,8 +141,8 @@ export class GamesService {
       player2: {
         id: player2Id,
         isReady: false,
-        y: this.canvas.height / 2 - GamePlayerHeight.MEDIUM / 2,
         x: this.canvas.width - this.PLAYER_WIDTH,
+        y: this.canvas.height / 2 - GamePlayerHeight.MEDIUM / 2,
         score: 0
       },
       ball: {
