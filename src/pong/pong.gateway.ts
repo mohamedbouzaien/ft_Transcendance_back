@@ -38,7 +38,11 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('new user ' + socket.id);
   }
 
-  async handleDisconnect(socket: Socket) {
+  async handleDisconnect(@ConnectedSocket() socket: Socket) {
+    console.log(socket.id);
+    if (this.waiting && this.waiting.id == socket.id) {
+      this.waiting = null;
+    }
 		console.log("disconnected");
   }
   

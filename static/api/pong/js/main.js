@@ -3,8 +3,6 @@
 var canvas;
 var game;
 var anim;
-const PLAYER_HEIGHT = 100;
-const PLAYER_WIDTH = 5;
 const socket = io("http://localhost:3000/pong");
 
 function draw() {
@@ -26,8 +24,8 @@ function draw() {
   //Draw players
 
   context.fillStyle = 'white';
-  context.fillRect(0, game.player1.y, PLAYER_WIDTH, PLAYER_HEIGHT);
-  context.fillRect(canvas.width - PLAYER_WIDTH, game.player2.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+  context.fillRect(0, game.player1.y, game.playerWidth, game.playerHeight);
+  context.fillRect(canvas.width - game.playerWidth, game.player2.y, game.playerWidth, game.playerHeight);
 
   //Draw Ball
   context.beginPath();

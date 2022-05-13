@@ -7,12 +7,33 @@ export enum GameStatus {
   ENDED = 'ended'
 };
 
+export enum GameMaxPoints {
+  FIVE = 5,
+  TEN = 10,
+  FIFTEEN = 15,
+}
+
+export enum GamePlayerHeight {
+  SMALL = 50,
+  MEDIUM = 100,
+  LARGE = 150,
+}
+
+export enum GameBallSpeed {
+  SLOW = 1.1,
+  MEDIUM = 2,
+  FAST = 2.5
+}
+
 class GameInterface {
   id: string;
-  max_points: number;
   status: GameStatus;
+  maxPoints: GameMaxPoints;
+  ballSpeed: GameBallSpeed;
+  playerHeight: GamePlayerHeight;
+  playerWidth: number;
   player1: PlayerInterface;
-  player2: PlayerInterface
+  player2: PlayerInterface;
   ball: BallInterface
 }
 
