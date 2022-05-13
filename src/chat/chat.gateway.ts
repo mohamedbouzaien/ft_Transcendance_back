@@ -141,12 +141,13 @@ export class ChatGateway implements OnGatewayConnection {
         const author = await this.chatsService.getUserFromSocket(socket);
         if (invitationData.invitedId === author.id) {
           socket.emit('invited_channels', await this.serializeBroadcastedInvitations(invitations));
-          return ;
+          return 'rejected';
         }
       }
     } catch (error) {
       return {error, invitationData};
     }
+    return 'yo'
   }
 
   @UsePipes(new ValidationPipe())
