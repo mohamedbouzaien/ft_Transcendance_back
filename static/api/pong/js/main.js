@@ -70,9 +70,9 @@ function start() {
     game= msg;
     draw();
     if (game.player1.score > game.player2.score) 
-      document.querySelector('#winner').textContent = "Winner is player1";
+      document.querySelector('#winner').textContent = 'player 1 named ' + game.player1.user.username + ' won';
     else
-    document.querySelector('#winner').textContent = "Winner is player2";
+    document.querySelector('#winner').textContent = 'player 2 named ' + game.player2.user.username + ' won';
 
   })
 }

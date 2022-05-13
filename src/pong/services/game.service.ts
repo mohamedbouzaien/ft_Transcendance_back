@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConnectedSocket } from "@nestjs/websockets";
-import { Socket } from "dgram";
+import { Socket } from "socket.io";
 import GameInterface, { GameBallSpeed, GameMaxPoints, GamePlayerHeight, GameStatus } from "../interfaces/game.interface";
 import MouseMoveInterface from "../interfaces/mouseMove.interface";
 import PlayerInterface from "../interfaces/player.interface";
@@ -82,7 +82,7 @@ export class GamesService {
     }
   }
 
-  initGame(gameId: string, player1Id: string, player2Id: string) {
+  initGame(gameId: string, player1: Socket, player2: Socket) {
     let game : GameInterface = {
       id: gameId,
       status: GameStatus.STOPPED,
@@ -91,11 +91,13 @@ export class GamesService {
       playerHeight: GamePlayerHeight.MEDIUM,
       playerWidth: 5,
       player1: {
-        id: player1Id,
+        id: player1.id,
+        user: player1.data.user,
         isReady: false
       },
       player2: {
-        id: player2Id,
+        id: player2.id,
+        user: player2.data.user,
         isReady: false
       }
     }
@@ -133,40 +135,5 @@ export class GamesService {
       }
     }
     game.status = GameStatus.RUNNING;
-  }
-
-  createGame(gameId: string, player1Id: string, player2Id: string) {
-    let game : GameInterface = {
-      id: gameId,
-      status: GameStatus.RUNNING,
-      maxPoints: GameMaxPoints.FIVE,
-      ballSpeed: GameBallSpeed.MEDIUM,
-      playerHeight: GamePlayerHeight.MEDIUM,
-      playerWidth: 5,
-      player1: {
-        id: player1Id,
-        isReady: false,
-        x: 0,
-        y: this.canvas.height / 2 - GamePlayerHeight.MEDIUM / 2,
-        score: 0
-      },
-      player2: {
-        id: player2Id,
-        isReady: false,
-        x: this.canvas.width - this.PLAYER_WIDTH,
-        y: this.canvas.height / 2 - GamePlayerHeight.MEDIUM / 2,
-        score: 0
-      },
-      ball: {
-        x: this.canvas.width / 2,
-        y: this.canvas.height / 2,
-        r: 5,
-        speed: {
-          x: GameBallSpeed.MEDIUM,
-          y: GameBallSpeed.MEDIUM
-        }
-      }
-    };
-    return game;
   }
 }

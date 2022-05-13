@@ -1,6 +1,6 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Socket, Server } from "socket.io";
-import BallInterface from "./interfaces/ball.interface";
+import { AuthenticationService } from "src/authentication/authentication.service";
 import GameInterface, { GameStatus } from "./interfaces/game.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
 import PlayerInterface from "./interfaces/player.interface";
@@ -18,6 +18,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly gamesService: GamesService,
+    private readonly authenticationService: AuthenticationService
   ) {}
 
   heartBeat() {
@@ -35,6 +36,22 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
   
   async handleConnection(@ConnectedSocket() socket: Socket, ...args: any[]) {
+    const user = await this.authenticationService.getUserFromSocket(socket);
+    socket.data.user = user;
+    for (let game of this.games) {
+      if (game.player1.user.id == user.id && game.player1.isReady == false) {
+        game.player1.id = socket.id;
+        game.player1.user = user;
+        game.player1.isReady = true;
+        socket.join(game.id);
+      }        
+      else if (game.player2.user.id == user.id && game.player2.isReady == false) {
+        game.player2.id = socket.id;
+        game.player2.user = user;
+        game.player2.isReady = true;
+        socket.join(game.id);
+      }
+    }
     console.log('new user ' + socket.id);
   }
 
@@ -42,17 +59,26 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (this.waiting && this.waiting.id == socket.id) {
       this.waiting = null;
     }
+    for (let game of this.games) {
+      if (game.player1.id == socket.id)
+        game.player1.isReady = false;
+      else if (game.player2.id == socket.id)
+        game.player2.isReady = false;
+    }
 		console.log("disconnected");
   }
   
   @SubscribeMessage("joinQueue")
   async joinQueue(@ConnectedSocket() socket: Socket) {
+    if (this.waiting.data.user.id == socket.data.id) {
+      return ;
+    }
     if (this.waiting == null) {
       this.waiting = socket;
       return ;
     }
     const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
-    let game = this.gamesService.initGame(gameId, this.waiting.id, socket.id);
+    let game = this.gamesService.initGame(gameId, this.waiting, socket);
     this.games.push(game);
     socket.join(gameId);
     this.waiting.join(gameId);
