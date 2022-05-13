@@ -67,7 +67,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   
   @SubscribeMessage("joinQueue")
   async joinQueue(@ConnectedSocket() socket: Socket) {
-    if (this.waiting.data.user.id == socket.data.id)
+    if (this.waiting && this.waiting.data.user.id == socket.data.id)
       return ;
     if (this.waiting == null) {
       this.waiting = socket;
