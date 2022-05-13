@@ -85,7 +85,7 @@ export class GamesService {
   initGame(gameId: string, player1: Socket, player2: Socket) {
     let game : GameInterface = {
       id: gameId,
-      status: GameStatus.STOPPED,
+      status: GameStatus.INITIALIZATION,
       maxPoints: GameMaxPoints.FIVE,
       ballSpeed: GameBallSpeed.MEDIUM,
       playerHeight: GamePlayerHeight.MEDIUM,

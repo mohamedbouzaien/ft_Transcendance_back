@@ -35,20 +35,32 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
   
+  checkPlayerSurrender() {
+    let time = new Date();
+    for (let game of this.games) {
+      if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
+        let checkedPlayer = (game.player1.isReady == false)? game.player1 : game.player2;
+        if (checkedPlayer.isReady == false && time > checkedPlayer.timer) {
+          let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
+          winner.score = game.maxPoints;
+          game.status = GameStatus.ENDED;
+          this.server.to(game.id).emit('endGame', game);
+        }
+      }
+    }
+  }
+
   async handleConnection(@ConnectedSocket() socket: Socket, ...args: any[]) {
     const user = await this.authenticationService.getUserFromSocket(socket);
     socket.data.user = user;
     for (let game of this.games) {
-      if (game.player1.user.id == user.id && game.player1.isReady == false) {
-        game.player1.id = socket.id;
-        game.player1.user = user;
-        game.player1.isReady = true;
-        socket.join(game.id);
-      }        
-      else if (game.player2.user.id == user.id && game.player2.isReady == false) {
-        game.player2.id = socket.id;
-        game.player2.user = user;
-        game.player2.isReady = true;
+      if ((game.player1.user.id == user.id && game.player1.isReady == false) ||
+      (game.player2.user.id == user.id && game.player2.isReady == false)) {
+        let player = (game.player1.user.id == user.id && game.player1.isReady == false)? game.player1 : game.player2;
+        player.id = socket.id;
+        player.user = user;
+        player.isReady = true;
+        game.status = GameStatus.RUNNING;
         socket.join(game.id);
       }
     }
@@ -58,10 +70,14 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (this.waiting && this.waiting.id == socket.id)
       this.waiting = null;
     for (let game of this.games) {
-      if (game.player1.id == socket.id)
-        game.player1.isReady = false;
-      else if (game.player2.id == socket.id)
-        game.player2.isReady = false;
+      if (game.player1.id == socket.id || game.player2.id == socket.id) {
+        let player = (game.player1.id == socket.id)? game.player1 : game.player2;
+        player.isReady = false;
+        let time = new Date();
+        time.setSeconds(time.getSeconds() + 10);
+        player.timer = time;
+        game.status = GameStatus.STOPPED;
+      }
     }
   }
   
