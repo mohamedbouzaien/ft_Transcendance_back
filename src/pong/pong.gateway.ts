@@ -52,30 +52,26 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
         socket.join(game.id);
       }
     }
-    console.log('new user ' + socket.id);
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    if (this.waiting && this.waiting.id == socket.id) {
+    if (this.waiting && this.waiting.id == socket.id)
       this.waiting = null;
-    }
     for (let game of this.games) {
       if (game.player1.id == socket.id)
         game.player1.isReady = false;
       else if (game.player2.id == socket.id)
         game.player2.isReady = false;
     }
-		console.log("disconnected");
   }
   
   @SubscribeMessage("joinQueue")
   async joinQueue(@ConnectedSocket() socket: Socket) {
-    if (this.waiting.data.user.id == socket.data.id) {
+    if (this.waiting.data.user.id == socket.data.id)
       return ;
-    }
     if (this.waiting == null) {
       this.waiting = socket;
-      return ;
+      return 'waiting';
     }
     const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
     let game = this.gamesService.initGame(gameId, this.waiting, socket);
