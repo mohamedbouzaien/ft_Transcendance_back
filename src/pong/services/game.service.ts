@@ -3,13 +3,14 @@ import { ConnectedSocket } from "@nestjs/websockets";
 import { Socket } from "dgram";
 import GameInterface, { GameBallSpeed, GameMaxPoints, GamePlayerHeight, GameStatus } from "../interfaces/game.interface";
 import MouseMoveInterface from "../interfaces/mouseMove.interface";
+import PlayerInterface from "../interfaces/player.interface";
 
 @Injectable()
 export class GamesService {
   PLAYER_WIDTH = 5;
   canvas =  {height: 480, width: 640}
 
-  reset(game) {
+  reset(game: GameInterface) {
     // Set ball and players to the center
     game.ball.x = this.canvas.width / 2;
     game.ball.y = this.canvas.height / 2;
@@ -21,13 +22,13 @@ export class GamesService {
     game.ball.speed.y = Math.random() * 2;
   }
 
-  changeDirection(game, playerPosition) {
+  changeDirection(game: GameInterface, playerPosition) {
     var impact = game.ball.y - playerPosition - game.playerHeight / 2;
     var ratio = 100 / (game.playerHeight / 2);
     game.ball.speed.y = Math.round(impact * ratio / 10);
   }
 
-  collide(game, player) {
+  collide(game: GameInterface, player: PlayerInterface) {
     // The player doesnt hit the ball
     if (game.ball.y < player.y || game.ball.y > player.y + game.playerHeight) {
       this.reset(game);
@@ -44,7 +45,7 @@ export class GamesService {
     }
   }
 
-  ballMove(game) {
+  ballMove(game: GameInterface) {
     if(game.ball.y > this.canvas.height || game.ball.y < 0) {
       game.ball.speed.y *= -1;
     }
@@ -57,7 +58,7 @@ export class GamesService {
     }
   }
 
-  updateGame(game) {
+  updateGame(game: GameInterface) {
     this.ballMove(game);
     if (game.player1.score == game.maxPoints || game.player2.score == game.maxPoints) {
       game.status = GameStatus.ENDED;
@@ -65,7 +66,7 @@ export class GamesService {
     return game;
   }
 
-  mouseUpdate(game, playerId: string, data: MouseMoveInterface) {
+  mouseUpdate(game: GameInterface, playerId: string, data: MouseMoveInterface) {
     let player;
     if (game.player1.id == playerId)
       player = game.player1;
@@ -101,7 +102,19 @@ export class GamesService {
     return (game);
   }
 
-  launchGame(game) {
+  setupGame(game: GameInterface, gameData: GameInterface) {
+    for (let param in gameData) {
+      if (param == 'player1' && 'isReady' in gameData.player1)
+        game.player1.isReady = gameData.player1.isReady;
+      else if (param == 'player2' && 'isReady' in gameData.player2)
+        game.player2.isReady = gameData.player2.isReady;
+      else
+        game[param] = gameData[param];
+    }
+
+  }
+
+  launchGame(game: GameInterface) {
     game.player1.x = 0;
     game.player1.y = this.canvas.height / 2 - game.playerHeight / 2;
     game.player1.score = 0;
@@ -120,7 +133,6 @@ export class GamesService {
       }
     }
     game.status = GameStatus.RUNNING;
-    return game;
   }
 
   createGame(gameId: string, player1Id: string, player2Id: string) {

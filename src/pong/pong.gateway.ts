@@ -62,16 +62,14 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage("setupGame") 
   async setupGame(@ConnectedSocket() socket: Socket, @MessageBody() gameData: GameInterface) {
+    let game = this.games.find(g => g.id == gameData.id);
+    this.gamesService.setupGame(game, gameData);
     if (gameData.player1.isReady == true && gameData.player2.isReady == true) {
-      console.log(gameData);
-      let game = this.games.find(g => g.id == gameData.id);
-      let index = this.games.indexOf(game);
-      this.games[index] = this.gamesService.launchGame(gameData);
+      this.gamesService.launchGame(game);
       this.server.to(gameData.id).emit('startGame', game);
     }
-    else {
-      this.server.to(gameData.id).emit('setupGame', gameData);
-    }
+    else
+      this.server.to(gameData.id).emit('setupGame', game);
   }
   @SubscribeMessage("start")
   async start(@ConnectedSocket() socket: Socket, @MessageBody() data: PlayerInterface) {
