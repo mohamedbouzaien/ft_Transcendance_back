@@ -100,6 +100,7 @@ export class ChatGateway implements OnGatewayConnection {
           end_of_sanction: null
         })
         this.sendToUsers(updated.channelId, 'channel_user', await this.serializeBroadcastedEntity(updated));
+        this.channelUsersService.deleteChannelUser(updated.id);
       }
     }
   }
