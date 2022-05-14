@@ -1,6 +1,7 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Socket, Server } from "socket.io";
 import { AuthenticationService } from "src/authentication/authentication.service";
+import { GameNotFoundException } from "./exception/GameNotFound.exception";
 import GameInterface, { GameStatus } from "./interfaces/game.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
 import PlayerInterface from "./interfaces/player.interface";
@@ -115,14 +116,21 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage("setupGame") 
   async setupGame(@ConnectedSocket() socket: Socket, @MessageBody() gameData: GameInterface) {
-    let game = this.games.find(g => g.id == gameData.id);
-    this.gamesService.setupGame(game, gameData);
-    if (gameData.player1.isReady == true && gameData.player2.isReady == true) {
-      this.gamesService.launchGame(game);
-      this.server.to(gameData.id).emit('startGame', game);
+    try {
+      let game = this.games.find(g => g.id == gameData.id);
+      if (!game)
+        throw new GameNotFoundException(Number(gameData.id));
+      this.gamesService.setupGame(socket, game, gameData);
+      if (gameData.player1.isReady == true && gameData.player2.isReady == true) {
+        this.gamesService.launchGame(game);
+        this.server.to(gameData.id).emit('startGame', game);
+      }
+      else
+        this.server.to(gameData.id).emit('setupGame', game);
+    } catch (error) {
+      console.log(error);
+      return (error);
     }
-    else
-      this.server.to(gameData.id).emit('setupGame', game);
   }
 
   @SubscribeMessage('mousemove')

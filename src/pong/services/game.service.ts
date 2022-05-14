@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ConnectedSocket } from "@nestjs/websockets";
 import { Socket } from "socket.io";
+import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import GameInterface, { GameBallSpeed, GameMaxPoints, GamePlayerHeight, GameStatus } from "../interfaces/game.interface";
 import MouseMoveInterface from "../interfaces/mouseMove.interface";
 import PlayerInterface from "../interfaces/player.interface";
@@ -104,7 +105,10 @@ export class GamesService {
     return (game);
   }
 
-  setupGame(game: GameInterface, gameData: GameInterface) {
+  setupGame(socket: Socket, game: GameInterface, gameData: GameInterface) {
+    /*if ((gameData.player1 && gameData.player1.isReady != game.player1.isReady && game.player1.id != socket.id) || 
+    (gameData.player2 && gameData.player2.isReady != game.player2.isReady && game.player2.id != socket.id))
+      throw new UserUnauthorizedException(socket.data.user.id);*/
     for (let param in gameData) {
       if (param == 'player1' && 'isReady' in gameData.player1)
         game.player1.isReady = gameData.player1.isReady;
