@@ -84,7 +84,6 @@ export class ChatService {
       return false;
     }
     else if (channelUser.end_of_sanction && channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
-      console.log('ban ended');
       await this.channelUsersService.updateChannelUser(channelUser.id, {
         ...channelUser,
         sanction: null,
@@ -92,7 +91,6 @@ export class ChatService {
       })
       return false;
     }
-    console.log('banned');
     return true;
   }
 
