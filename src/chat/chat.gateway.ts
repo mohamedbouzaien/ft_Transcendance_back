@@ -106,7 +106,7 @@ export class ChatGateway implements OnGatewayConnection {
         else {
           console.log('end of ban');
           this.channelUsersService.deleteChannelUser(channelUser.id);
-          this.sendToUsers(channelUser.id, 'left_channel', await this.serializeBroadcastedEntity(channelUser));
+          this.sendToUsers(channelUser.channelId, 'left_channel', await this.serializeBroadcastedEntity(channelUser));
         }
       }
     }
