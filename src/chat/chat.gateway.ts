@@ -79,6 +79,17 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  async sendBanToUser(channelId: number, userId: number) {
+    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+    for (let socket of sockets) {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      if (user.id === userId && user.userChannels.find(userChannel => userChannel.channelId == channelId)) {
+        socket.emit('user_banned', channelId);
+      }
+    }
+  }
+
   async sendToUsers(channelId: number, event: string, to_send: any) {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
@@ -100,13 +111,10 @@ export class ChatGateway implements OnGatewayConnection {
             sanction: null,
             end_of_sanction: null
           })
-          console.log('end of mute');
           this.sendToUsers(updated.channelId, 'channel_user', await this.serializeBroadcastedEntity(updated));
         }
         else {
-          console.log('end of ban');
           this.channelUsersService.deleteChannelUser(channelUser.id);
-          this.sendToUsers(channelUser.channelId, 'left_channel', await this.serializeBroadcastedEntity(channelUser));
         }
       }
     }
@@ -165,6 +173,9 @@ export class ChatGateway implements OnGatewayConnection {
       const user = await this.chatsService.getUserFromSocket(socket);
       const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
       this.sendToUsers(channel_user.channelId, 'channel_user', await this.serializeBroadcastedEntity(channel_user));
+      if (channelUserData.sanction === 'ban'){
+          await this.sendBanToUser(channel_user.channelId, channel_user.user.id)
+      }
     } catch (error) {
       return {error, channelUserData};
     }
