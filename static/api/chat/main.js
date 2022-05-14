@@ -82,8 +82,8 @@ const app = new Vue({
     //this.socket.emit('send_direct_message', {channelId: 14, content: 'hello'});
     var d = new Date(); d.setMinutes(d.getMinutes() + 1);
     this.socket.emit('manage_channel_user', {
-      id: 74,
-      sanction: 'ban',
+      id: 82,
+      sanction: 'mute',
       end_of_sanction: d,
 
     });

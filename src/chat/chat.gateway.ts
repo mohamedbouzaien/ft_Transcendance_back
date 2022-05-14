@@ -94,13 +94,20 @@ export class ChatGateway implements OnGatewayConnection {
     let sanctionned = await this.channelUsersService.getTemporarySanctionnedChannelUsers();
     for (const channelUser of sanctionned) {
       if (channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
-        let updated = await this.channelUsersService.updateChannelUser(channelUser.id, {
-          ...channelUser,
-          sanction: null,
-          end_of_sanction: null
-        })
-        this.sendToUsers(updated.channelId, 'channel_user', await this.serializeBroadcastedEntity(updated));
-        this.channelUsersService.deleteChannelUser(updated.id);
+        if (channelUser.sanction == SanctionType.MUTE) {
+          let updated = await this.channelUsersService.updateChannelUser(channelUser.id, {
+            ...channelUser,
+            sanction: null,
+            end_of_sanction: null
+          })
+          console.log('end of mute');
+          this.sendToUsers(updated.channelId, 'channel_user', await this.serializeBroadcastedEntity(updated));
+        }
+        else {
+          console.log('end of ban');
+          this.channelUsersService.deleteChannelUser(channelUser.id);
+          this.sendToUsers(channelUser.id, 'left_channel', await this.serializeBroadcastedEntity(channelUser));
+        }
       }
     }
   }
