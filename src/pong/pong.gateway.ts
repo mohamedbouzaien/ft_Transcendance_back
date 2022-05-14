@@ -5,6 +5,7 @@ import GameInterface, { GameStatus } from "./interfaces/game.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
 import PlayerInterface from "./interfaces/player.interface";
 import { GamesService } from "./services/game.service";
+import { RoomsService } from "./services/room.service";
 
 
 @WebSocketGateway({namespace: 'pong'})
@@ -12,14 +13,18 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @WebSocketServer()
   server: Server;
-  waiting: Socket = null;
-  games: GameInterface[] = [];
+  queue: Socket[];
+  games: GameInterface[];
 
 
   constructor(
     private readonly gamesService: GamesService,
-    private readonly authenticationService: AuthenticationService
-  ) {}
+    private readonly authenticationService: AuthenticationService,
+    private readonly roomsService: RoomsService
+  ) {
+    this.queue = [];
+    this.games = [];
+  }
 
   heartBeat() {
     for (let game of this.games) {
@@ -35,7 +40,20 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
   
-  checkPlayerSurrender() {
+  async matchmaking() {
+    while (this.queue.length >= 2) {
+      const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
+      const player1 = this.queue.shift();
+      const player2 = this.queue.shift();
+      let game = this.gamesService.initGame(gameId, player1, player2);
+      player1.join(gameId);
+      player2.join(gameId);
+      this.games.push(game);
+      this.server.to(game.id).emit("setupGame", game);
+    }
+  }
+
+  async checkPlayerSurrender() {
     let time = new Date();
     for (let game of this.games) {
       if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
@@ -67,8 +85,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    if (this.waiting && this.waiting.id == socket.id)
-      this.waiting = null;
+    /*if (this.waiting && this.waiting.id == socket.id)
+      this.waiting = null;*/
     for (let game of this.games) {
       if (game.player1.id == socket.id || game.player2.id == socket.id) {
         let player = (game.player1.id == socket.id)? game.player1 : game.player2;
@@ -81,21 +99,18 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
   
+
+
   @SubscribeMessage("joinQueue")
   async joinQueue(@ConnectedSocket() socket: Socket) {
-    if (this.waiting && this.waiting.data.user.id == socket.data.id)
-      return ;
-    if (this.waiting == null) {
-      this.waiting = socket;
-      return 'waiting';
+    try {
+      //this.roomsService.checkQueueEligibility(socket, this.queue, this.games);
+      this.queue.push(socket);
+      return this.queue.length;
+    } catch (error) {
+      console.log(error);
+      return error;
     }
-    const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
-    let game = this.gamesService.initGame(gameId, this.waiting, socket);
-    this.games.push(game);
-    socket.join(gameId);
-    this.waiting.join(gameId);
-    this.server.to(game.id).emit("setupGame", game);
-    this.waiting = null;
   }
 
   @SubscribeMessage("setupGame") 
@@ -108,10 +123,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     else
       this.server.to(gameData.id).emit('setupGame', game);
-  }
-  @SubscribeMessage("start")
-  async start(@ConnectedSocket() socket: Socket, @MessageBody() data: PlayerInterface) {
-    console.log('start');
   }
 
   @SubscribeMessage('mousemove')
