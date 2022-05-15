@@ -1,4 +1,5 @@
 import { Socket } from "socket.io";
+import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import BallInterface from "../interfaces/ball.interface";
 import GameSetupInterface from "../interfaces/gameSetup.interface";
 import MouseMoveInterface from "../interfaces/mouseMove.interface";
@@ -97,8 +98,10 @@ class Game {
     let player;
     if (this.player1.user.id == playerId)
       player = this.player1;
-    else
+    else if (this.player2.user.id == playerId)
       player = this.player2;
+    else 
+      throw new UserUnauthorizedException(playerId);
     var mouseLocation = data.clientY - data.canvasLocationY;
     if (mouseLocation < this.playerHeight / 2)
       player.y = 0;

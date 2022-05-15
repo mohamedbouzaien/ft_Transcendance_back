@@ -4,6 +4,7 @@ import { Request } from "express";
 import { Socket, Server } from "socket.io";
 import { AuthenticationService } from "src/authentication/authentication.service";
 import RequestWithUser from "src/authentication/request-with-user.interface";
+import { FindOne } from "./dto/findOne.dto";
 import { GameNotFoundException } from "./exception/GameNotFound.exception";
 import GameSetupInterface from "./interfaces/gameSetup.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
@@ -155,4 +156,18 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return error;
     }
   }
+
+  @UsePipes(new ValidationPipe())
+  @SubscribeMessage('viewGame')
+  async addViewerToGame(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
+    try {
+      let game = this.games.find(g => g.id == data.id);
+      if (!game)
+        throw new GameNotFoundException(Number(data.id));
+      socket.join(game.id);
+      socket.emit('startGame', game);
+    } catch (error){
+      return error;
+    }
+  }  
 }
