@@ -16,6 +16,7 @@ import { RoomsService } from "./services/room.service";
 @WebSocketGateway(  
  {
   namespace:'pong',
+  allowEIO3: true ,
   cors: {
     origin: "http://localhost:3008",
     methods: ["GET", "POST"],
