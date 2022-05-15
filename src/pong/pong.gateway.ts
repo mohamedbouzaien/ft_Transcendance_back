@@ -4,6 +4,7 @@ import { Request } from "express";
 import { Socket, Server } from "socket.io";
 import { AuthenticationService } from "src/authentication/authentication.service";
 import RequestWithUser from "src/authentication/request-with-user.interface";
+import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import { FindOne } from "./dto/findOne.dto";
 import { GameNotFoundException } from "./exception/GameNotFound.exception";
 import GameSetupInterface from "./interfaces/gameSetup.interface";
@@ -107,8 +108,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     }
   }
-  
-
 
   @SubscribeMessage("joinQueue")
   async joinQueue(@ConnectedSocket() socket: Socket) {
@@ -164,8 +163,9 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       let game = this.games.find(g => g.id == data.id);
       if (!game)
         throw new GameNotFoundException(Number(data.id));
+      if (socket.data.user.id == game.player1.user.id || socket.data.user.id)
+       throw new UserUnauthorizedException(socket.data.user.id);
       socket.join(game.id);
-      socket.emit('startGame', game);
     } catch (error){
       return error;
     }

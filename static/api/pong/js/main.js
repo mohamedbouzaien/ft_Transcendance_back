@@ -67,8 +67,6 @@ function sendMouse(event) {
 
 function start() {
   socket.emit('joinQueue');
-  canvas.addEventListener('mousemove', sendMouse);
-
 }
 
 function stop () {
@@ -93,6 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#start-game').addEventListener('click', start);
   document.querySelector('#stop-game').addEventListener('click', stop);
   document.querySelector('#view-game').addEventListener('click', view);
-
+  canvas.addEventListener('mousemove', sendMouse);
 
 })
