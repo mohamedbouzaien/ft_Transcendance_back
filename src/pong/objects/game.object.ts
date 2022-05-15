@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import BallInterface from "../interfaces/ball.interface";
-import GameInterface from "../interfaces/game.interface";
+import GameSetupInterface from "../interfaces/gameSetup.interface";
 import MouseMoveInterface from "../interfaces/mouseMove.interface";
 import PlayerInterface from "../interfaces/player.interface";
 
@@ -63,16 +63,16 @@ class Game {
     }
   }
 
-  setupGame(socket: Socket, gameData: GameInterface) {
+  setupGame(socket: Socket, gameData: GameSetupInterface) {
     /*if ((gameData.player1 && gameData.player1.isReady != game.player1.isReady && game.player1.id != socket.id) || 
     (gameData.player2 && gameData.player2.isReady != game.player2.isReady && game.player2.id != socket.id))
       throw new UserUnauthorizedException(socket.data.user.id);*/
     for (let param in gameData) {
-      if (param == 'player1' && 'isReady' in gameData.player1)
-        this.player1.isReady = gameData.player1.isReady;
-      else if (param == 'player2' && 'isReady' in gameData.player2)
-        this.player2.isReady = gameData.player2.isReady;
-      else
+      if (param == 'isPlayerReady') {
+        let player = (this.player1.id == socket.id )? this.player1 : this.player2;
+        player.isReady = gameData[param];
+      }
+      else if (param.toString() == "maxPoints" || param == "ballSpeed" || param == "playerHeight")
         this[param] = gameData[param];
     }
   }

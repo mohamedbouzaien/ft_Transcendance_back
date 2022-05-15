@@ -3,9 +3,9 @@ import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect,
 import { Socket, Server } from "socket.io";
 import { AuthenticationService } from "src/authentication/authentication.service";
 import { GameNotFoundException } from "./exception/GameNotFound.exception";
-import GameInterface, { GameStatus } from "./interfaces/game.interface";
+import GameSetupInterface from "./interfaces/gameSetup.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
-import Game from "./objects/game.object";
+import Game, { GameStatus } from "./objects/game.object";
 import { RoomsService } from "./services/room.service";
 
 
@@ -112,8 +112,9 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @UsePipes(new ValidationPipe())
   @SubscribeMessage("setupGame") 
-  async setupGame(@ConnectedSocket() socket: Socket, @MessageBody() gameData: GameInterface) {
+  async setupGame(@ConnectedSocket() socket: Socket, @MessageBody() gameData: GameSetupInterface) {
     try {
       let game = this.games.find(g => g.id == gameData.id);
       if (!game)

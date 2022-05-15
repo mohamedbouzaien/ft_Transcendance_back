@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { Socket } from "socket.io";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
-import GameInterface from "../interfaces/game.interface";
+import GameInterface from "../interfaces/gameSetup.interface";
+import Game from "../objects/game.object";
 
 @Injectable()
 export class RoomsService {
-  checkQueueEligibility(socket: Socket, queue: Socket[], games: GameInterface[]) {
+  checkQueueEligibility(socket: Socket, queue: Socket[], games: Game[]) {
     queue.forEach(queued => {
       if (queued.data.user.id == socket.data.user.id)
         throw new UserUnauthorizedException(socket.data.user.id);
