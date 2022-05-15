@@ -11,7 +11,14 @@ import Game, { GameStatus } from "./objects/game.object";
 import { RoomsService } from "./services/room.service";
 
 
-@WebSocketGateway({namespace: 'pong'})
+@WebSocketGateway(  
+ {
+  namespace:'pong',
+  cors: {
+    origin: "http://localhost:3008",
+    methods: ["GET", "POST"],
+    credentials: true
+}})
 export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @WebSocketServer()
