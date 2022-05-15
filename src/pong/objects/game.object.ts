@@ -52,24 +52,19 @@ class Game {
     this.playerHeight = GamePlayerHeight.MEDIUM;
     this.playerWidth = 5;
     this.player1 = {
-      id: player1.id,
       user: player1.data.user,
       isReady: false
     },
     this.player2 = {
-      id: player2.id,
       user: player2.data.user,
       isReady: false
     }
   }
 
-  setupGame(socket: Socket, gameData: GameSetupInterface) {
-    /*if ((gameData.player1 && gameData.player1.isReady != game.player1.isReady && game.player1.id != socket.id) || 
-    (gameData.player2 && gameData.player2.isReady != game.player2.isReady && game.player2.id != socket.id))
-      throw new UserUnauthorizedException(socket.data.user.id);*/
+  setupGame(id: number, gameData: GameSetupInterface) {
     for (let param in gameData) {
       if (param == 'isPlayerReady') {
-        let player = (this.player1.id == socket.id )? this.player1 : this.player2;
+        let player = (this.player1.user.id == id )? this.player1 : this.player2;
         player.isReady = gameData[param];
       }
       else if (param.toString() == "maxPoints" || param == "ballSpeed" || param == "playerHeight")
@@ -98,9 +93,9 @@ class Game {
     this.status = GameStatus.RUNNING;
   }
 
-  mouseUpdate(playerId: string, data: MouseMoveInterface) {
+  mouseUpdate(playerId: number, data: MouseMoveInterface) {
     let player;
-    if (this.player1.id == playerId)
+    if (this.player1.user.id == playerId)
       player = this.player1;
     else
       player = this.player2;

@@ -35,7 +35,6 @@ function draw() {
 }
 
 function sendMouse(event) {
-  console.log(event);
   if (game && game.status == 'running')
     socket.emit('mousemove', {id: game.id, canvasLocationY: canvas.getBoundingClientRect().y, clientY: event.clientY});
 }
@@ -44,16 +43,12 @@ function start() {
   socket.emit('joinQueue');
   socket.on('setupGame', function (msg) {
     game = msg;
-    if (game.status != 'running') { 
-      if (socket.id == game.player1.id)
+    if (game.status == 'initialization') { 
         socket.emit('setupGame', {id: game.id, playerHeight: 50, isPlayerReady: true});
-     else
-       socket.emit('setupGame', {id: game.id, isPlayerReady: true});
     }
   })
   socket.on('startGame', function (msg) {
     game = msg;
-    console.log(game);
     draw();
   });
   canvas.addEventListener('mousemove', sendMouse);

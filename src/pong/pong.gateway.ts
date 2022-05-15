@@ -1,7 +1,9 @@
-import { ClassSerializerInterceptor, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { BadRequestException, ClassSerializerInterceptor, Req, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { Request } from "express";
 import { Socket, Server } from "socket.io";
 import { AuthenticationService } from "src/authentication/authentication.service";
+import RequestWithUser from "src/authentication/request-with-user.interface";
 import { GameNotFoundException } from "./exception/GameNotFound.exception";
 import GameSetupInterface from "./interfaces/gameSetup.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
@@ -67,14 +69,13 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  async handleConnection(@ConnectedSocket() socket: Socket, ...args: any[]) {
+  async handleConnection(@ConnectedSocket() socket: Socket) {
     const user = await this.authenticationService.getUserFromSocket(socket);
     socket.data.user = user;
     for (let game of this.games) {
       if ((game.player1.user.id == user.id && game.player1.isReady == false) ||
       (game.player2.user.id == user.id && game.player2.isReady == false)) {
         let player = (game.player1.user.id == user.id && game.player1.isReady == false)? game.player1 : game.player2;
-        player.id = socket.id;
         player.user = user;
         player.isReady = true;
         game.status = GameStatus.RUNNING;
@@ -88,8 +89,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (isQueued)
       this.queue.splice(this.queue.indexOf(isQueued), 1);
     for (let game of this.games) {
-      if (game.player1.id == socket.id || game.player2.id == socket.id) {
-        let player = (game.player1.id == socket.id)? game.player1 : game.player2;
+      if (game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id) {
+        let player = (game.player1.user.id == socket.data.id)? game.player1 : game.player2;
         player.isReady = false;
         let time = new Date();
         time.setSeconds(time.getSeconds() + 10);
@@ -104,10 +105,11 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage("joinQueue")
   async joinQueue(@ConnectedSocket() socket: Socket) {
     try {
-      //this.roomsService.checkQueueEligibility(socket, this.queue, this.games);
+      this.roomsService.checkQueueEligibility(socket, this.queue, this.games);
       this.queue.push(socket);
       return this.queue.length;
     } catch (error) {
+      console.log(error);
       return error;
     }
   }
@@ -119,10 +121,13 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       let game = this.games.find(g => g.id == gameData.id);
       if (!game)
         throw new GameNotFoundException(Number(gameData.id));
-      game.setupGame(socket, gameData);
+      if (game.status != GameStatus.INITIALIZATION)
+        throw new BadRequestException();
+      game.setupGame(socket.data.user.id, gameData);
       if (game.player1.isReady == true && game.player2.isReady == true) {
         game.launchGame();
         this.server.to(gameData.id).emit('startGame', game);
+        return ;
       }
       else
         this.server.to(gameData.id).emit('setupGame', game);
@@ -138,7 +143,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       let game = this.games.find(g => g.id == data.id);
       if (!game)
         throw new GameNotFoundException(Number(data.id));
-      game.mouseUpdate(socket.id, data);
+      game.mouseUpdate(socket.data.user.id, data);
     } catch (error){
       return error;
     }
