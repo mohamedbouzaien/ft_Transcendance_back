@@ -4,8 +4,7 @@ import { AuthenticationService } from "src/authentication/authentication.service
 import { GameNotFoundException } from "./exception/GameNotFound.exception";
 import GameInterface, { GameStatus } from "./interfaces/game.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
-import PlayerInterface from "./interfaces/player.interface";
-import { GamesService } from "./services/game.service";
+import Game from "./objects/game.object";
 import { RoomsService } from "./services/room.service";
 
 
@@ -15,11 +14,9 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
   queue: Socket[];
-  games: GameInterface[];
-
-
+  games: Game[];
+  
   constructor(
-    private readonly gamesService: GamesService,
     private readonly authenticationService: AuthenticationService,
     private readonly roomsService: RoomsService
   ) {
@@ -30,7 +27,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   heartBeat() {
     for (let game of this.games) {
       if (game.status == GameStatus.RUNNING) {
-        this.gamesService.updateGame(game);
+        game.updateGame();
         if (game.status.toString() == GameStatus.ENDED) {
           this.server.to(game.id).emit('endGame', game);
           this.games.splice(this.games.indexOf(game), 1);
@@ -46,7 +43,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
       const player1 = this.queue.shift();
       const player2 = this.queue.shift();
-      let game = this.gamesService.initGame(gameId, player1, player2);
+      let game = new Game(gameId, player1, player2);
       player1.join(gameId);
       player2.join(gameId);
       this.games.push(game);
@@ -86,8 +83,9 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    /*if (this.waiting && this.waiting.id == socket.id)
-      this.waiting = null;*/
+    let isQueued = this.queue.find(queued => queued.id == socket.id);
+    if (isQueued)
+      this.queue.splice(this.queue.indexOf(isQueued), 1);
     for (let game of this.games) {
       if (game.player1.id == socket.id || game.player2.id == socket.id) {
         let player = (game.player1.id == socket.id)? game.player1 : game.player2;
@@ -109,7 +107,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.queue.push(socket);
       return this.queue.length;
     } catch (error) {
-      console.log(error);
       return error;
     }
   }
@@ -120,22 +117,27 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       let game = this.games.find(g => g.id == gameData.id);
       if (!game)
         throw new GameNotFoundException(Number(gameData.id));
-      this.gamesService.setupGame(socket, game, gameData);
-      if (gameData.player1.isReady == true && gameData.player2.isReady == true) {
-        this.gamesService.launchGame(game);
+      game.setupGame(socket, gameData);
+      if (game.player1.isReady == true && game.player2.isReady == true) {
+        game.launchGame();
         this.server.to(gameData.id).emit('startGame', game);
       }
       else
         this.server.to(gameData.id).emit('setupGame', game);
     } catch (error) {
-      console.log(error);
       return (error);
     }
   }
 
   @SubscribeMessage('mousemove')
   async mouseMove(@ConnectedSocket() socket: Socket, @MessageBody() data: MouseMoveInterface) {
-    let game = this.games.find(g => g.id == data.id);
-    this.gamesService.mouseUpdate(game, socket.id, data);
+    try {
+      let game = this.games.find(g => g.id == data.id);
+      if (!game)
+        throw new GameNotFoundException(Number(data.id));
+      game.mouseUpdate(socket.id, data);
+    } catch (error){
+      return error;
+    }
   }
 }

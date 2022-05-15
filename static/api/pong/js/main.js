@@ -46,7 +46,6 @@ function start() {
     game = msg;
     if (game.status != 'running') { 
       if (socket.id == game.player1.id) {
-        game.id = "a";
         game.playerHeight = 50;
         game.player1.isReady = true;
         game.player2.isReady = true;
