@@ -104,7 +104,7 @@ class Game {
       player = this.player1;
     else
       player = this.player2;
-    var mouseLocation = data.clientY - data.canvasLocation.y;
+    var mouseLocation = data.clientY - data.canvasLocationY;
     if (mouseLocation < this.playerHeight / 2)
       player.y = 0;
     else if (mouseLocation > this.canvasHeight - this.playerHeight / 2)
