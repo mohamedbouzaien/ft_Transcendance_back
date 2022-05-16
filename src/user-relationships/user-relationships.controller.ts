@@ -34,14 +34,19 @@ export class UserRelationshipsController {
     @UseGuards(JwtTwoFactornGuard)
     async updateStatus(@Req() request: RequestWithUser, @Body() {id, status}: UpdateUserRelationshipStatusDto) {
         const {user} = request;
-        const userRelationship = await this.userRelationshipsService.getById(id);
-        return await this.userRelationshipsService.updateStatus(status, userRelationship, user);
+        const secondUser = await this.usersService.getById(id);
+        const userRelationship = await this.userRelationshipsService.findByUsers(user, secondUser);
+        await this.userRelationshipsService.updateStatus(status, userRelationship, user);
+        return this.usersService.getById(user.id);
     }
 
     @Delete(':id')
     @UseGuards(JwtTwoFactornGuard)
     async deleteRelationship(@Param('id', ParseIntPipe)id: number, @Req() request:RequestWithUser) {
         const {user} = request;
-        return await this.userRelationshipsService.delete(id, user);
+        const secondUser = await this.usersService.getById(id);
+        const userRelationship = await this.userRelationshipsService.findByUsers(user, secondUser);
+        await this.userRelationshipsService.delete(userRelationship.id, user);
+        return this.usersService.getById(user.id);
     }
 }

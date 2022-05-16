@@ -57,4 +57,10 @@ export class UsersController {
     async   getUserById(@Param('id', ParseIntPipe) id: number) {
         return this.usersService.getById(id);
     }
+
+    @Get("/username/:username")
+    @UseGuards(JwtTwoFactornGuard)
+    async   getByUsername(@Param('username') username: string) {
+        return this.usersService.getByUsername(username);
+    }
 }

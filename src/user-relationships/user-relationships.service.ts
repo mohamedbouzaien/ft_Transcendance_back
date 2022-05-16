@@ -31,6 +31,25 @@ export class UserRelationshipsService {
         throw new HttpException('Relationship with this user already exists', HttpStatus.BAD_REQUEST);
     }
 
+    async findByUsers(first: User, second: User) {
+        const userRelationshipFound = await this.userRelashionshipRepository.findOne({
+            issuer: first,
+            receiver: second
+        });
+        
+        if (userRelationshipFound)
+            return userRelationshipFound;
+        else {
+            const userRelationshipReverseFound = await this.userRelashionshipRepository.findOne({
+                issuer: second,
+                receiver: first
+            });
+            if (userRelationshipReverseFound)
+                return userRelationshipReverseFound;
+        }
+        throw new HttpException('Relationship doesn\'t exist', HttpStatus.BAD_REQUEST);
+    }
+
     async getById(id: number) {
         const userRelationship = await this.userRelashionshipRepository.findOne(id);
         if (userRelationship)
@@ -39,15 +58,15 @@ export class UserRelationshipsService {
     }
     
     async updateStatus(status: UserRelationshipStatus, userRelationship: UserRelationship, user: User) {
-        if (userRelationship.receiver == user && userRelationship.status == UserRelationshipStatus.PENDING 
-            && status == UserRelationshipStatus.FRIENDS) {
+        if (userRelationship.receiver_id === user.id && userRelationship.status === UserRelationshipStatus.PENDING 
+            && status === UserRelationshipStatus.FRIENDS) {
             await this.userRelashionshipRepository.update(userRelationship.id, {
                 status: UserRelationshipStatus.FRIENDS
             });
             return this.userRelashionshipRepository.findOne(userRelationship.id);
             }
-        if (status == UserRelationshipStatus.BLOCKED && userRelationship.status == UserRelationshipStatus.FRIENDS
-            || userRelationship.status == UserRelationshipStatus.PENDING) {
+        if (status === UserRelationshipStatus.BLOCKED && (userRelationship.status === UserRelationshipStatus.FRIENDS
+            || userRelationship.status === UserRelationshipStatus.PENDING)) {
             await this.userRelashionshipRepository.update(userRelationship.id, {
                 status: UserRelationshipStatus.BLOCKED
             });
@@ -58,7 +77,7 @@ export class UserRelationshipsService {
 
     async delete(id: number, user: User) {
         const userRelationship = await this.userRelashionshipRepository.findOne(id);
-        if (userRelationship && (userRelationship.issuer_id == user.id || userRelationship.receiver_id == user.id))
+        if (userRelationship && (userRelationship.issuer_id === user.id || userRelationship.receiver_id === user.id))
             return await this.userRelashionshipRepository.delete(id);
         throw new HttpException('Relationship status not alloud', HttpStatus.BAD_REQUEST);
     }
