@@ -90,8 +90,8 @@ class Game {
       y: this.canvasHeight / 2,
       r: 5,
       speed: {
-        x: this.ballSpeed,
-        y: this.ballSpeed
+        x: 2,
+        y: 2
       }
     }
     this.status = GameStatus.RUNNING;
@@ -145,7 +145,13 @@ class Game {
       }
     } else {
       // Increase speed and change direction
-      this.ball.speed.x *= -1.2;
+      if (this.ballSpeed > -12 && this.ball.speed.x < 12) {
+        this.ball.speed.x *= -this.ballSpeed;
+      }
+      if(this.ballSpeed < -12)
+        this.ballSpeed = -12;
+      if (this.ballSpeed > 12)
+        this.ballSpeed = 12;
       this.changeDirection(player.y);
     }
   }
