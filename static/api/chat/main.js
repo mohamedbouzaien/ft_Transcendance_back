@@ -67,6 +67,10 @@ const app = new Vue({
     xhr.send(data);
     
   },
+  getDmChannel() {
+    const id = this.content;
+    this.socket.emit('get_direct_messages_channel', {id},  elem => console.log(elem));
+  },
   leaveChannel() {
     const id = this.content;
     this.socket.emit('leave_channel', {id},  elem => console.log(elem));
@@ -76,13 +80,13 @@ const app = new Vue({
     //this.socket.emit('manage_blocked_users', {id: '2'});
     //this.socket.emit('get_direct_messages_channel', {id: '2'});
     //this.socket.emit('send_direct_message', {channelId: 14, content: 'hello'});
-    //var d = new Date(); d.setMinutes(d.getMinutes() + 1);
-    /*this.socket.emit('manage_channel_user_sanction', {
-      id: 16,
-      sanction: 'ban',
+    var d = new Date(); d.setMinutes(d.getMinutes() + 1);
+    this.socket.emit('manage_channel_user', {
+      id: 82,
+      sanction: 'mute',
       end_of_sanction: d,
 
-    });*/
+    });
     //this.socket.emit('update_password', {id: 9, old_password: this.new_channel_password, new_password: 'test'});
     /*this.socket.emit('manage_channel_user', {
       id: 51,

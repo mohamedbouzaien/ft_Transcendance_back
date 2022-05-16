@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { IsNull, Not, Repository } from "typeorm";
 import CreateChannelUserDto from "../dto/createChannelUser.dto";
 import UpdateChannelUserDto from "../dto/updateChannelUser.dto";
 import ChannelUser from "../entities/channelUser.entity";
@@ -12,6 +12,14 @@ export class ChannelUsersService {
     private readonly channelUsersRepository: Repository<ChannelUser>
     ) {}
 
+    async getTemporarySanctionnedChannelUsers() {
+      return await this.channelUsersRepository.find({
+        where: {
+          sanction: Not(IsNull()),
+          end_of_sanction: Not(IsNull())
+        }
+      })
+    }
     async getChannelUserById(id: number) {
       const channelUser = this.channelUsersRepository.findOne(id, {relations: ['user']});
       if (!channelUser) {
