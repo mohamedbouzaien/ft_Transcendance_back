@@ -18,7 +18,7 @@ import { RoomsService } from "./services/room.service";
   namespace:'pong',
   allowEIO3: true ,
   cors: {
-    origin: "http://localhost:3008",
+    origin: process.env.FRONT_URL,
     methods: ["GET", "POST"],
     credentials: true
 }})
