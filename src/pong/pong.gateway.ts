@@ -102,7 +102,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.queue.splice(this.queue.indexOf(isQueued), 1);
     for (let game of this.games) {
       if (game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id) {
-        let player = (game.player1.user.id == socket.data.id)? game.player1 : game.player2;
+        let player = (game.player1.user.id == socket.data.user.id)? game.player1 : game.player2;
         if (game.status == GameStatus.INITIALIZATION) {
           this.server.to(game.id).emit('playerLeft', player.user);
           this.games.splice(this.games.indexOf(game), 1);
@@ -125,7 +125,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.queue.push(socket);
       return this.queue.length;
     } catch (error) {
-      console.log(error);
       return error;
     }
   }
