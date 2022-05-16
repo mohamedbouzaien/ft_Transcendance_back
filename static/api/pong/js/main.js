@@ -62,7 +62,7 @@ function draw() {
 
 function sendMouse(event) {
   if (game && game.status == 'running')
-    socket.emit('mousemove', {id: game.id, canvasLocationY: canvas.getBoundingClientRect().y, clientY: event.clientY});
+    socket.emit('mousemove', {id: Number(game.id), canvasLocationY: canvas.getBoundingClientRect().y, clientY: event.clientY});
 }
 
 function start() {
