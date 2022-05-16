@@ -1,8 +1,8 @@
 import { Socket } from "socket.io";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import BallInterface from "../interfaces/ball.interface";
-import GameSetupInterface from "../dto/gameSetup.interface";
-import MouseMoveInterface from "../interfaces/mouseMove.interface";
+import GameSetupInterface from "../dto/gameSetup.dto";
+import MouseMoveInterface from "../dto/mouseMove.dto";
 import PlayerInterface from "../interfaces/player.interface";
 
 export enum GameStatus {

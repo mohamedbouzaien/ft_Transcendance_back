@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Socket } from "socket.io";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
-import GameInterface from "../dto/gameSetup.interface";
+import GameInterface from "../dto/gameSetup.dto";
 import Game from "../objects/game.object";
 
 @Injectable()
