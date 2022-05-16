@@ -7,7 +7,7 @@ import RequestWithUser from "src/authentication/request-with-user.interface";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import { FindOne } from "./dto/findOne.dto";
 import { GameNotFoundException } from "./exception/GameNotFound.exception";
-import GameSetupInterface from "./interfaces/gameSetup.interface";
+import GameSetupInterface from "./dto/gameSetup.interface";
 import MouseMoveInterface from "./interfaces/mouseMove.interface";
 import Game, { GameStatus } from "./objects/game.object";
 import { RoomsService } from "./services/room.service";

@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import BallInterface from "../interfaces/ball.interface";
-import GameSetupInterface from "../interfaces/gameSetup.interface";
+import GameSetupInterface from "../dto/gameSetup.interface";
 import MouseMoveInterface from "../interfaces/mouseMove.interface";
 import PlayerInterface from "../interfaces/player.interface";
 
