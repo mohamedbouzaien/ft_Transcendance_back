@@ -172,22 +172,17 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('viewGame')
   async addViewerToGame(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
     try {
-      for (let queued of this.queue)
-        if(queued.data.user.id == socket.data.user.id) {
-          this.queue.splice(this.queue.indexOf(queued), 1);
-          break;
-        }
-      for (let game of this.games)
+      for (let game of this.games) {
         if (game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id)
           throw new UserUnauthorizedException(socket.data.user.id);
-      let game = this.games.find(g => g.id == data.id);
-      if (!game || game.status !== GameStatus.RUNNING)
-        throw new GameNotFoundException(data.id);
-      if (socket.data.user.id == game.player1.user.id || socket.data.user.id)
-       throw new UserUnauthorizedException(socket.data.user.id);
-      socket.join(game.id);
-      socket.to(game.id).emit('newViewer', socket.data.user);
-      return 'success';
+      }
+      for (let game of this.games) {
+        if (game.player1.user.id == Number(data.id) || game.player2.user.id == Number(data.id)) {
+          socket.join(game.id);
+          socket.to(game.id).emit('newViewer', socket.data.user);
+          return 'success';
+        }
+      }
     } catch (error){
       return error;
     }
