@@ -18,7 +18,7 @@ import { WsExceptionFilter } from "src/chat/exception/WsException.filter";
   namespace:'pong',
   allowEIO3: true ,
   cors: {
-    origin: "http://localhost:3008",
+    origin: process.env.FRONT_URL,
     methods: ["GET", "POST"],
     credentials: true
 }})

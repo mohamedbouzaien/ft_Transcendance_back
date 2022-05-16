@@ -19,7 +19,7 @@ import Channel from "./entities/channel.entity";
 @UseInterceptors(ClassSerializerInterceptor)
 @WebSocketGateway(
   { cors: {
-  origin: "http://localhost:3008",
+  origin: process.env.FRONT_URL,
   methods: ["GET", "POST"],
   credentials: true
 }}
