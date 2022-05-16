@@ -68,8 +68,11 @@ class Game {
         let player = (this.player1.user.id == id )? this.player1 : this.player2;
         player.isReady = gameData[param];
       }
-      else if (param.toString() == "maxPoints" || param == "ballSpeed" || param == "playerHeight")
+      else if (param.toString() == "maxPoints" || param == "ballSpeed" || param == "playerHeight") {
+        this.player1.isReady = false;
+        this.player2.isReady = false;
         this[param] = gameData[param];
+      }
     }
   }
 
