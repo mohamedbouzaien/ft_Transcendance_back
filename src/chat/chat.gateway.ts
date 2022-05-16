@@ -20,7 +20,7 @@ import { ChannelUsersService } from "./services/channelUser.service";
 @UseInterceptors(ClassSerializerInterceptor)
 @WebSocketGateway(
   { cors: {
-  origin: "http://localhost:3008",
+  origin: process.env.FRONT_URL,
   methods: ["GET", "POST"],
   credentials: true
 }}
