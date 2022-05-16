@@ -1,4 +1,4 @@
-import { BadRequestException, ClassSerializerInterceptor, Req, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { BadRequestException, ClassSerializerInterceptor, Req, UseFilters, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Socket, Server } from "socket.io";
 import { AuthenticationService } from "src/authentication/authentication.service";
@@ -9,8 +9,10 @@ import GameSetupInterface from "./dto/gameSetup.dto";
 import MouseMoveInterface from "./dto/mouseMove.dto";
 import Game, { GameStatus } from "./objects/game.object";
 import { RoomsService } from "./services/room.service";
+import { WsExceptionFilter } from "src/chat/exception/WsException.filter";
 
 
+@UseFilters(WsExceptionFilter)
 @WebSocketGateway(  
  {
   namespace:'pong',

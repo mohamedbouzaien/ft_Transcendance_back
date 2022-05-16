@@ -83,7 +83,7 @@ function stop () {
 }
 
 function view() {
-  socket.emit('viewGame', {id: '0'});
+  socket.emit('viewGame', {id: 'a'}, function(msg) {console.log(msg)});
 }
 
 document.addEventListener('DOMContentLoaded', function() {
