@@ -64,7 +64,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  async checkPlayerSurrender() {
+  async checkDisconnection() {
     let time = new Date();
     for (let game of this.games) {
       if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
@@ -87,8 +87,10 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       (game.player2.user.id == user.id && game.player2.isReady == false)) {
         let player = (game.player1.user.id == user.id && game.player1.isReady == false)? game.player1 : game.player2;
         player.user = user;
-        player.isReady = true;
-        game.status = GameStatus.RUNNING;
+        if (game.status == GameStatus.STOPPED) {
+          player.isReady = true;
+          game.status = GameStatus.RUNNING;
+        }
         socket.join(game.id);
       }
     }
@@ -105,7 +107,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
         let time = new Date();
         time.setSeconds(time.getSeconds() + 10);
         player.timer = time;
-        game.status = GameStatus.STOPPED;
+        if (game.status == GameStatus.RUNNING)
+          game.status = GameStatus.STOPPED;
       }
     }
   }
