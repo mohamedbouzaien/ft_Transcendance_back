@@ -109,12 +109,13 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.games.splice(this.games.indexOf(game), 1);
           return ;
         }
-        player.isReady = false;
-        let time = new Date();
-        time.setSeconds(time.getSeconds() + 10);
-        player.timer = time;
-        if (game.status == GameStatus.RUNNING)
+        else if (game.status == GameStatus.RUNNING) {
+          player.isReady = false;
+          let time = new Date();
+          time.setSeconds(time.getSeconds() + 10);
+          player.timer = time;
           game.status = GameStatus.STOPPED;
+        }
       }
     }
   }
