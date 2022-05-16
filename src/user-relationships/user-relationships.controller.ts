@@ -15,16 +15,17 @@ export class UserRelationshipsController {
         ) {}
     @Post()
     @UseGuards(JwtTwoFactornGuard)
-    async createRelationship(@Body('id', ParseIntPipe)id: number, @Req() request: RequestWithUser) {
+    async createRelationship(@Body() {id, status}: UpdateUserRelationshipStatusDto, @Req() request: RequestWithUser) {
         const requestedUser = await this.usersService.getById(id);
         if (requestedUser)
         {
             const {user} = request;
-            return this.userRelationshipsService.create({
+            await this.userRelationshipsService.create({
                 issuer: user,
                 receiver: requestedUser,
-                status: UserRelationshipStatus.PENDING
-            });
+                status: status
+            })
+            return await this.usersService.getById(user.id);
         }
         throw new HttpException('Requested user doesn\'t exist', HttpStatus.BAD_REQUEST);
     }

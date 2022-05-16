@@ -11,24 +11,27 @@ export class UserRelationshipsService {
     constructor(@InjectRepository(UserRelationship) private userRelashionshipRepository: Repository<UserRelationship>) {}
 
     async create(userRelationshipDto: CreateUserRelationshipDto) {
-        const userRelationshipFound = await this.userRelashionshipRepository.findOne({
-            issuer: userRelationshipDto.issuer,
-            receiver: userRelationshipDto.receiver
-        });
-        if (!userRelationshipFound)
-        {
-            const userRelationshipReverseFound = await this.userRelashionshipRepository.findOne({
-                issuer: userRelationshipDto.receiver,
-                receiver: userRelationshipDto.issuer
+        try {
+            const userRelationshipFound = await this.userRelashionshipRepository.findOne({
+                issuer: userRelationshipDto.issuer,
+                receiver: userRelationshipDto.receiver
             });
-            if (!userRelationshipReverseFound)
+            if (!userRelationshipFound)
             {
-                const userRelationship = await this.userRelashionshipRepository.create(userRelationshipDto);
-                await this.userRelashionshipRepository.save(userRelationship);
-                return userRelationship;
+                const userRelationshipReverseFound = await this.userRelashionshipRepository.findOne({
+                    issuer: userRelationshipDto.receiver,
+                    receiver: userRelationshipDto.issuer
+                });
+                if (!userRelationshipReverseFound)
+                {
+                    const userRelationship = await this.userRelashionshipRepository.create(userRelationshipDto);
+                    await this.userRelashionshipRepository.save(userRelationship);
+                    return userRelationship;
+                }
             }
+        } catch (error) {
+            throw new HttpException('Relationship with this user already exists', HttpStatus.BAD_REQUEST);            
         }
-        throw new HttpException('Relationship with this user already exists', HttpStatus.BAD_REQUEST);
     }
 
     async findByUsers(first: User, second: User) {
