@@ -41,17 +41,22 @@ export class UsersService {
     {
         const user = await this.usersRepository.findOne({email});
         if (user)
-            throw new HttpException('User with this email exists', HttpStatus.NOT_FOUND);
+            throw new HttpException('User with this email exists', HttpStatus.CONFLICT);
         else
             return false;
     }
 
     async   getByUsername(username: string)
     {
-        const user = await this.usersRepository.findOne({username});
+        const user = await this.usersRepository.findOne({username},{
+            relations: [
+                'sent_relationships', 
+                'received_relationships',
+                'invited_channels', 'userChannels', 'blocked_users'
+            ]});
         if (user)
             return user;
-        throw new HttpException('User with this username does not exist', HttpStatus.CONFLICT);
+        throw new HttpException('User with this username does not exist', HttpStatus.NOT_FOUND);
     }
 
     async   checkIfExistsByUsername(username: string)

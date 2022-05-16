@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { isEmail } from 'class-validator';
 import JwtTwoFactornGuard from 'src/authentication/jwt-two-factor.guard';
 import RequestWithUser from 'src/authentication/request-with-user.interface';
@@ -48,7 +48,19 @@ export class UsersController {
 
     @Patch()
     @UseGuards(JwtTwoFactornGuard)
-    updateUser(@Req() request: RequestWithUser, @Body() user: CreateUserDto) {
+    async updateUser(@Req() request: RequestWithUser, @Body() user: CreateUserDto) {
         return this.usersService.update(+request.user.id, user);
+    }
+
+    @Get(':id')
+    @UseGuards(JwtTwoFactornGuard)
+    async   getUserById(@Param('id', ParseIntPipe) id: number) {
+        return this.usersService.getById(id);
+    }
+
+    @Get("/username/:username")
+    @UseGuards(JwtTwoFactornGuard)
+    async   getByUsername(@Param('username') username: string) {
+        return this.usersService.getByUsername(username);
     }
 }
