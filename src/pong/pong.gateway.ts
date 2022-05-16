@@ -103,6 +103,11 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     for (let game of this.games) {
       if (game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id) {
         let player = (game.player1.user.id == socket.data.id)? game.player1 : game.player2;
+        if (game.status == GameStatus.INITIALIZATION) {
+          this.server.to(game.id).emit('playerDisconnected', player.user);
+          this.games.splice(this.games.indexOf(game), 1);
+          return ;
+        }
         player.isReady = false;
         let time = new Date();
         time.setSeconds(time.getSeconds() + 10);
