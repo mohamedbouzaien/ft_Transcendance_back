@@ -16,7 +16,7 @@ export class TasksService {
 
   @Cron(CronExpression.EVERY_SECOND)
   checkPlayerSurrender() {
-    this.pongGateway.checkPlayerSurrender();
+    this.pongGateway.checkDisconnection();
   }
 
 

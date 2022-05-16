@@ -1,8 +1,8 @@
 import { Socket } from "socket.io";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import BallInterface from "../interfaces/ball.interface";
-import GameSetupInterface from "../interfaces/gameSetup.interface";
-import MouseMoveInterface from "../interfaces/mouseMove.interface";
+import GameSetupInterface from "../dto/gameSetup.dto";
+import MouseMoveInterface from "../dto/mouseMove.dto";
 import PlayerInterface from "../interfaces/player.interface";
 
 export enum GameStatus {
@@ -68,8 +68,11 @@ class Game {
         let player = (this.player1.user.id == id )? this.player1 : this.player2;
         player.isReady = gameData[param];
       }
-      else if (param.toString() == "maxPoints" || param == "ballSpeed" || param == "playerHeight")
+      else if (param.toString() == "maxPoints" || param == "ballSpeed" || param == "playerHeight") {
+        this.player1.isReady = false;
+        this.player2.isReady = false;
         this[param] = gameData[param];
+      }
     }
   }
 
