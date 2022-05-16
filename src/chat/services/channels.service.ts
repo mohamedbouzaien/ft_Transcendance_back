@@ -50,12 +50,19 @@ export class ChannelsService {
   }
   
   async getDirectMessagesChannel(userId1: number, userId2: number) {
-    return await this.channelsRepository.createQueryBuilder("channel")
-    .innerJoinAndSelect("channel.channelUsers", "channelUser")
-    .where("channelUser.user.id = :userId1", { userId1 })
-    .where("channelUser.user.id = :userId2", { userId2 })
-    .andWhere("channel.status = :status", {status: 'direct_message'})
-    .getOne();
+    const channels = await this.channelsRepository.find({
+      relations: ['channelUsers'],
+      where: {status: ChannelStatus.DIRECT_MESSAGE}
+    });
+    let channel : Channel = null;
+    await channels.find(chan => {
+      if ((chan.channelUsers[0].user.id == userId1 || chan.channelUsers[0].user.id == userId2) &&
+      (chan.channelUsers[1].user.id == userId1 || chan.channelUsers[1].user.id == userId2)) {
+        channel = chan;
+        return ;
+      }
+    })
+    return channel;
   }
 
   async checkChannelPassword(plain_password: string, hashed_password: string) {

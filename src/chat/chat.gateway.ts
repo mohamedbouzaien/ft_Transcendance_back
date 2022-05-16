@@ -14,6 +14,7 @@ import { FindOneParams } from "./dto/findOneParams.dto";
 import { WsResponseImplementation } from "./serialisationTools/wsResponse.implementation";
 import User from "src/users/user.entity";
 import Channel from "./entities/channel.entity";
+import { ChannelUsersService } from "./services/channelUser.service";
 
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -31,6 +32,7 @@ export class ChatGateway implements OnGatewayConnection {
   constructor(
     private readonly chatsService: ChatService, 
     private readonly channelsService: ChannelsService,
+    private readonly channelUsersService: ChannelUsersService,
     private readonly usersService: UsersService,
     ) {
   }
@@ -77,6 +79,17 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  async sendBanToUser(channelId: number, userId: number) {
+    const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+    for (let socket of sockets) {
+      const user = await this.chatsService.getUserFromSocket(socket);
+      if (user.id === userId && user.userChannels.find(userChannel => userChannel.channelId == channelId)) {
+        socket.emit('user_banned', channelId);
+      }
+    }
+  }
+
   async sendToUsers(channelId: number, event: string, to_send: any) {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
@@ -84,6 +97,25 @@ export class ChatGateway implements OnGatewayConnection {
       const user = await this.chatsService.getUserFromSocket(socket);
       if (user.userChannels.find(userChannel => userChannel.channelId == channelId && userChannel.sanction !== SanctionType.BAN)) {
         socket.emit(event, to_send);
+      }
+    }
+  }
+
+  async checkChannelUserSanction() {
+    let sanctionned = await this.channelUsersService.getTemporarySanctionnedChannelUsers();
+    for (const channelUser of sanctionned) {
+      if (channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
+        if (channelUser.sanction == SanctionType.MUTE) {
+          let updated = await this.channelUsersService.updateChannelUser(channelUser.id, {
+            ...channelUser,
+            sanction: null,
+            end_of_sanction: null
+          })
+          this.sendToUsers(updated.channelId, 'channel_user', await this.serializeBroadcastedEntity(updated));
+        }
+        else {
+          this.channelUsersService.deleteChannelUser(channelUser.id);
+        }
       }
     }
   }
@@ -107,7 +139,7 @@ export class ChatGateway implements OnGatewayConnection {
     try {
       const user = await this.chatsService.getUserFromSocket(socket);
       const data = await this.chatsService.leaveChannel(channel, user);
-      this.sendToUsers(channel.id, 'leaved_channel', data);
+      this.sendToUsers(channel.id, 'left_channel', data);
       return data;
     } catch (error) {
       return {error, channel};
@@ -125,12 +157,13 @@ export class ChatGateway implements OnGatewayConnection {
         const author = await this.chatsService.getUserFromSocket(socket);
         if (invitationData.invitedId === author.id) {
           socket.emit('invited_channels', await this.serializeBroadcastedInvitations(invitations));
-          return ;
+          return 'rejected';
         }
       }
     } catch (error) {
       return {error, invitationData};
     }
+    return 'yo'
   }
 
   @UsePipes(new ValidationPipe())
@@ -140,6 +173,9 @@ export class ChatGateway implements OnGatewayConnection {
       const user = await this.chatsService.getUserFromSocket(socket);
       const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
       this.sendToUsers(channel_user.channelId, 'channel_user', await this.serializeBroadcastedEntity(channel_user));
+      if (channelUserData.sanction === 'ban'){
+          await this.sendBanToUser(channel_user.channelId, channel_user.user.id)
+      }
     } catch (error) {
       return {error, channelUserData};
     }

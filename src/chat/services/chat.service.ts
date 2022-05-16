@@ -84,7 +84,6 @@ export class ChatService {
       return false;
     }
     else if (channelUser.end_of_sanction && channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
-      console.log('ban ended');
       await this.channelUsersService.updateChannelUser(channelUser.id, {
         ...channelUser,
         sanction: null,
@@ -92,7 +91,6 @@ export class ChatService {
       })
       return false;
     }
-    console.log('banned');
     return true;
   }
 
@@ -114,7 +112,7 @@ export class ChatService {
   async getAllChannelsForUser(user: User) {
     const user_channels = await this.exctractAllChannelsForUser(user);
     const accessible_channels = await this.channelsService.getAllAccessibleChannels();
-    const channels_ids = new Set(user_channels.map(channel => channel.id));
+    const channels_ids = new Set(user.userChannels.map(userChannel => userChannel.channelId));
     const available_channels = [...accessible_channels.filter(channel => !channels_ids.has(channel.id))];
     const invited_channels = user.invited_channels;
     const channels = {
@@ -239,14 +237,12 @@ export class ChatService {
 
   async saveChannelMessage(messageData: CreateMessageDto, author: User) {
     const message_channel = await this.channelsService.getChannelById(messageData.channelId);
-    if (message_channel.status === ChannelStatus.DIRECT_MESSAGE) {
-      throw new UserUnauthorizedException(author.id);
-    }
     const channelUser = await message_channel.channelUsers.find(channelUser => channelUser.user.id === author.id);
+
     if (!(channelUser)) {
       throw new UserUnauthorizedException(author.id);
     }
-    if (channelUser.sanction) {
+    if (message_channel.status.toString() != ChannelStatus.DIRECT_MESSAGE && channelUser.sanction) {
       if (channelUser.end_of_sanction && channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
         console.log('sanction ended');
         this.channelUsersService.updateChannelUser(channelUser.id, {
@@ -265,6 +261,25 @@ export class ChatService {
 
   // Direct Message UwU
 
+  async saveDirectMessage(directMessageData: CreateDirectMessageDto, author: User) {
+    let channel: Channel;
+
+    if (directMessageData.channelId) {
+      channel = await this.channelsService.getChannelById(directMessageData.channelId);
+      if (channel.status !== ChannelStatus.DIRECT_MESSAGE || !channel.channelUsers.find(userChannel => userChannel.user.id === author.id)) {
+        throw new UserUnauthorizedException(author.id);
+      }
+    }
+    else {
+      const recipient = await this.usersService.getById(directMessageData.recipientId);
+      channel = await this.getDirectMessagesChannel(author, recipient);
+    }
+    if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
+      throw new UserUnauthorizedException(author.id);
+    }
+    const message = await this.messagesService.saveMessage(directMessageData, author, channel);
+    return message;
+  }
 
   async createDirectMessagesChannel(applicant: User, recipient: User) {
     let channelData: CreateChannelDto;
@@ -290,26 +305,6 @@ export class ChatService {
       return await this.createDirectMessagesChannel(applicant, recipient);
     }
     return await this.channelsService.getChannelById(channel.id);
-  }
-
-  async saveDirectMessage(directMessageData: CreateDirectMessageDto, author: User) {
-    let channel: Channel;
-
-    if (directMessageData.channelId) {
-      channel = await this.channelsService.getChannelById(directMessageData.channelId);
-      if (channel.status !== ChannelStatus.DIRECT_MESSAGE || !channel.channelUsers.find(userChannel => userChannel.user.id === author.id)) {
-        throw new UserUnauthorizedException(author.id);
-      }
-    }
-    else {
-      const recipient = await this.usersService.getById(directMessageData.recipientId);
-      channel = await this.getDirectMessagesChannel(author, recipient);
-    }
-    if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
-      throw new UserUnauthorizedException(author.id);
-    }
-    const message = await this.messagesService.saveMessage(directMessageData, author, channel);
-    return message;
   }
 
   async manageBlockedUsers(to_be_blocked: FindOneParams, user: User) {
