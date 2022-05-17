@@ -213,6 +213,13 @@ export class ChatService {
     return await (await this.usersService.getById(invited_user.id)).invited_channels;
   }
 
+  async sendGameInvitation(author: User, recipient: User) {
+    let duelOpponent = author.duels.find(duelOpponent => duelOpponent.id == recipient.id);
+    if (duelOpponent)
+      return duelOpponent;
+    return await this.usersService.createDuelInvitation(author, recipient);
+  }
+
   async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {
     const affectedChannelUser = await this.channelUsersService.getChannelUserById(channelUserData.id);
     const channel = await this.channelsService.getChannelById(affectedChannelUser.channelId);

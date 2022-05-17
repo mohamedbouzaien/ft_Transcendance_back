@@ -1,4 +1,4 @@
-import { IsDate, IsDateString, IsNotEmpty, IsNumber, IsOptional, ValidateIf } from "class-validator";
+import { IsDate, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, ValidateIf } from "class-validator";
 import { ChannelUserRole, SanctionType } from "../entities/channelUser.entity";
 
 class UpdateChannelUserDto {
@@ -6,10 +6,12 @@ class UpdateChannelUserDto {
   @IsNumber()
   id: number;
 
-  @IsOptional()
+  @ValidateIf(o => Boolean(o.role))
+  @IsEnum(ChannelUserRole)
   role: ChannelUserRole;
 
-  @IsOptional()
+  @ValidateIf(o => Boolean(o.role))
+  @IsEnum(SanctionType)
   sanction: SanctionType;
 
   @ValidateIf(o => Boolean(o.end_of_sanction))

@@ -193,6 +193,19 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+
+  @UsePipes(new ValidationPipe())
+  @SubscribeMessage('sendGameInvitation')
+  async sendGameInvitation(@MessageBody() data: FindOneParams, @ConnectedSocket() socket: Socket) {
+    try {
+      const author = await this.chatsService.getUserFromSocket(socket);
+      const recipient = await this.usersService.getById(data.id);
+      const guest = await this.chatsService.sendGameInvitation(author, recipient);
+    } catch (error) {
+      console.log(error);
+      return {error, data};
+    }
+  }
   // Direct Messages UwU
 
   @UsePipes(new ValidationPipe())
@@ -238,55 +251,3 @@ export class ChatGateway implements OnGatewayConnection {
     return {event: 'blocked_users', blocked_users};
   }
 }
-
-
-// HTTP REQUEST NOW 
-
-/*
-@UsePipes(new ValidationPipe())
-  @SubscribeMessage('request_all_channels')
-  async requestAllChannels(@ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
-    const channels = await this.chatsService.getAllChannelsForUser(user);
-    socket.emit('get_all_channels', channels);
-  }
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('request_channel')
-  async requestChannel(@MessageBody() channelData: FindOneParams, @ConnectedSocket() socket: Socket) {
-    console.log(channelData);
-    const user = await this.chatsService.getUserFromSocket(socket);
-    const channel = await this.chatsService.getChannelForUser(channelData, user);
-    console.log(channel);
-    socket.emit('get_channel', channel);
-  }
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('create_channel')
-  async createChannel(@MessageBody() channelData: CreateChannelDto, @ConnectedSocket() socket: Socket): Promise<WsResponseImplementation<any>> {
-    const owner = await this.chatsService.getUserFromSocket(socket);
-    const channel = await this.chatsService.createChannel(channelData, owner);
-    if (channel.status === ChannelStatus.PUBLIC) {
-      this.server.sockets.emit('channel_created', channel);
-    }
-    else {
-      return { event: 'channel_created', data: channel };
-    }
-    return { event: 'channel_created', data: channel };
-  }
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('update_channel')
-  async updateChannel(@MessageBody() channelData: UpdateChannelDto, @ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
-    const updated_channel = await this.chatsService.updateChannel(channelData, user);
-    this.sendToUsers(updated_channel.id, 'updated_channel', updated_channel);
-  }
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('delete_channel')
-  async deleteChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
-    await this.chatsService.deleteChannel(channel, user);
-    this.server.sockets.emit('channel_deleted', channel.id);
-  }*/

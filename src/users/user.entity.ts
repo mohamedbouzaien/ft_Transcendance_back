@@ -75,6 +75,11 @@ class User {
     
     @Column({default: 0})
     public defeats: number;
+
+
+    @ManyToMany(type => User)
+    @JoinTable()
+    duels: User[];
 }
 
 export default User;

@@ -75,7 +75,7 @@ export class UsersService {
             relations: [
                 'sent_relationships', 
                 'received_relationships',
-                'invited_channels', 'userChannels', 'blocked_users'
+                'invited_channels', 'userChannels', 'blocked_users', 'duels'
             ]});
         if (user) {
             return user;
@@ -152,6 +152,15 @@ export class UsersService {
         if (updatedUser) {
             return updatedUser;
         }
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    async createDuelInvitation(host: User, guest: User) {
+        host.duels.push(guest);
+        await this.usersRepository.save({id: host.id, duels: host.duels});
+        const updatedUser = await this.usersRepository.findOne(host.id);
+        if (updatedUser)
+            return updatedUser;
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 }
