@@ -25,11 +25,12 @@ export class UsersController {
         }
     }))
     async addAvatar(@Req() request: RequestWithUser, @UploadedFile() file: Express.Multer.File) {
-        return this.usersService.addAvatar(request.user.id, {
+        await this.usersService.addAvatar(request.user.id, {
             path: file.path,
             filename: file.originalname,
             mimetype: file.mimetype
         });
+        return await this.usersService.getById(request.user.id);
     }
 
     @Get('check_mail/:email')

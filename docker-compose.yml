@@ -6,7 +6,7 @@ services:
     ports:
     - "5432:5432"
     volumes:
-    - /var/lib/postgresql/data:/var/lib/postgresql/data
+    - /mnt/nfs/homes/mbouzaie/sgoinfre/postgresql/data:/mnt/nfs/homes/mbouzaie/sgoinfre/postgresql/data
     env_file:
     - docker.env
     networks:
@@ -20,7 +20,7 @@ services:
     ports:
     - "8080:80"
     volumes:
-    - /var/lib/pgadmin/data:/root/.pgadmin
+    - /mnt/nfs/homes/mbouzaie/sgoinfre/pgadmin/data:/root/.pgadmin
     env_file:
     - docker.env
     networks:
