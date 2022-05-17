@@ -115,6 +115,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           time.setSeconds(time.getSeconds() + 10);
           player.timer = time;
           game.status = GameStatus.STOPPED;
+          this.server.to(game.id).emit('update', game);
         }
       }
     }
