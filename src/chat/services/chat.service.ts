@@ -20,6 +20,7 @@ import UpdateChannelUserDto from '../dto/updateChannelUser.dto';
 import CreateChannelUserDto from '../dto/createChannelUser.dto';
 import CreateDirectMessageDto from '../dto/createDirectMessage.dto';
 import { FindOneParams } from '../dto/findOneParams.dto';
+import { DuelsService } from 'src/duels/services/duel.service';
 
 @Injectable()
 export class ChatService {
@@ -28,7 +29,8 @@ export class ChatService {
     private readonly channelsService: ChannelsService,
     private readonly usersService: UsersService,
     private readonly channelUsersService: ChannelUsersService,
-    private readonly messagesService: MessagesService
+    private readonly messagesService: MessagesService,
+    private readonly duelsService: DuelsService
   ) {
   }
  
@@ -213,11 +215,11 @@ export class ChatService {
     return await (await this.usersService.getById(invited_user.id)).invited_channels;
   }
 
-  async sendGameInvitation(author: User, recipient: User) {
-    let duelOpponent = author.duels.find(duelOpponent => duelOpponent.id == recipient.id);
-    if (duelOpponent)
-      return duelOpponent;
-    return await this.usersService.createDuelInvitation(author, recipient);
+  async sendGameInvitation(sender: User, receiver: User) {
+    const duels = await this.duelsService.getSpecificDuel(sender, receiver);
+    if (duels.length)
+      return duels[0];
+    return await this.duelsService.createDuel({sender, receiver});
   }
 
   async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {

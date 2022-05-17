@@ -6,6 +6,7 @@ import Channel from "src/chat/entities/channel.entity";
 import ChannelUser from "src/chat/entities/channelUser.entity";
 import UserRelationship from "src/user-relationships/user-relationship.entity"
 import { UserStatus } from "./user-status.enum";
+import { Duel } from "src/duels/entities/duel.entity";
 
 @Entity()
 class User {
@@ -76,10 +77,11 @@ class User {
     @Column({default: 0})
     public defeats: number;
 
+    @OneToMany(() => Duel, (duel: Duel) => duel.sender)
+    sendedDuels: Duel[];
 
-    @ManyToMany(type => User)
-    @JoinTable()
-    duels: User[];
+    @OneToMany(() => Duel, (duel: Duel) =>duel.receiver)
+    receivedDuels: Duel[];
 }
 
 export default User;

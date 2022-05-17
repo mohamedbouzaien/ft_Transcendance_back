@@ -12,6 +12,7 @@ import ChannelUser from "./entities/channelUser.entity";
 import Message from "./entities/message.entity";
 import { ChannelsController } from "./controllers/channels.controller";
 import { ChatTasksService } from "./tasks/chatTasks.service";
+import { DuelModule } from "src/duels/duel.module";
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { ChatTasksService } from "./tasks/chatTasks.service";
     TypeOrmModule.forFeature([Message]), 
     TypeOrmModule.forFeature([ChannelUser]),
     AuthenticationModule,
-    UsersModule
+    UsersModule,
+    DuelModule
   ],
   controllers: [ChannelsController],
   providers: [ChatGateway, ChatService, ChannelsService, MessagesService, ChannelUsersService, ChatTasksService],
