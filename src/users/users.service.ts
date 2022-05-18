@@ -5,6 +5,7 @@ import CreateUserDto from './dto/createUser.dto';
 import User from './user.entity';
 import * as bcrypt from 'bcrypt';
 import LocalFilesService from 'src/local-files/local-files.service';
+import { UserStatus } from './user-status.enum';
 
 @Injectable()
 export class UsersService {
@@ -26,6 +27,13 @@ export class UsersService {
         const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
         await this.usersRepository.update(userId, {
             currentHashedRefreshToken
+        });
+    }
+
+    async setStatus(status: UserStatus, id: number)
+    {
+        await this.usersRepository.update(id, {
+            status
         });
     }
 
@@ -154,4 +162,6 @@ export class UsersService {
         }
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
+
+
 }

@@ -34,12 +34,14 @@ export class ChatService {
  
   async getUserFromSocket(socket: Socket) {
     const cookie = socket.handshake.headers.cookie;
-    const { Authentication: authenticationToken } = parse(cookie);
+    const { Refresh: authenticationToken } = parse(cookie);
     const user = await this.authenticationService.getUserFromAuthenticationToken(authenticationToken);
     if (!user) {
-      throw new WsException('Invalid credentials.');
+      console.error('Invalid credentials.');
+      return null;
     }
-    return user;
+    else
+        return user;
   }
 
   async createChannel(channelData: CreateChannelDto, user: User) {

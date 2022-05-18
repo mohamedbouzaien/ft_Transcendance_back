@@ -5,6 +5,7 @@ import RequestWithUser from 'src/authentication/request-with-user.interface';
 import LocalFilesInterceptor from 'src/local-files/local-files.interceptor';
 import { fileURLToPath } from 'url';
 import CreateUserDto from './dto/createUser.dto';
+import UpdateStatusDto from './dto/updateStatus.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -63,5 +64,13 @@ export class UsersController {
     @UseGuards(JwtTwoFactornGuard)
     async   getByUsername(@Param('username') username: string) {
         return this.usersService.getByUsername(username);
+    }
+
+    @Post('status')
+    @UseGuards(JwtTwoFactornGuard)
+    async   setStatus(@Body() {status} :UpdateStatusDto, @Req() request: RequestWithUser)
+    {
+        await this.usersService.setStatus(status, request.user.id);
+        return await this.usersService.getById(request.user.id);
     }
 }

@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, Post, Req, Res, UseGuards, Response, Get, Redirect, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
+import { UserStatus } from 'src/users/user-status.enum';
 import { UsersService } from 'src/users/users.service';
 import { AuthenticationService } from './authentication.service';
 import RegisterDto from './dto/register.dto';
@@ -32,6 +33,7 @@ export class AuthenticationController {
             token: refreshToken
         } = this.authenticationService.getCookieWithJwtRefreshToken(user.id);
         await this.usersService.setCurrentRefreshToken(refreshToken, user.id);
+        await this.usersService.setStatus(UserStatus.ONLINE, user.id);
         request.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
         if (user.isTwoFactorAuthenticationEnabled) {
             return;
@@ -47,8 +49,9 @@ export class AuthenticationController {
 
     @UseGuards(JwtRefreshGuard)
     @Get('refresh')
-    refresh(@Req() request: RequestWithUser) {
+    async refresh(@Req() request: RequestWithUser) {
         const accessTokenCookie = this.authenticationService.getCookieWithJwtAccessToken(request.user.id);
+        const user = await this.usersService.setStatus(UserStatus.ONLINE, request.user.id);
         request.res.setHeader('Set-Cookie', accessTokenCookie);
         return request.user;
     }
@@ -57,6 +60,7 @@ export class AuthenticationController {
     @Post('log-out')
     @HttpCode(200)
     async logOut(@Req() request: RequestWithUser) {
+        await this.usersService.setStatus(UserStatus.OFFLINE, request.user.id);
         await this.usersService.removeRefreshToken(request.user.id);
         request.res.setHeader('Set-Cookie', this.authenticationService.getCookiesForLogOut());
     }
