@@ -101,7 +101,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     }
     const duels = await this.duelsService.getAllUserDuels(user);
-    return duels;
+    socket.emit('duels-update', duels);
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
