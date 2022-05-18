@@ -206,8 +206,10 @@ export class ChatGateway implements OnGatewayConnection {
 
       for (let socket of sockets) {
         const user = await this.authenticationService.getUserFromSocket(socket);
-        if (user.id == duel.sender.id || user.id == duel.receiver.id)
+        if ((user.id == duel.sender.id || user.id == duel.receiver.id) && user.id != author.id) {
           socket.emit('newDuelInvitation', duel);
+          break;
+        }
       }
     } catch (error) {
       console.log(error);
