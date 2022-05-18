@@ -202,7 +202,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
       const duel = await this.duelsService.getDuelById(Number(data.id));
-      if (duel.sender.id != socket.data.user.id && duel.sender.id != socket.data.user.id)
+      if (duel.sender.id != socket.data.user.id && duel.receiver.id != socket.data.user.id)
         throw new UserUnauthorizedException(socket.data.user.id);
       for (let game of this.games) {
         if (game.player1.user.id == duel.sender.id &&
