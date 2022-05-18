@@ -43,6 +43,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
         game.updateGame();
         if (game.status.toString() == GameStatus.ENDED) {
           this.server.to(game.id).emit('endGame', game);
+          this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
         }
         else
@@ -74,6 +75,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           winner.score = game.maxPoints;
           game.status = GameStatus.ENDED;
           this.server.to(game.id).emit('endGame', game);
+          this.server.in(game.id).socketsLeave(game.id);
+          this.games.splice(this.games.indexOf(game), 1);
         }
       }
     }
