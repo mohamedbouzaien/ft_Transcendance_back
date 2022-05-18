@@ -4,10 +4,12 @@ import BallInterface from "../interfaces/ball.interface";
 import GameSetupInterface from "../dto/gameSetup.dto";
 import MouseMoveInterface from "../dto/mouseMove.dto";
 import PlayerInterface from "../interfaces/player.interface";
+import User from "src/users/user.entity";
 
 export enum GameStatus {
-  RUNNING = 'running',
+  WAITING = 'waiting',
   INITIALIZATION = 'initialization',
+  RUNNING = 'running',
   STOPPED = 'stopped',
   ENDED = 'ended'
 };
@@ -43,7 +45,7 @@ class Game {
   player2: PlayerInterface;
   ball: BallInterface
 
-  constructor(id: string, player1: Socket, player2: Socket) {
+  constructor(id: string, player1: User, player2: User) {
     this.id = id;
     this.status =  GameStatus.INITIALIZATION;
     this.canvasHeight = 480;
@@ -53,11 +55,11 @@ class Game {
     this.playerHeight = GamePlayerHeight.MEDIUM;
     this.playerWidth = 5;
     this.player1 = {
-      user: player1.data.user,
+      user: player1,
       isReady: false
     },
     this.player2 = {
-      user: player2.data.user,
+      user: player2,
       isReady: false
     }
   }

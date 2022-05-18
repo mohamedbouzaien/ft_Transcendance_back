@@ -10,9 +10,11 @@ import MouseMoveInterface from "./dto/mouseMove.dto";
 import Game, { GameStatus } from "./objects/game.object";
 import { RoomsService } from "./services/room.service";
 import { WsExceptionFilter } from "src/chat/exception/WsException.filter";
+import { DuelsService } from "src/duels/services/duel.service";
 
 
 @UseFilters(WsExceptionFilter)
+@UseInterceptors(ClassSerializerInterceptor)
 @WebSocketGateway(  
  {
   namespace:'pong',
@@ -31,6 +33,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   
   constructor(
     private readonly authenticationService: AuthenticationService,
+    private readonly duelsService: DuelsService,
     private readonly roomsService: RoomsService
   ) {
     this.queue = [];
@@ -57,7 +60,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
       const player1 = this.queue.shift();
       const player2 = this.queue.shift();
-      let game = new Game(gameId, player1, player2);
+      let game = new Game(gameId, player1.data.user, player2.data.user);
       player1.join(gameId);
       player2.join(gameId);
       this.games.push(game);
@@ -97,6 +100,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
         socket.join(game.id);
       }
     }
+    return (this.duelsService.getAllUserDuels(user));
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
@@ -106,11 +110,13 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     for (let game of this.games) {
       if (game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id) {
         let player = (game.player1.user.id == socket.data.user.id)? game.player1 : game.player2;
+        if (game.status == GameStatus.WAITING) {
+          this.games.splice(this.games.indexOf(game), 1);
+        }
         if (game.status == GameStatus.INITIALIZATION) {
           this.server.to(game.id).emit('playerLeft', player.user);
           this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
-          return ;
         }
         else if (game.status == GameStatus.RUNNING) {
           player.isReady = false;
@@ -127,7 +133,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage("joinQueue")
   async joinQueue(@ConnectedSocket() socket: Socket) {
     try {
-      this.roomsService.checkQueueEligibility(socket, this.queue, this.games);
+      this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
       this.queue.push(socket);
       return this.queue.length;
     } catch (error) {
@@ -176,10 +182,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('viewGame')
   async addViewerToGame(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
     try {
-      for (let game of this.games) {
-        if (game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id)
-          throw new UserUnauthorizedException(socket.data.user.id);
-      }
+      this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
       for (let game of this.games) {
         if (game.player1.user.id == Number(data.id) || game.player2.user.id == Number(data.id)) {
           socket.join(game.id);
@@ -191,6 +194,57 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return error;
     }
   }
+
+  @UsePipes(new ValidationPipe())
+  @SubscribeMessage('deleteDuelInvitation')
+  async deleteDuelInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
+    try {
+      const duel = await this.duelsService.getDuelById(Number(data.id));
+      if (duel.sender.id != socket.data.user.id && duel.sender.id != socket.data.user.id)
+        throw new UserUnauthorizedException(socket.data.user.id);
+      await this.duelsService.deleteDuel(duel.id);
+      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+      for (let socket of sockets) {
+        const user = await this.authenticationService.getUserFromSocket(socket);
+        if (user.id == duel.sender.id || user.id == duel.receiver.id)
+          socket.emit('deletedDuelInvitation', duel);
+      }
+    } catch (error) {
+      return (error);
+    }
+  }
+
+
+  @UsePipes(new ValidationPipe())
+  @SubscribeMessage('joinWaitingRoom')
+  async joinWaitingRoom(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
+    try {
+      this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
+      const duel = await this.duelsService.getDuelById(Number(data.id));
+      if (duel.sender.id != socket.data.user.id && duel.sender.id != socket.data.user.id)
+        throw new UserUnauthorizedException(socket.data.user.id);
+      for (let game of this.games) {
+        if (game.player1.user.id == duel.sender.id &&
+          game.player2.user.id == duel.receiver.id && game.status == GameStatus.WAITING) {
+            this.duelsService.deleteDuel(duel.id);
+            game.status = GameStatus.INITIALIZATION;
+            socket.join(game.id);
+            this.server.to(game.id).emit('setupGame', game);
+            return ;
+        }
+      };
+      const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
+      let game = new Game(gameId, duel.sender, duel.receiver);
+      game.status = GameStatus.WAITING;
+      socket.join(game.id);
+      this.games.push(game);
+      this.server.to(game.id).emit("waitingRoom", game);
+    } catch (error) {
+      return (error);
+    }
+  }
+
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('leaveRoom')
   async leaveRoom(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {

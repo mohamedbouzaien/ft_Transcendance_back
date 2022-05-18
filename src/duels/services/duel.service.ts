@@ -14,7 +14,7 @@ export class DuelsService {
     ) {}
 
     async getDuelById(id: number) {
-      const Duel = this.DuelsRepository.findOne(id, {relations: ['user']});
+      const Duel = this.DuelsRepository.findOne(id, {relations: ['sender', 'receiver']});
       if (!Duel) {
         throw new DuelNotFoundException(id);
       }
