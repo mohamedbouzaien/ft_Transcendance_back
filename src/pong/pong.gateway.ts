@@ -93,11 +93,11 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       (game.player2.user.id == user.id && game.player2.isReady == false)) {
         let player = (game.player1.user.id == user.id && game.player1.isReady == false)? game.player1 : game.player2;
         player.user = user;
-        if (game.status == GameStatus.STOPPED) {
-          player.isReady = true;
+        player.isReady = true;
+        if (game.player1.isReady == true && game.player2.isReady == true)
           game.status = GameStatus.RUNNING;
-        }
         socket.join(game.id);
+        socket.emit('update', game);
       }
     }
     const duels = await this.duelsService.getAllUserDuels(user);
@@ -119,7 +119,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
         }
-        else if (game.status == GameStatus.RUNNING) {
+        else if (game.status == GameStatus.RUNNING || game.status == GameStatus.STOPPED) {
           player.isReady = false;
           let time = new Date();
           time.setSeconds(time.getSeconds() + 10);
