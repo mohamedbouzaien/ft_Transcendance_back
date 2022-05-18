@@ -64,7 +64,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       player1.join(gameId);
       player2.join(gameId);
       this.games.push(game);
-      this.server.to(game.id).emit("setupGame", game);
+      this.server.to(game.id).emit("update", game);
     }
   }
 
@@ -155,11 +155,11 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       game.setupGame(socket.data.user.id, gameData);
       if (game.player1.isReady == true && game.player2.isReady == true) {
         game.launchGame();
-        this.server.to(gameData.id).emit('startGame', game);
+        this.server.to(gameData.id).emit('update', game);
         return ;
       }
       else
-        this.server.to(gameData.id).emit('setupGame', game);
+        this.server.to(gameData.id).emit('update', game);
     } catch (error) {
       return (error);
     }
@@ -231,7 +231,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.duelsService.deleteDuel(duel.id);
             game.status = GameStatus.INITIALIZATION;
             socket.join(game.id);
-            this.server.to(game.id).emit('setupGame', game);
+            this.server.to(game.id).emit('update', game);
             return ;
         }
       };
@@ -240,7 +240,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       game.status = GameStatus.WAITING;
       socket.join(game.id);
       this.games.push(game);
-      this.server.to(game.id).emit("waitingRoom", game);
+      this.server.to(game.id).emit("update", game);
     } catch (error) {
       return (error);
     }
