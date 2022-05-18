@@ -201,7 +201,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async deleteDuelInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
     try {
       const duel = await this.duelsService.getDuelById(Number(data.id));
-      if (duel.sender.id != socket.data.user.id && duel.sender.id != socket.data.user.id)
+      if (duel.sender.id != socket.data.user.id && duel.receiver.id != socket.data.user.id)
         throw new UserUnauthorizedException(socket.data.user.id);
       await this.duelsService.deleteDuel(duel.id);
       const sockets :any[] = Array.from(this.server.sockets.sockets.values());
