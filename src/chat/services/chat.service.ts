@@ -33,17 +33,7 @@ export class ChatService {
     private readonly duelsService: DuelsService
   ) {
   }
- 
-  async getUserFromSocket(socket: Socket) {
-    const cookie = socket.handshake.headers.cookie;
-    const { Authentication: authenticationToken } = parse(cookie);
-    const user = await this.authenticationService.getUserFromAuthenticationToken(authenticationToken);
-    if (!user) {
-      throw new WsException('Invalid credentials.');
-    }
-    return user;
-  }
-
+  
   async createChannel(channelData: CreateChannelDto, user: User) {
     if (channelData.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new HttpException('bad channel type', HttpStatus.BAD_REQUEST);

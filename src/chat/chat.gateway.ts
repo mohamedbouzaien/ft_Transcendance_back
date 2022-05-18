@@ -11,10 +11,10 @@ import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
 import {ClassSerializerInterceptor, UseFilters, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { WsExceptionFilter } from "./exception/WsException.filter";
 import { FindOneParams } from "./dto/findOneParams.dto";
-import { WsResponseImplementation } from "./serialisationTools/wsResponse.implementation";
 import User from "src/users/user.entity";
 import Channel from "./entities/channel.entity";
 import { ChannelUsersService } from "./services/channelUser.service";
+import { AuthenticationService } from "src/authentication/authentication.service";
 
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -34,6 +34,7 @@ export class ChatGateway implements OnGatewayConnection {
     private readonly channelsService: ChannelsService,
     private readonly channelUsersService: ChannelUsersService,
     private readonly usersService: UsersService,
+    private readonly authenticationService: AuthenticationService
     ) {
   }
 
@@ -72,7 +73,7 @@ export class ChatGateway implements OnGatewayConnection {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
-      const user = await this.chatsService.getUserFromSocket(socket);
+      const user = await this.authenticationService.getUserFromSocket(socket);
       if (channelUsers.find(channelUser => channelUser.user.id == user.id && channelUser.sanction !== SanctionType.BAN)) {
         socket.emit('deleted_channel', {id});
       }
@@ -83,7 +84,7 @@ export class ChatGateway implements OnGatewayConnection {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
-      const user = await this.chatsService.getUserFromSocket(socket);
+      const user = await this.authenticationService.getUserFromSocket(socket);
       if (user.id === userId && user.userChannels.find(userChannel => userChannel.channelId == channelId)) {
         socket.emit('user_banned', channelId);
       }
@@ -94,7 +95,7 @@ export class ChatGateway implements OnGatewayConnection {
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
-      const user = await this.chatsService.getUserFromSocket(socket);
+      const user = await this.authenticationService.getUserFromSocket(socket);
       if (user.userChannels.find(userChannel => userChannel.channelId == channelId && userChannel.sanction !== SanctionType.BAN)) {
         socket.emit(event, to_send);
       }
@@ -124,7 +125,7 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('join_channel')
   async joinChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<any>{
     try {
-      const user = await this.chatsService.getUserFromSocket(socket);
+      const user = await this.authenticationService.getUserFromSocket(socket);
       const channelUser = await this.chatsService.joinChannel(channel, user);
       this.sendToUsers(channelUser.channelId, 'channel_user', await this.serializeBroadcastedEntity(channelUser));
       return await this.channelsService.getChannelById(channelUser.channelId);
@@ -137,7 +138,7 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('leave_channel')
   async leaveChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<any>{
     try {
-      const user = await this.chatsService.getUserFromSocket(socket);
+      const user = await this.authenticationService.getUserFromSocket(socket);
       const data = await this.chatsService.leaveChannel(channel, user);
       this.sendToUsers(channel.id, 'left_channel', data);
       return data;
@@ -150,11 +151,11 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('channel_invitation')
   async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitationDto, @ConnectedSocket() socket: Socket) {
     try {
-      const user = await this.chatsService.getUserFromSocket(socket);
+      const user = await this.authenticationService.getUserFromSocket(socket);
       const invitations = await this.chatsService.manageInvitation(invitationData, user);
       const sockets :any[] = Array.from(this.server.sockets.sockets.values());
       for (socket of sockets) {
-        const author = await this.chatsService.getUserFromSocket(socket);
+        const author = await this.authenticationService.getUserFromSocket(socket);
         if (invitationData.invitedId === author.id) {
           socket.emit('invited_channels', await this.serializeBroadcastedInvitations(invitations));
           return 'rejected';
@@ -170,7 +171,7 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('manage_channel_user')
   async updateChannelUser(@MessageBody() channelUserData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
     try {
-      const user = await this.chatsService.getUserFromSocket(socket);
+      const user = await this.authenticationService.getUserFromSocket(socket);
       const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
       this.sendToUsers(channel_user.channelId, 'channel_user', await this.serializeBroadcastedEntity(channel_user));
       if (channelUserData.sanction === 'ban'){
@@ -185,7 +186,7 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('send_channel_message')
   async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
     try {
-      const author = await this.chatsService.getUserFromSocket(socket);
+      const author = await this.authenticationService.getUserFromSocket(socket);
       const message = await this.chatsService.saveChannelMessage(messageData, author);
       this.sendToUsers(message.channelId, 'receive_message', await this.serializeBroadcastedEntity(message));
     } catch (error) {
@@ -198,9 +199,16 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('sendGameInvitation')
   async sendGameInvitation(@MessageBody() data: FindOneParams, @ConnectedSocket() socket: Socket) {
     try {
-      const author = await this.chatsService.getUserFromSocket(socket);
+      const author = await this.authenticationService.getUserFromSocket(socket);
       const recipient = await this.usersService.getById(data.id);
-      const guest = await this.chatsService.sendGameInvitation(author, recipient);
+      const duel = await this.chatsService.sendGameInvitation(author, recipient);
+      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+      for (let socket of sockets) {
+        const user = await this.authenticationService.getUserFromSocket(socket);
+        if (user.id == duel.sender.id || user.id == duel.receiver.id)
+          socket.emit('newDuelInvitation', duel);
+      }
     } catch (error) {
       console.log(error);
       return {error, data};
@@ -212,7 +220,7 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('get_direct_messages_channel')
   async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<any>{
     try {
-      const applicant  = await this.chatsService.getUserFromSocket(socket);
+      const applicant  = await this.authenticationService.getUserFromSocket(socket);
       const recipient = await this.usersService.getById(userData.id);
       const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
       return channel;
@@ -225,13 +233,13 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('send_direct_message')
   async listenForDirectMessages(@MessageBody() messageData: CreateDirectMessageDto, @ConnectedSocket() socket: Socket) {
     try {
-      const author = await this.chatsService.getUserFromSocket(socket);
+      const author = await this.authenticationService.getUserFromSocket(socket);
       const message = await this.chatsService.saveDirectMessage(messageData, author);
       const channel = await this.channelsService.getChannelById(message.channelId);
       const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
       for (socket of sockets) {
-        const user = await this.chatsService.getUserFromSocket(socket);
+        const user = await this.authenticationService.getUserFromSocket(socket);
         if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id &&
           !user.blocked_users.find(blocked_user => blocked_user.id === message.author.id))) {
             socket.emit('receive_message', await this.serializeBroadcastedEntity(message));
@@ -246,7 +254,7 @@ export class ChatGateway implements OnGatewayConnection {
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('manage_blocked_users')
   async blockUser(@MessageBody() to_be_blocked: FindOneParams, @ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
+    const user = await this.authenticationService.getUserFromSocket(socket);
     const blocked_users = await this.chatsService.manageBlockedUsers(to_be_blocked, user);
     return {event: 'blocked_users', blocked_users};
   }
