@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Socket } from "socket.io";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import GameInterface from "../dto/gameSetup.dto";
-import Game from "../objects/game.object";
+import Game, { GameStatus } from "../objects/game.object";
 
 @Injectable()
 export class RoomsService {
@@ -12,7 +12,7 @@ export class RoomsService {
         throw new UserUnauthorizedException(socket.data.user.id);
     });
     games.forEach(game => {
-      if (game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id)
+      if ((game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id) && game.status != GameStatus.WAITING)
         throw new UserUnauthorizedException(socket.data.user.id);
     })
   }

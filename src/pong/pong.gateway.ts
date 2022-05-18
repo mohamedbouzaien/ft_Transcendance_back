@@ -89,8 +89,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const user = await this.authenticationService.getUserFromSocket(socket);
     socket.data.user = user;
     for (let game of this.games) {
-      if ((game.player1.user.id == user.id && game.player1.isReady == false) ||
-      (game.player2.user.id == user.id && game.player2.isReady == false)) {
+      if (((game.player1.user.id == user.id && game.player1.isReady == false) ||
+      (game.player2.user.id == user.id && game.player2.isReady == false)) && game.status != GameStatus.WAITING) {
         let player = (game.player1.user.id == user.id && game.player1.isReady == false)? game.player1 : game.player2;
         player.user = user;
         player.isReady = true;
