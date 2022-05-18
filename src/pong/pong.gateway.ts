@@ -45,7 +45,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (game.status == GameStatus.RUNNING) {
         game.updateGame();
         if (game.status.toString() == GameStatus.ENDED) {
-          this.server.to(game.id).emit('endGame', game);
+          this.server.to(game.id).emit('update', game);
           this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
         }
