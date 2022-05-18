@@ -197,27 +197,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @UsePipes(new ValidationPipe())
-  @SubscribeMessage('deleteDuelInvitation')
-  async deleteDuelInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
-    try {
-      const duel = await this.duelsService.getDuelById(Number(data.id));
-      if (duel.sender.id != socket.data.user.id && duel.receiver.id != socket.data.user.id)
-        throw new UserUnauthorizedException(socket.data.user.id);
-      await this.duelsService.deleteDuel(duel.id);
-      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
-
-      for (let socket of sockets) {
-        const user = await this.authenticationService.getUserFromSocket(socket);
-        if (user.id == duel.sender.id || user.id == duel.receiver.id)
-          socket.emit('deletedDuelInvitation', duel);
-      }
-    } catch (error) {
-      return (error);
-    }
-  }
-
-
-  @UsePipes(new ValidationPipe())
   @SubscribeMessage('joinWaitingRoom')
   async joinWaitingRoom(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
     try {

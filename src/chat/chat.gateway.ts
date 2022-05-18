@@ -15,6 +15,8 @@ import User from "src/users/user.entity";
 import Channel from "./entities/channel.entity";
 import { ChannelUsersService } from "./services/channelUser.service";
 import { AuthenticationService } from "src/authentication/authentication.service";
+import { DuelsService } from "src/duels/services/duel.service";
+import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -34,7 +36,8 @@ export class ChatGateway implements OnGatewayConnection {
     private readonly channelsService: ChannelsService,
     private readonly channelUsersService: ChannelUsersService,
     private readonly usersService: UsersService,
-    private readonly authenticationService: AuthenticationService
+    private readonly authenticationService: AuthenticationService,
+    private readonly duelsService: DuelsService
     ) {
   }
 
@@ -214,6 +217,27 @@ export class ChatGateway implements OnGatewayConnection {
     } catch (error) {
       console.log(error);
       return {error, data};
+    }
+  }
+
+  @UsePipes(new ValidationPipe())
+  @SubscribeMessage('deleteDuelInvitation')
+  async deleteDuelInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOneParams) {
+    try {
+      const user = await this.authenticationService.getUserFromSocket(socket);
+      const duel = await this.duelsService.getDuelById(data.id);
+      if (duel.sender.id != user.id && duel.receiver.id != user.id)
+        throw new UserUnauthorizedException(user.id);
+      await this.duelsService.deleteDuel(duel.id);
+      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
+
+      for (let socket of sockets) {
+        const client = await this.authenticationService.getUserFromSocket(socket);
+        if (client.id == duel.sender.id || client.id == duel.receiver.id)
+          socket.emit('deletedDuelInvitation', duel);
+      }
+    } catch (error) {
+      return (error);
     }
   }
   // Direct Messages UwU
