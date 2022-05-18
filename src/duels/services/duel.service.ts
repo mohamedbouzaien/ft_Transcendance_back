@@ -25,7 +25,8 @@ export class DuelsService {
       return await this.DuelsRepository.find({
         where: [
           {sender: user},
-          {receiver: user}]
+          {receiver: user}],
+          relations: ['sender', 'receiver']
       })
     }
 
