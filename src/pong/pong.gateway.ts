@@ -61,6 +61,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const player1 = this.queue.shift();
       const player2 = this.queue.shift();
       let game = new Game(gameId, player1.data.user, player2.data.user);
+      player1.rooms.clear();
+      player2.rooms.clear();
       player1.join(gameId);
       player2.join(gameId);
       this.games.push(game);
@@ -135,6 +137,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async joinQueue(@ConnectedSocket() socket: Socket) {
     try {
       this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
+      socket.rooms.clear();
       this.queue.push(socket);
       return this.queue.length;
     } catch (error) {
@@ -184,6 +187,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async addViewerToGame(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
     try {
       this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
+      socket.rooms.clear();
       for (let game of this.games) {
         if (game.player1.user.id == Number(data.id) || game.player2.user.id == Number(data.id)) {
           socket.join(game.id);
@@ -209,6 +213,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           game.player2.user.id == duel.receiver.id && game.status == GameStatus.WAITING) {
             this.duelsService.deleteDuel(duel.id);
             game.status = GameStatus.INITIALIZATION;
+            socket.rooms.clear();
             socket.join(game.id);
             this.server.to(game.id).emit('update', game);
             return ;
@@ -217,6 +222,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
       let game = new Game(gameId, duel.sender, duel.receiver);
       game.status = GameStatus.WAITING;
+      socket.rooms.clear();
       socket.join(game.id);
       this.games.push(game);
       this.server.to(game.id).emit("update", game);
