@@ -20,6 +20,7 @@ import UpdateChannelUserDto from '../dto/updateChannelUser.dto';
 import CreateChannelUserDto from '../dto/createChannelUser.dto';
 import CreateDirectMessageDto from '../dto/createDirectMessage.dto';
 import { FindOneParams } from '../dto/findOneParams.dto';
+import { DuelsService } from 'src/duels/services/duel.service';
 
 @Injectable()
 export class ChatService {
@@ -28,20 +29,11 @@ export class ChatService {
     private readonly channelsService: ChannelsService,
     private readonly usersService: UsersService,
     private readonly channelUsersService: ChannelUsersService,
-    private readonly messagesService: MessagesService
+    private readonly messagesService: MessagesService,
+    private readonly duelsService: DuelsService
   ) {
   }
- 
-  async getUserFromSocket(socket: Socket) {
-    const cookie = socket.handshake.headers.cookie;
-    const { Authentication: authenticationToken } = parse(cookie);
-    const user = await this.authenticationService.getUserFromAuthenticationToken(authenticationToken);
-    if (!user) {
-      throw new WsException('Invalid credentials.');
-    }
-    return user;
-  }
-
+  
   async createChannel(channelData: CreateChannelDto, user: User) {
     if (channelData.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new HttpException('bad channel type', HttpStatus.BAD_REQUEST);
@@ -211,6 +203,13 @@ export class ChatService {
     }
     const updated_channel = await this.channelsService.saveChannel(channel);
     return await (await this.usersService.getById(invited_user.id)).invited_channels;
+  }
+
+  async sendGameInvitation(sender: User, receiver: User) {
+    const duels = await this.duelsService.getSpecificDuel(sender, receiver);
+    if (duels.length)
+      return duels[0];
+    return await this.duelsService.createDuel({sender, receiver});
   }
 
   async updateChannelUser(channelUserData: UpdateChannelUserDto, user: User) {

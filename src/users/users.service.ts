@@ -5,6 +5,7 @@ import CreateUserDto from './dto/createUser.dto';
 import User from './user.entity';
 import * as bcrypt from 'bcrypt';
 import LocalFilesService from 'src/local-files/local-files.service';
+import Game, { EndGameStatus } from 'src/pong/entities/game.entity';
 
 @Injectable()
 export class UsersService {
@@ -52,9 +53,9 @@ export class UsersService {
             relations: [
                 'sent_relationships', 
                 'received_relationships',
-                'invited_channels', 'userChannels', 'blocked_users'
+                'invited_channels', 'userChannels', 'blocked_users', 'gamesAsPlayer1', 'gamesAsPlayer2'
             ]});
-        if (user)
+        if (user) 
             return user;
         throw new HttpException('User with this username does not exist', HttpStatus.NOT_FOUND);
     }
@@ -75,7 +76,7 @@ export class UsersService {
             relations: [
                 'sent_relationships', 
                 'received_relationships',
-                'invited_channels', 'userChannels', 'blocked_users'
+                'invited_channels', 'userChannels', 'blocked_users', 'gamesAsPlayer1', 'gamesAsPlayer2'
             ]});
         if (user) {
             return user;
@@ -153,5 +154,18 @@ export class UsersService {
             return updatedUser;
         }
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    async saveUsersGameResult(game: Game) {
+        if (game.endGameStatus == EndGameStatus.ABORT)
+            return ;
+        if (game.player1Points > game.player2Points) {
+            await this.usersRepository.update(game.player1.id, {victories: game.player1.victories += 1});
+            await this.usersRepository.update(game.player2.id, {defeats: game.player2.defeats += 1});
+        }
+        else {
+            await this.usersRepository.update(game.player1.id, {victories: game.player1.victories += 1});
+            await this.usersRepository.update(game.player2.id, {defeats: game.player2.defeats += 1});  
+        }
     }
 }

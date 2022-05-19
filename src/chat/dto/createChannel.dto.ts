@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
 import { ChannelStatus } from "../entities/channel.entity";
 
 class CreateChannelDto {
@@ -9,6 +9,7 @@ class CreateChannelDto {
   name: string;
 
   @IsNotEmpty()
+  @IsEnum(ChannelStatus)
   status: ChannelStatus;
 
   @ValidateIf(o => o.status === ChannelStatus.PROTECTED)
