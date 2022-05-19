@@ -12,6 +12,7 @@ import { RoomsService } from "./services/room.service";
 import { WsExceptionFilter } from "src/chat/exception/WsException.filter";
 import { DuelsService } from "src/duels/services/duel.service";
 import { GamesService } from "./services/game.service";
+import { UsersService } from "src/users/users.service";
 
 
 @UseFilters(WsExceptionFilter)
@@ -36,18 +37,20 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly authenticationService: AuthenticationService,
     private readonly duelsService: DuelsService,
     private readonly roomsService: RoomsService,
+    private readonly usersService: UsersService,
     private readonly gamesService: GamesService
   ) {
     this.queue = [];
     this.games = [];
   }
 
-  heartBeat() {
+  async heartBeat() {
     for (let game of this.games) {
       if (game.status == GameStatus.RUNNING) {
         game.updateGame();
         if (game.status.toString() == GameStatus.ENDED) {
-          this.gamesService.createGame(game);
+          const newGame = await this.gamesService.createGame(game);
+          this.usersService.saveUsersGameResult(newGame);
           this.server.to(game.id).emit('update', game);
           this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
@@ -79,10 +82,13 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
         let checkedPlayer = (game.player1.isReady == false)? game.player1 : game.player2;
         if (checkedPlayer.isReady == false && time > checkedPlayer.timer) {
-          let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
-          winner.score = game.maxPoints;
+          if (!(game.player1.isReady == false && game.player2.isReady == false)) {
+            let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
+            winner.score = game.maxPoints;
+          }
           game.status = GameStatus.ENDED;
-          this.gamesService.createGame(game);
+          const newGame = await this.gamesService.createGame(game);
+          this.usersService.saveUsersGameResult(newGame);
           this.server.to(game.id).emit('update', game);
           this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
