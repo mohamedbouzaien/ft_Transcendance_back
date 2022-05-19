@@ -30,7 +30,6 @@ class User {
     @Exclude()
     public twoFactorAuthenticationSecret?: string;
     @Column({default: false})
-    @Exclude()
     public isTwoFactorAuthenticationEnabled: boolean;
     @JoinColumn({name: 'avatar_id'})
     @OneToOne(() => LocalFile,

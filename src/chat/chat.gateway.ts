@@ -1,4 +1,4 @@
-import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer} from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer} from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { UsersService } from "src/users/users.service";
 import { ChannelsService } from "./services/channels.service";
@@ -14,6 +14,7 @@ import { FindOneParams } from "./dto/findOneParams.dto";
 import User from "src/users/user.entity";
 import Channel from "./entities/channel.entity";
 import { ChannelUsersService } from "./services/channelUser.service";
+import { UserStatus } from "src/users/user-status.enum";
 import { AuthenticationService } from "src/authentication/authentication.service";
 import { DuelsService } from "src/duels/services/duel.service";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
@@ -27,7 +28,7 @@ import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.
   credentials: true
 }}
 )
-export class ChatGateway implements OnGatewayConnection {
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @WebSocketServer()
   server: Server;
 
@@ -68,8 +69,15 @@ export class ChatGateway implements OnGatewayConnection {
     return data;
   }
 
-  async handleConnection(socket: Socket) {
-    //this.requestAllChannels(socket);
+  async handleConnection(@ConnectedSocket() socket: Socket) {
+    const user = await this.chatsService.getUserFromSocket(socket);
+    await this.usersService.setStatus(UserStatus.ONLINE, user.id);
+  }
+
+
+  async handleDisconnect(@ConnectedSocket() socket: Socket) {
+    const user = await this.chatsService.getUserFromSocket(socket);
+    await this.usersService.setStatus(UserStatus.OFFLINE, user.id);
   }
 
   async sendDeletiontoUsers(channelUsers: ChannelUser[], id: number) {
