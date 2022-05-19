@@ -194,7 +194,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('viewGame')
-  async addViewerToGame(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
+  addViewerToGame(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
     try {
       this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
       socket.rooms.clear();
