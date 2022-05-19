@@ -52,9 +52,9 @@ export class UsersService {
             relations: [
                 'sent_relationships', 
                 'received_relationships',
-                'invited_channels', 'userChannels', 'blocked_users'
+                'invited_channels', 'userChannels', 'blocked_users', 'gamesAsPlayer1', 'gamesAsPlayer2'
             ]});
-        if (user)
+        if (user) 
             return user;
         throw new HttpException('User with this username does not exist', HttpStatus.NOT_FOUND);
     }
@@ -75,7 +75,7 @@ export class UsersService {
             relations: [
                 'sent_relationships', 
                 'received_relationships',
-                'invited_channels', 'userChannels', 'blocked_users'
+                'invited_channels', 'userChannels', 'blocked_users', 'gamesAsPlayer1', 'gamesAsPlayer2'
             ]});
         if (user) {
             return user;

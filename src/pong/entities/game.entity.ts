@@ -1,5 +1,5 @@
 import User from "src/users/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { GameBallSpeed, GameMaxPoints, GamePlayerHeight } from "../objects/game.object";
 
 export enum EndGameStatus {
@@ -48,6 +48,9 @@ class Game {
     default: EndGameStatus.FINISHED
   })
   endGameStatus: EndGameStatus;
+
+  @CreateDateColumn({type: 'timestamptz'})
+  created_at: Date;
 }
 
 export default Game;
