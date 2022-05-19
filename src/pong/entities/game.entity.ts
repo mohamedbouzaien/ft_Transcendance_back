@@ -24,16 +24,29 @@ class Game {
   @Column({default: 0})
   player2Points: number;
 
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: GameMaxPoints,
+  })
   pointsTarget: GameMaxPoints;
 
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: GamePlayerHeight,
+  })
   playersSize: GamePlayerHeight;
 
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: GameBallSpeed,
+  })
   ballSpeed: GameBallSpeed;
 
-  @Column({default: EndGameStatus.FINISHED})
+  @Column({
+    type: 'enum',
+    enum: EndGameStatus,
+    default: EndGameStatus.FINISHED
+  })
   endGameStatus: EndGameStatus;
 }
 
