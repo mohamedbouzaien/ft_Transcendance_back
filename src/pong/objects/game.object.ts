@@ -32,7 +32,7 @@ export enum GameBallSpeed {
   FAST = 2.5
 }
 
-class Game {
+class GameObject {
   id: string;
   status: GameStatus;
   canvasHeight: number;
@@ -177,4 +177,4 @@ class Game {
   }
 }
 
-export default Game;
+export default GameObject;

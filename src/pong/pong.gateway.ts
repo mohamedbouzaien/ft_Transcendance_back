@@ -7,10 +7,11 @@ import { FindOne } from "./dto/findOne.dto";
 import { GameNotFoundException } from "./exception/GameNotFound.exception";
 import GameSetupInterface from "./dto/gameSetup.dto";
 import MouseMoveInterface from "./dto/mouseMove.dto";
-import Game, { GameStatus } from "./objects/game.object";
+import GameObject, { GameStatus } from "./objects/game.object";
 import { RoomsService } from "./services/room.service";
 import { WsExceptionFilter } from "src/chat/exception/WsException.filter";
 import { DuelsService } from "src/duels/services/duel.service";
+import { GamesService } from "./services/game.service";
 
 
 @UseFilters(WsExceptionFilter)
@@ -29,12 +30,13 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
   queue: Socket[];
-  games: Game[];
+  games: GameObject[];
   
   constructor(
     private readonly authenticationService: AuthenticationService,
     private readonly duelsService: DuelsService,
-    private readonly roomsService: RoomsService
+    private readonly roomsService: RoomsService,
+    private readonly gamesService: GamesService
   ) {
     this.queue = [];
     this.games = [];
@@ -45,6 +47,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (game.status == GameStatus.RUNNING) {
         game.updateGame();
         if (game.status.toString() == GameStatus.ENDED) {
+          this.gamesService.createGame(game);
           this.server.to(game.id).emit('update', game);
           this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
@@ -60,7 +63,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
       const player1 = this.queue.shift();
       const player2 = this.queue.shift();
-      let game = new Game(gameId, player1.data.user, player2.data.user);
+      let game = new GameObject(gameId, player1.data.user, player2.data.user);
       player1.rooms.clear();
       player2.rooms.clear();
       player1.join(gameId);
@@ -79,7 +82,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
           winner.score = game.maxPoints;
           game.status = GameStatus.ENDED;
-          this.server.to(game.id).emit('endGame', game);
+          this.gamesService.createGame(game);
+          this.server.to(game.id).emit('update', game);
           this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
         }
@@ -220,7 +224,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       };
       const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
-      let game = new Game(gameId, duel.sender, duel.receiver);
+      let game = new GameObject(gameId, duel.sender, duel.receiver);
       game.status = GameStatus.WAITING;
       socket.rooms.clear();
       socket.join(game.id);

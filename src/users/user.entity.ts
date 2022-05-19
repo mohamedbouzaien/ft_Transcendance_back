@@ -7,6 +7,7 @@ import ChannelUser from "src/chat/entities/channelUser.entity";
 import UserRelationship from "src/user-relationships/user-relationship.entity"
 import { UserStatus } from "./user-status.enum";
 import { Duel } from "src/duels/entities/duel.entity";
+import Game from "src/pong/entities/game.entity";
 
 @Entity()
 class User {
@@ -82,6 +83,12 @@ class User {
 
     @OneToMany(() => Duel, (duel: Duel) =>duel.receiver)
     receivedDuels: Duel[];
+
+    @OneToMany(() => Game, (game: Game) => game.player1)
+    gamesAsPlayer1: Game[];
+
+    @OneToMany(() => Game, (game: Game) => game.player2)
+    gamesAsPlayer2: Game[];
 }
 
 export default User;
