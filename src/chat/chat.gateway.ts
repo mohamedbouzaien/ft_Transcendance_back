@@ -70,13 +70,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   }
 
   async handleConnection(@ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
+    const user = await this.authenticationService.getUserFromSocket(socket);
     await this.usersService.setStatus(UserStatus.ONLINE, user.id);
   }
 
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
+    const user = await this.authenticationService.getUserFromSocket(socket);
     await this.usersService.setStatus(UserStatus.OFFLINE, user.id);
   }
 

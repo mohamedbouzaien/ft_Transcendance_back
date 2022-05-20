@@ -104,10 +104,10 @@ export class AuthenticationService {
     async getUserFromSocket(socket: Socket) {
         const cookie = socket.handshake.headers.cookie;
         const { Refresh: authenticationToken } = parse(cookie);
-        console.log(authenticationToken);
         const user = await this.getUserFromAuthenticationToken(authenticationToken);
         if (!user) {
           console.error('Invalid credentials.');
+          return (null);
         }
         else
             return user;
