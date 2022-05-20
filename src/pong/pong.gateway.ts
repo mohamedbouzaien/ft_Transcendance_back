@@ -66,7 +66,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
   
-  async matchmaking() {
+  matchmaking() {
     while (this.queue.length >= 2) {
       const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
       const player1 = this.queue.shift();
