@@ -21,6 +21,7 @@ import CreateChannelUserDto from '../dto/createChannelUser.dto';
 import CreateDirectMessageDto from '../dto/createDirectMessage.dto';
 import { FindOneParams } from '../dto/findOneParams.dto';
 import { DuelsService } from 'src/duels/services/duel.service';
+import { UserRelationshipsService } from 'src/user-relationships/user-relationships.service';
 
 @Injectable()
 export class ChatService {
@@ -30,7 +31,8 @@ export class ChatService {
     private readonly usersService: UsersService,
     private readonly channelUsersService: ChannelUsersService,
     private readonly messagesService: MessagesService,
-    private readonly duelsService: DuelsService
+    private readonly duelsService: DuelsService,
+    private readonly userRelationshipsService: UserRelationshipsService
   ) {
   }
  
@@ -250,9 +252,14 @@ export class ChatService {
     const message_channel = await this.channelsService.getChannelById(messageData.channelId);
     const channelUser = await message_channel.channelUsers.find(channelUser => channelUser.user.id === author.id);
 
-    if (!(channelUser)) {
+    if (!(channelUser))
       throw new UserUnauthorizedException(author.id);
-    }
+    if (message_channel.status == ChannelStatus.DIRECT_MESSAGE) {
+      const dest = (message_channel.channelUsers[0].user.id == author.id) ? message_channel.channelUsers[1].user : message_channel.channelUsers[0].user;
+      const isBlocked = await this.userRelationshipsService.checkBlockedUser(dest.id, author.id);
+      if (isBlocked)
+        throw new UserUnauthorizedException(author.id);
+    } 
     if (message_channel.status.toString() != ChannelStatus.DIRECT_MESSAGE && channelUser.sanction) {
       if (channelUser.end_of_sanction && channelUser.end_of_sanction.getTime() <= new Date().getTime()) {
         console.log('sanction ended');
@@ -271,26 +278,6 @@ export class ChatService {
   }
 
   // Direct Message UwU
-
-  async saveDirectMessage(directMessageData: CreateDirectMessageDto, author: User) {
-    let channel: Channel;
-
-    if (directMessageData.channelId) {
-      channel = await this.channelsService.getChannelById(directMessageData.channelId);
-      if (channel.status !== ChannelStatus.DIRECT_MESSAGE || !channel.channelUsers.find(userChannel => userChannel.user.id === author.id)) {
-        throw new UserUnauthorizedException(author.id);
-      }
-    }
-    else {
-      const recipient = await this.usersService.getById(directMessageData.recipientId);
-      channel = await this.getDirectMessagesChannel(author, recipient);
-    }
-    if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
-      throw new UserUnauthorizedException(author.id);
-    }
-    const message = await this.messagesService.saveMessage(directMessageData, author, channel);
-    return message;
-  }
 
   async createDirectMessagesChannel(applicant: User, recipient: User) {
     let channelData: CreateChannelDto;

@@ -205,11 +205,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     }
   }
 
-
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('sendGameInvitation')
   async sendGameInvitation(@MessageBody() data: FindOneParams, @ConnectedSocket() socket: Socket) {
-    try {
+    try {
       const author = await this.authenticationService.getUserFromSocket(socket);
       const recipient = await this.usersService.getById(data.id);
       const duel = await this.chatsService.sendGameInvitation(author, recipient);
@@ -254,34 +253,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @SubscribeMessage('get_direct_messages_channel')
   async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<any>{
     try {
+      console.log('get dm');
       const applicant  = await this.authenticationService.getUserFromSocket(socket);
       const recipient = await this.usersService.getById(userData.id);
       const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
       return channel;
     } catch (error) {
       return {error, userData};
-    }
-  }
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('send_direct_message')
-  async listenForDirectMessages(@MessageBody() messageData: CreateDirectMessageDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const author = await this.authenticationService.getUserFromSocket(socket);
-      const message = await this.chatsService.saveDirectMessage(messageData, author);
-      const channel = await this.channelsService.getChannelById(message.channelId);
-      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
-
-      for (socket of sockets) {
-        const user = await this.authenticationService.getUserFromSocket(socket);
-        if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id &&
-          !user.blocked_users.find(blocked_user => blocked_user.id === message.author.id))) {
-            socket.emit('receive_message', await this.serializeBroadcastedEntity(message));
-            return ;
-          }
-      }
-    } catch (error) {
-      return (error);
     }
   }
 
