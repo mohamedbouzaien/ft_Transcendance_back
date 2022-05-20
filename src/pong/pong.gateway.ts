@@ -15,6 +15,7 @@ import { GamesService } from "./services/game.service";
 import { UsersService } from "src/users/users.service";
 import { UserStatus } from "src/users/user-status.enum";
 import User from "src/users/user.entity";
+import { UserGameNotFound } from "./exception/UserGameNotFound.exception";
 
 
 @UseFilters(WsExceptionFilter)
@@ -224,6 +225,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           return 'success';
         }
       }
+      throw new UserGameNotFound();
     } catch (error){
       return error;
     }
