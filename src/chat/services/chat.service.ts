@@ -109,6 +109,12 @@ export class ChatService {
         if (channel.status !== ChannelStatus.DIRECT_MESSAGE) {
           delete channel.channelUsers
         }
+        else {
+          const dest = (channel.channelUsers[0].user.id == user.id) ? channel.channelUsers[1].user : channel.channelUsers[0].user;
+          const isBlocked = await this.userRelationshipsService.checkBlockedUser(user.id, dest.id);
+          if (isBlocked)
+            continue;
+        }
        user_channels.splice(user_channels.length, 0, channel);
       }
     }
@@ -303,19 +309,5 @@ export class ChatService {
       return await this.createDirectMessagesChannel(applicant, recipient);
     }
     return await this.channelsService.getChannelById(channel.id);
-  }
-
-  async manageBlockedUsers(to_be_blocked: FindOneParams, user: User) {
-    const target = await this.usersService.getById(to_be_blocked.id);
-    if (target.id === user.id) {
-      throw new UserUnauthorizedException(user.id);
-    }
-    if (user.blocked_users.find(blocked => blocked.id === target.id)) {
-      user.blocked_users.splice(user.blocked_users.indexOf(target), 1);
-    }
-    else {
-      user.blocked_users.splice(0, 0, target);
-    }
-    return await (await this.usersService.saveUser(user)).blocked_users;
   }
 }

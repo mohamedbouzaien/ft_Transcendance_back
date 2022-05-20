@@ -203,6 +203,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     } catch (error) {
       return {error, messageData};
     }
+  } 
+
+  @UsePipes(new ValidationPipe())
+  @SubscribeMessage('get_direct_messages_channel')
+  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<any>{
+    try {
+      const applicant  = await this.authenticationService.getUserFromSocket(socket);
+      const recipient = await this.usersService.getById(userData.id);
+      const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
+      return channel;
+    } catch (error) {
+      return {error, userData};
+    }
   }
 
   @UsePipes(new ValidationPipe())
@@ -246,28 +259,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     } catch (error) {
       return (error);
     }
-  }
-  // Direct Messages UwU
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('get_direct_messages_channel')
-  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<any>{
-    try {
-      console.log('get dm');
-      const applicant  = await this.authenticationService.getUserFromSocket(socket);
-      const recipient = await this.usersService.getById(userData.id);
-      const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
-      return channel;
-    } catch (error) {
-      return {error, userData};
-    }
-  }
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('manage_blocked_users')
-  async blockUser(@MessageBody() to_be_blocked: FindOneParams, @ConnectedSocket() socket: Socket) {
-    const user = await this.authenticationService.getUserFromSocket(socket);
-    const blocked_users = await this.chatsService.manageBlockedUsers(to_be_blocked, user);
-    return {event: 'blocked_users', blocked_users};
   }
 }
