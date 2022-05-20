@@ -14,6 +14,7 @@ import { DuelsService } from "src/duels/services/duel.service";
 import { GamesService } from "./services/game.service";
 import { UsersService } from "src/users/users.service";
 import { UserStatus } from "src/users/user-status.enum";
+import User from "src/users/user.entity";
 
 
 @UseFilters(WsExceptionFilter)
@@ -101,9 +102,19 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  async serializeBroadcastedUser(user: User) {
+    for (let key in user) {
+      if (key != 'id' && key != 'username' && key != 'avatar_id'
+      && key != 'status' && key != 'victories' && key != 'defeats') {
+        delete user[key];
+      }
+    }
+    return user;
+  }
+
   async handleConnection(@ConnectedSocket() socket: Socket) {
     const user = await this.authenticationService.getUserFromSocket(socket);
-    socket.data.user = user;
+    socket.data.user = await this.serializeBroadcastedUser(user);
     for (let game of this.games) {
       if (((game.player1.user.id == user.id && game.player1.isReady == false) ||
       (game.player2.user.id == user.id && game.player2.isReady == false)) && game.status != GameStatus.WAITING) {
