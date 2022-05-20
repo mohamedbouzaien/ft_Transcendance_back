@@ -10,18 +10,18 @@ export class TasksService {
   ) {}
 
   @Cron(CronExpression.EVERY_SECOND)
-  matchMaking() {
+  async matchMaking() {
     this.pongGateway.matchmaking();
   }
 
   @Cron(CronExpression.EVERY_SECOND)
-  checkPlayerSurrender() {
+  async checkPlayerSurrender() {
     this.pongGateway.checkDisconnection();
   }
 
 
   @Interval(1000 / 60)
-  heartBeat() {
+  async heartBeat() {
     this.pongGateway.heartBeat();
   }
 
