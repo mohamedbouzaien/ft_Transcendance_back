@@ -18,7 +18,7 @@ class AcheivementHistory {
     @Column({default: false})
     public isRead: boolean;
 
-    @OneToOne(() => Acheivement, {eager: true})
+    @ManyToOne(() => Acheivement, {eager: true})
     @JoinTable()
     @JoinColumn({name: 'acheivement_id'})
     public acheivement: Acheivement;
