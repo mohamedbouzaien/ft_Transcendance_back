@@ -48,7 +48,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async heartBeat() {
-    for (let game of this.games) {
+    for (let game of await this.games) {
       if (game.status == GameStatus.RUNNING) {
         game.updateGame();
         if (game.status.toString() == GameStatus.ENDED) {
@@ -63,27 +63,13 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
         else
          this.server.to(game.id).emit('update', game);
       }
-    }
-  }
-  
-  matchmaking() {
-    while (this.queue.length >= 2) {
-      const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
-      const player1 = this.queue.shift();
-      const player2 = this.queue.shift();
-      let game = new GameObject(gameId, player1.data.user, player2.data.user);
-      player1.rooms.clear();
-      player2.rooms.clear();
-      player1.join(gameId);
-      player2.join(gameId);
-      this.games.push(game);
-      this.server.to(game.id).emit("update", game);
+      else if (game.status == GameStatus.STOPPED)
+        this.checkDisconnection(game);
     }
   }
 
-  async checkDisconnection() {
+  async checkDisconnection(game: GameObject) {
     let time = new Date();
-    for (let game of this.games) {
       if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
         let checkedPlayer = (game.player1.isReady == false)? game.player1 : game.player2;
         if (checkedPlayer.isReady == false && time > checkedPlayer.timer) {
@@ -100,7 +86,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.games.splice(this.games.indexOf(game), 1);
         }
       }
-    }
   }
 
   async serializeBroadcastedUser(user: User) {
@@ -167,6 +152,18 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
       socket.rooms.clear();
       this.queue.push(socket);
+      while (this.queue.length >= 2) {
+        const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
+        const player1 = this.queue.shift();
+        const player2 = this.queue.shift();
+        let game = new GameObject(gameId, player1.data.user, player2.data.user);
+        player1.rooms.clear();
+        player2.rooms.clear();
+        player1.join(gameId);
+        player2.join(gameId);
+        this.games.push(game);
+        this.server.to(game.id).emit("update", game);
+      }
       return this.queue.length;
     } catch (error) {
       return error;
