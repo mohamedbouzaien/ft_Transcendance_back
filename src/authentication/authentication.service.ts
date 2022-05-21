@@ -80,20 +80,6 @@ export class AuthenticationService {
         }
     }
 
-    public async getUserFromAuthenticationToken(token: string) {
-        try {
-            const payload: TokenPayload = this.jwtService.verify(token, {
-                secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET')
-              })
-              if (payload.userId) {
-                return this.usersService.getById(payload.userId);
-              }
-        } catch (error) {
-            console.error(error);   
-            return null;
-        }
-      }
-
     public getCookiesForLogOut() {
         return [
             'Authentication=; HttpOnly; Path=/; Max-Age=0',
@@ -101,15 +87,37 @@ export class AuthenticationService {
         ];
     }
 
+    public async getUserFromAuthenticationToken(token: string) {
+        const payload: TokenPayload = this.jwtService.verify(token, {
+            secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET')
+          });
+          if (payload.userId) {
+            return this.usersService.getById(payload.userId);
+          }
+      }
+
+      public async getUserFromRefreshToken(token: string) {
+        const payload: TokenPayload = this.jwtService.verify(token, {
+            secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET')
+          });
+          if (payload.userId) {
+            return this.usersService.getById(payload.userId);
+          }
+      }
+
     async getUserFromSocket(socket: Socket) {
         const cookie = socket.handshake.headers.cookie;
-        const { Refresh: authenticationToken } = parse(cookie);
-        console.log(authenticationToken);
-        const user = await this.getUserFromAuthenticationToken(authenticationToken);
+        const { Authentication: authenticationToken } = parse(cookie);
+        const { Refresh: refreshToken } = parse(cookie);
+        let user;
+        if (refreshToken)
+            user = await this.getUserFromRefreshToken(refreshToken);
+        else 
+            user = await this.getUserFromAuthenticationToken(authenticationToken);
         if (!user) {
-          console.error('Invalid credentials.');
+            console.log('invalides credentials');
+            throw new WsException('Invalid credentials.');
         }
-        else
-            return user;
+        return user;
       }
 }

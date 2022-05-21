@@ -93,7 +93,7 @@ class GameObject {
       r: 5,
       speed: {
         x: 2,
-        y: 2
+        y: 0
       }
     }
     this.status = GameStatus.RUNNING;
@@ -146,15 +146,12 @@ class GameObject {
         this.player1.score++;
       }
     } else {
-      // Increase speed and change direction
-      if (this.ballSpeed > -12 && this.ball.speed.x < 12) {
-        this.ball.speed.x *= -this.ballSpeed;
-      }
-      if(this.ballSpeed < -12)
-        this.ballSpeed = -12;
-      if (this.ballSpeed > 12)
-        this.ballSpeed = 12;
-      this.changeDirection(player.y);
+        this.ball.speed.x *= -1;
+        this.changeDirection(player.y);
+
+        // Increase speed if it has not reached max speed
+        if (Math.abs(this.ball.speed.x) < 12)
+          this.ball.speed.x *= this.ballSpeed;
     }
   }
 

@@ -36,18 +36,6 @@ export class ChatService {
   ) {
   }
  
-  async getUserFromSocket(socket: Socket) {
-    const cookie = socket.handshake.headers.cookie;
-    const { Refresh: authenticationToken } = parse(cookie);
-    const user = await this.authenticationService.getUserFromAuthenticationToken(authenticationToken);
-    if (!user) {
-      console.error('Invalid credentials.');
-      return null;
-    }
-    else
-        return user;
-  }
-
   async createChannel(channelData: CreateChannelDto, user: User) {
     if (channelData.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new HttpException('bad channel type', HttpStatus.BAD_REQUEST);
