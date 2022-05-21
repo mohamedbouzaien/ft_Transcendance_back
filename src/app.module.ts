@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TodosModule } from './todos/todos.module';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
@@ -13,9 +12,11 @@ import * as Joi from '@hapi/joi';
 import { ChatModule } from './chat/chat.module';
 import { PongModule } from './pong/pong.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AcheivementsModule } from './acheivements/acheivements.module';
+import { AcheivementsHistoriesModule } from './acheivements-history/acheivements-histories.module';
 
 @Module({
-  imports: [TodosModule, ScheduleModule.forRoot(), ConfigModule.forRoot({
+  imports: [ScheduleModule.forRoot(), ConfigModule.forRoot({
     validationSchema: Joi.object({
       POSTGRES_HOST: Joi.string().required(),
       POSTGRES_PORT: Joi.number().required(),
@@ -33,7 +34,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
       UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule,],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule, AcheivementsModule, AcheivementsHistoriesModule],
   controllers: [AppController],
   providers: [AppService],
 })
