@@ -9,19 +9,8 @@ export class TasksService {
     private readonly pongGateway: PongGateway,
   ) {}
 
-  @Cron(CronExpression.EVERY_SECOND)
-  matchMaking() {
-    this.pongGateway.matchmaking();
-  }
-
-  @Cron(CronExpression.EVERY_SECOND)
-  checkPlayerSurrender() {
-    this.pongGateway.checkDisconnection();
-  }
-
-
   @Interval(1000 / 60)
-  heartBeat() {
+  async heartBeat() {
     this.pongGateway.heartBeat();
   }
 
