@@ -13,6 +13,9 @@ import { WsExceptionFilter } from "src/chat/exception/WsException.filter";
 import { DuelsService } from "src/duels/services/duel.service";
 import { GamesService } from "./services/game.service";
 import { UsersService } from "src/users/users.service";
+import { UserStatus } from "src/users/user-status.enum";
+import User from "src/users/user.entity";
+import { UserGameNotFound } from "./exception/UserGameNotFound.exception";
 
 
 @UseFilters(WsExceptionFilter)
@@ -52,6 +55,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           const newGame = await this.gamesService.createGame(game);
           this.usersService.saveUsersGameResult(newGame);
           this.server.to(game.id).emit('update', game);
+          this.usersService.setStatus(UserStatus.ONLINE, game.player1.user.id);
+          this.usersService.setStatus(UserStatus.ONLINE, game.player2.user.id);
           this.server.in(game.id).socketsLeave(game.id);
           this.games.splice(this.games.indexOf(game), 1);
         }
@@ -61,7 +66,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
   
-  async matchmaking() {
+  matchmaking() {
     while (this.queue.length >= 2) {
       const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
       const player1 = this.queue.shift();
@@ -85,6 +90,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (!(game.player1.isReady == false && game.player2.isReady == false)) {
             let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
             winner.score = game.maxPoints;
+            this.usersService.setStatus(UserStatus.ONLINE, winner.user.id);
           }
           game.status = GameStatus.ENDED;
           const newGame = await this.gamesService.createGame(game);
@@ -97,15 +103,26 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  async serializeBroadcastedUser(user: User) {
+    for (let key in user) {
+      if (key != 'id' && key != 'username' && key != 'avatar_id'
+      && key != 'status' && key != 'victories' && key != 'defeats') {
+        delete user[key];
+      }
+    }
+    return user;
+  }
+
   async handleConnection(@ConnectedSocket() socket: Socket) {
     const user = await this.authenticationService.getUserFromSocket(socket);
-    socket.data.user = user;
+    socket.data.user = await this.serializeBroadcastedUser(user);
     for (let game of this.games) {
       if (((game.player1.user.id == user.id && game.player1.isReady == false) ||
       (game.player2.user.id == user.id && game.player2.isReady == false)) && game.status != GameStatus.WAITING) {
         let player = (game.player1.user.id == user.id && game.player1.isReady == false)? game.player1 : game.player2;
         player.user = user;
         player.isReady = true;
+        this.usersService.setStatus(UserStatus.PLAYING, player.user.id);
         if (game.player1.isReady == true && game.player2.isReady == true)
           game.status = GameStatus.RUNNING;
         socket.join(game.id);
@@ -123,6 +140,7 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     for (let game of this.games) {
       if (game.player1.user.id == socket.data.user.id || game.player2.user.id == socket.data.user.id) {
         let player = (game.player1.user.id == socket.data.user.id)? game.player1 : game.player2;
+        await this.usersService.setStatus(UserStatus.ONLINE, player.user.id);
         if (game.status == GameStatus.WAITING) {
           this.games.splice(this.games.indexOf(game), 1);
         }
@@ -167,6 +185,8 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new BadRequestException();
       game.setupGame(socket.data.user.id, gameData);
       if (game.player1.isReady == true && game.player2.isReady == true) {
+        this.usersService.setStatus(UserStatus.PLAYING, game.player1.user.id);
+        this.usersService.setStatus(UserStatus.PLAYING, game.player2.user.id);
         game.launchGame();
         this.server.to(gameData.id).emit('update', game);
         return ;
@@ -194,17 +214,18 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('viewGame')
-  addViewerToGame(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
+  async addViewerToGame(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOne) {
     try {
       this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
       socket.rooms.clear();
-      for (let game of this.games) {
+      for (let game of await this.games) {
         if (game.player1.user.id == Number(data.id) || game.player2.user.id == Number(data.id)) {
           socket.join(game.id);
           socket.to(game.id).emit('newViewer', socket.data.user);
           return 'success';
         }
       }
+      throw new UserGameNotFound();
     } catch (error){
       return error;
     }

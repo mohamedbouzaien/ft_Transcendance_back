@@ -70,13 +70,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   }
 
   async handleConnection(@ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
+    const user = await this.authenticationService.getUserFromSocket(socket);
     await this.usersService.setStatus(UserStatus.ONLINE, user.id);
   }
 
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    const user = await this.chatsService.getUserFromSocket(socket);
+    const user = await this.authenticationService.getUserFromSocket(socket);
     await this.usersService.setStatus(UserStatus.OFFLINE, user.id);
   }
 
@@ -203,13 +203,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     } catch (error) {
       return {error, messageData};
     }
-  }
+  } 
 
+  @UsePipes(new ValidationPipe())
+  @SubscribeMessage('get_direct_messages_channel')
+  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<any>{
+    try {
+      const applicant  = await this.authenticationService.getUserFromSocket(socket);
+      const recipient = await this.usersService.getById(userData.id);
+      const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
+      return channel;
+    } catch (error) {
+      return {error, userData};
+    }
+  }
 
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('sendGameInvitation')
   async sendGameInvitation(@MessageBody() data: FindOneParams, @ConnectedSocket() socket: Socket) {
-    try {
+    try {
       const author = await this.authenticationService.getUserFromSocket(socket);
       const recipient = await this.usersService.getById(data.id);
       const duel = await this.chatsService.sendGameInvitation(author, recipient);
@@ -247,49 +259,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     } catch (error) {
       return (error);
     }
-  }
-  // Direct Messages UwU
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('get_direct_messages_channel')
-  async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<any>{
-    try {
-      const applicant  = await this.authenticationService.getUserFromSocket(socket);
-      const recipient = await this.usersService.getById(userData.id);
-      const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
-      return channel;
-    } catch (error) {
-      return {error, userData};
-    }
-  }
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('send_direct_message')
-  async listenForDirectMessages(@MessageBody() messageData: CreateDirectMessageDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const author = await this.authenticationService.getUserFromSocket(socket);
-      const message = await this.chatsService.saveDirectMessage(messageData, author);
-      const channel = await this.channelsService.getChannelById(message.channelId);
-      const sockets :any[] = Array.from(this.server.sockets.sockets.values());
-
-      for (socket of sockets) {
-        const user = await this.authenticationService.getUserFromSocket(socket);
-        if (channel.channelUsers.find(chanUser => chanUser.user.id === user.id &&
-          !user.blocked_users.find(blocked_user => blocked_user.id === message.author.id))) {
-            socket.emit('receive_message', await this.serializeBroadcastedEntity(message));
-            return ;
-          }
-      }
-    } catch (error) {
-      return (error);
-    }
-  }
-
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('manage_blocked_users')
-  async blockUser(@MessageBody() to_be_blocked: FindOneParams, @ConnectedSocket() socket: Socket) {
-    const user = await this.authenticationService.getUserFromSocket(socket);
-    const blocked_users = await this.chatsService.manageBlockedUsers(to_be_blocked, user);
-    return {event: 'blocked_users', blocked_users};
   }
 }
