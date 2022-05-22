@@ -7,7 +7,6 @@ import { ChannelInvitationDto } from "./dto/ChannelInvitation.dto";
 import CreateMessageDto from "./dto/createMessage.dto";
 import UpdateChannelUserDto from "./dto/updateChannelUser.dto";
 import ChannelUser, { SanctionType } from "./entities/channelUser.entity";
-import CreateDirectMessageDto from "./dto/createDirectMessage.dto";
 import {ClassSerializerInterceptor, UseFilters, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { WsExceptionFilter } from "./exception/WsException.filter";
 import { FindOneParams } from "./dto/findOneParams.dto";
@@ -71,6 +70,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
 
   async handleConnection(@ConnectedSocket() socket: Socket) {
     const user = await this.authenticationService.getUserFromSocket(socket);
+    socket.data.user = user;
     await this.usersService.setStatus(UserStatus.ONLINE, user.id);
   }
 
@@ -84,8 +84,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
-      const user = await this.authenticationService.getUserFromSocket(socket);
-      if (channelUsers.find(channelUser => channelUser.user.id == user.id && channelUser.sanction !== SanctionType.BAN)) {
+      if (channelUsers.find(channelUser => channelUser.user.id == socket.data.user.id && channelUser.sanction !== SanctionType.BAN)) {
         socket.emit('deleted_channel', {id});
       }
     }
@@ -95,10 +94,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
-      const user = await this.authenticationService.getUserFromSocket(socket);
-      if (user.id === userId && user.userChannels.find(userChannel => userChannel.channelId == channelId)) {
+      const user = await this.usersService.getUserWithRelations(socket.data.user.id, ['userChannels']);
+      if (user.id === userId && user.userChannels.find(userChannel => userChannel.channelId == channelId))
         socket.emit('user_banned', channelId);
-      }
     }
   }
 
@@ -106,10 +104,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
     for (let socket of sockets) {
-      const user = await this.authenticationService.getUserFromSocket(socket);
-      if (user.userChannels.find(userChannel => userChannel.channelId == channelId && userChannel.sanction !== SanctionType.BAN)) {
+      const user = await this.usersService.getUserWithRelations(socket.data.user.id, ['userChannels']);
+      if (user.userChannels.find(userChannel => userChannel.channelId == channelId && userChannel.sanction !== SanctionType.BAN))
         socket.emit(event, to_send);
-      }
     }
   }
 
@@ -136,8 +133,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @SubscribeMessage('join_channel')
   async joinChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<any>{
     try {
-      const user = await this.authenticationService.getUserFromSocket(socket);
-      const channelUser = await this.chatsService.joinChannel(channel, user);
+      const channelUser = await this.chatsService.joinChannel(channel, socket.data.user);
       this.sendToUsers(channelUser.channelId, 'channel_user', await this.serializeBroadcastedEntity(channelUser));
       return await this.channelsService.getChannelById(channelUser.channelId);
     } catch (error) {
@@ -149,8 +145,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @SubscribeMessage('leave_channel')
   async leaveChannel(@MessageBody() channel: FindOneParams, @ConnectedSocket() socket: Socket) : Promise<any>{
     try {
-      const user = await this.authenticationService.getUserFromSocket(socket);
-      const data = await this.chatsService.leaveChannel(channel, user);
+      const data = await this.chatsService.leaveChannel(channel, socket.data.user);
       this.sendToUsers(channel.id, 'left_channel', data);
       return data;
     } catch (error) {
@@ -162,13 +157,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @SubscribeMessage('channel_invitation')
   async manageChannelInvitation(@MessageBody() invitationData: ChannelInvitationDto, @ConnectedSocket() socket: Socket) {
     try {
-      const user = await this.authenticationService.getUserFromSocket(socket);
-      const invitations = await this.chatsService.manageInvitation(invitationData, user);
+      const invitations = await this.chatsService.manageInvitation(invitationData, socket.data.user);
       const sockets :any[] = Array.from(this.server.sockets.sockets.values());
-      for (socket of sockets) {
-        const author = await this.authenticationService.getUserFromSocket(socket);
-        if (invitationData.invitedId === author.id) {
-          socket.emit('invited_channels', await this.serializeBroadcastedInvitations(invitations));
+      for (let sock of sockets) {
+        if (invitationData.invitedId == sock.data.user.id) {
+          sock.emit('invited_channels', await this.serializeBroadcastedInvitations(invitations));
           return 'rejected';
         }
       }
@@ -182,12 +175,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @SubscribeMessage('manage_channel_user')
   async updateChannelUser(@MessageBody() channelUserData: UpdateChannelUserDto, @ConnectedSocket() socket: Socket) {
     try {
-      const user = await this.authenticationService.getUserFromSocket(socket);
+      const user = await this.usersService.getUserWithRelations(socket.data.user.id, ['userChannels']);
       const channel_user = await this.chatsService.updateChannelUser(channelUserData, user);
       this.sendToUsers(channel_user.channelId, 'channel_user', await this.serializeBroadcastedEntity(channel_user));
-      if (channelUserData.sanction === 'ban'){
+      if (channelUserData.sanction == 'ban')
           await this.sendBanToUser(channel_user.channelId, channel_user.user.id)
-      }
     } catch (error) {
       return {error, channelUserData};
     }
@@ -196,9 +188,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('send_channel_message')
   async listenForMessages(@MessageBody() messageData: CreateMessageDto, @ConnectedSocket() socket: Socket) {
-    try {
-      const author = await this.authenticationService.getUserFromSocket(socket);
-      const message = await this.chatsService.saveChannelMessage(messageData, author);
+    try {
+      const message = await this.chatsService.saveChannelMessage(messageData, socket.data.user);
       this.sendToUsers(message.channelId, 'receive_message', await this.serializeBroadcastedEntity(message));
     } catch (error) {
       return {error, messageData};
@@ -209,9 +200,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @SubscribeMessage('get_direct_messages_channel')
   async getDirectMessages(@MessageBody() userData: FindOneParams , @ConnectedSocket() socket: Socket) : Promise<any>{
     try {
-      const applicant  = await this.authenticationService.getUserFromSocket(socket);
-      const recipient = await this.usersService.getById(userData.id);
-      const channel = await this.chatsService.getDirectMessagesChannel(applicant, recipient);
+      const recipient = await this.usersService.getUserWithRelations(userData.id, []);
+      const channel = await this.chatsService.getDirectMessagesChannel(socket.data.user, recipient);
       return channel;
     } catch (error) {
       return {error, userData};
@@ -222,15 +212,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @SubscribeMessage('sendGameInvitation')
   async sendGameInvitation(@MessageBody() data: FindOneParams, @ConnectedSocket() socket: Socket) {
     try {
-      const author = await this.authenticationService.getUserFromSocket(socket);
-      const recipient = await this.usersService.getById(data.id);
-      const duel = await this.chatsService.sendGameInvitation(author, recipient);
+      const recipient = await this.usersService.getUserWithRelations(data.id, []);
+      const duel = await this.chatsService.sendGameInvitation(socket.data.user, recipient);
       const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
-      for (let socket of sockets) {
-        const user = await this.authenticationService.getUserFromSocket(socket);
-        if ((user.id == duel.sender.id || user.id == duel.receiver.id) && user.id != author.id) {
-          socket.emit('newDuelInvitation', duel);
+      for (let sock of sockets) {
+        if ((sock.data.user.id == duel.sender.id || sock.data.user.id == duel.receiver.id) && sock.data.user.id != socket.data.user.id) {
+          sock.emit('newDuelInvitation', duel);
           break;
         }
       }
@@ -244,17 +232,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @SubscribeMessage('deleteDuelInvitation')
   async deleteDuelInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: FindOneParams) {
     try {
-      const user = await this.authenticationService.getUserFromSocket(socket);
       const duel = await this.duelsService.getDuelById(data.id);
-      if (duel.sender.id != user.id && duel.receiver.id != user.id)
-        throw new UserUnauthorizedException(user.id);
+      if (duel.sender.id != socket.data.user.id && duel.receiver.id != socket.data.user.id)
+        throw new UserUnauthorizedException(socket.data.user.id);
       await this.duelsService.deleteDuel(duel.id);
       const sockets :any[] = Array.from(this.server.sockets.sockets.values());
 
-      for (let socket of sockets) {
-        const client = await this.authenticationService.getUserFromSocket(socket);
-        if (client.id == duel.sender.id || client.id == duel.receiver.id)
-          socket.emit('deletedDuelInvitation', duel);
+      for (let sock of sockets) {
+        if (sock.data.user.id == duel.sender.id || sock.data.user.id == duel.receiver.id)
+          sock.emit('deletedDuelInvitation', duel);
       }
     } catch (error) {
       return (error);

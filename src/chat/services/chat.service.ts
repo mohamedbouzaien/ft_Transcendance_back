@@ -191,8 +191,8 @@ export class ChatService {
     if (channel.status === ChannelStatus.DIRECT_MESSAGE) {
       throw new UserUnauthorizedException(user.id);
     }
-    let invitation =  channel.invited_members.find(member => member.id === user.id);
-    if (user.id === invited_user.id) {
+    let invitation =  channel.invited_members.find(member => member.id == user.id);
+    if (user.id == invited_user.id) {
       if (invitation) {
         channel.invited_members.splice(channel.invited_members.indexOf(invitation), 1);
       }
