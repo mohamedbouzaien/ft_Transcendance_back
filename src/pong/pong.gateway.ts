@@ -16,6 +16,7 @@ import { UsersService } from "src/users/users.service";
 import { UserStatus } from "src/users/user-status.enum";
 import User from "src/users/user.entity";
 import { UserGameNotFound } from "./exception/UserGameNotFound.exception";
+import { Interval } from "@nestjs/schedule";
 
 
 @UseFilters(WsExceptionFilter)
@@ -45,72 +46,6 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     this.queue = [];
     this.games = [];
-  }
-
-  async heartBeat() {
-    for (let game of this.games) {
-      if (game.status == GameStatus.RUNNING) {
-        game.updateGame();
-        if (game.status.toString() == GameStatus.ENDED) {
-          const newGame = await this.gamesService.createGame(game);
-          this.usersService.saveUsersGameResult(newGame);
-          this.server.to(game.id).emit('update', game);
-          this.usersService.setStatus(UserStatus.ONLINE, game.player1.user.id);
-          this.usersService.setStatus(UserStatus.ONLINE, game.player2.user.id);
-          this.server.in(game.id).socketsLeave(game.id);
-          this.games.splice(this.games.indexOf(game), 1);
-        }
-        else
-         this.server.to(game.id).emit('update', game);
-      }
-    }
-  }
-  
-  matchmaking() {
-    while (this.queue.length >= 2) {
-      const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
-      const player1 = this.queue.shift();
-      const player2 = this.queue.shift();
-      let game = new GameObject(gameId, player1.data.user, player2.data.user);
-      player1.rooms.clear();
-      player2.rooms.clear();
-      player1.join(gameId);
-      player2.join(gameId);
-      this.games.push(game);
-      this.server.to(game.id).emit("update", game);
-    }
-  }
-
-  async checkDisconnection() {
-    let time = new Date();
-    for (let game of this.games) {
-      if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
-        let checkedPlayer = (game.player1.isReady == false)? game.player1 : game.player2;
-        if (checkedPlayer.isReady == false && time > checkedPlayer.timer) {
-          if (!(game.player1.isReady == false && game.player2.isReady == false)) {
-            let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
-            winner.score = game.maxPoints;
-            this.usersService.setStatus(UserStatus.ONLINE, winner.user.id);
-          }
-          game.status = GameStatus.ENDED;
-          const newGame = await this.gamesService.createGame(game);
-          this.usersService.saveUsersGameResult(newGame);
-          this.server.to(game.id).emit('update', game);
-          this.server.in(game.id).socketsLeave(game.id);
-          this.games.splice(this.games.indexOf(game), 1);
-        }
-      }
-    }
-  }
-
-  async serializeBroadcastedUser(user: User) {
-    for (let key in user) {
-      if (key != 'id' && key != 'username' && key != 'avatar_id'
-      && key != 'status' && key != 'victories' && key != 'defeats') {
-        delete user[key];
-      }
-    }
-    return user;
   }
 
   async handleConnection(@ConnectedSocket() socket: Socket) {
@@ -161,12 +96,91 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @Interval(1000 / 60)
+  async heartBeat() {
+    for (let game of this.games) {
+      if (game.status == GameStatus.RUNNING) {
+        game.updateGame();
+        if (game.status.toString() == GameStatus.ENDED) {
+          const newGame = await this.gamesService.createGame(game);
+          this.usersService.saveUsersGameResult(newGame);
+          this.server.to(game.id).emit('update', game);
+          this.usersService.setStatus(UserStatus.ONLINE, game.player1.user.id);
+          this.usersService.setStatus(UserStatus.ONLINE, game.player2.user.id);
+          this.server.in(game.id).socketsLeave(game.id);
+          this.games.splice(this.games.indexOf(game), 1);
+        }
+        else
+         this.server.to(game.id).emit('update', game);
+      }
+      else if (game.status == GameStatus.STOPPED)
+        this.checkDisconnection(game);
+    }
+  }
+  
+  async checkDisconnection(game) {
+    let time = new Date();
+    if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
+      let checkedPlayer = (game.player1.isReady == false)? game.player1 : game.player2;
+      if (checkedPlayer.isReady == false && time > checkedPlayer.timer) {
+        if (!(game.player1.isReady == false && game.player2.isReady == false)) {
+          let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
+          winner.score = game.maxPoints;
+          this.usersService.setStatus(UserStatus.ONLINE, winner.user.id);
+        }
+        game.status = GameStatus.ENDED;
+        const newGame = await this.gamesService.createGame(game);
+        this.usersService.saveUsersGameResult(newGame);
+        this.server.to(game.id).emit('update', game);
+        this.server.in(game.id).socketsLeave(game.id);
+        this.games.splice(this.games.indexOf(game), 1);
+      }
+    }
+  }
+
+  matchmaking() {
+    while (this.queue.length >= 2) {
+      const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
+      const player1 = this.queue.shift();
+      const player2 = this.queue.shift();
+      let game = new GameObject(gameId, player1.data.user, player2.data.user);
+      player1.rooms.clear();
+      player2.rooms.clear();
+      player1.join(gameId);
+      player2.join(gameId);
+      this.games.push(game);
+      this.server.to(game.id).emit("update", game);
+    }
+  }
+
+  async serializeBroadcastedUser(user: User) {
+    for (let key in user) {
+      if (key != 'id' && key != 'username' && key != 'avatar_id'
+      && key != 'status' && key != 'victories' && key != 'defeats') {
+        delete user[key];
+      }
+    }
+    return user;
+  }
+
   @SubscribeMessage("joinQueue")
   async joinQueue(@ConnectedSocket() socket: Socket) {
     try {
       this.roomsService.isUserAlreadyPlaying(socket, this.queue, this.games);
       socket.rooms.clear();
       this.queue.push(socket);
+      while (this.queue.length >= 2) {
+        const gameId = (this.games.length > 0 ? (this.games[this.games.length - 1].id + 1) : 0).toString();
+        const player1 = this.queue.shift();
+        const player2 = this.queue.shift();
+        let game = new GameObject(gameId, player1.data.user, player2.data.user);
+        player1.rooms.clear();
+        player2.rooms.clear();
+        player1.join(gameId);
+        player2.join(gameId);
+        this.games.push(game);
+        this.server.to(game.id).emit("update", game);
+      }
       return this.queue.length;
     } catch (error) {
       return error;

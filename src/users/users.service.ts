@@ -172,8 +172,16 @@ export class UsersService {
             await this.usersRepository.update(game.player2.id, {defeats: game.player2.defeats += 1});
         }
         else {
-            await this.usersRepository.update(game.player1.id, {victories: game.player1.victories += 1});
-            await this.usersRepository.update(game.player2.id, {defeats: game.player2.defeats += 1});  
+            await this.usersRepository.update(game.player2.id, {victories: game.player2.victories += 1});
+            await this.usersRepository.update(game.player1.id, {defeats: game.player1.defeats += 1});  
         }
     }
+
+    async getUserWithRelations(id: number, relations: string[]) {
+        const user =  await this.usersRepository.findOne(id, {relations});
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+        return user;
+    } 
 }
