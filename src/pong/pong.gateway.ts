@@ -113,27 +113,27 @@ export class PongGateway implements OnGatewayConnection, OnGatewayDisconnect {
         else
          this.server.to(game.id).emit('update', game);
       }
-      else if (game.status == GameStatus.STOPPED)
-        this.checkDisconnection(game);
     }
   }
   
-  async checkDisconnection(game) {
+  async checkDisconnection() {
     let time = new Date();
-    if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
-      let checkedPlayer = (game.player1.isReady == false)? game.player1 : game.player2;
-      if (checkedPlayer.isReady == false && time > checkedPlayer.timer) {
-        if (!(game.player1.isReady == false && game.player2.isReady == false)) {
-          let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
-          winner.score = game.maxPoints;
-          this.usersService.setStatus(UserStatus.ONLINE, winner.user.id);
+    for (let game of this.games) {
+      if (game.status == GameStatus.STOPPED && (game.player1.isReady == false || game.player2.isReady == false) ) {
+        let checkedPlayer = (game.player1.isReady == false)? game.player1 : game.player2;
+        if (checkedPlayer.isReady == false && time > checkedPlayer.timer) {
+          if (!(game.player1.isReady == false && game.player2.isReady == false)) {
+            let winner =  (game.player1.isReady == false)? game.player2 : game.player1;
+            winner.score = game.maxPoints;
+            this.usersService.setStatus(UserStatus.ONLINE, winner.user.id);
+          }
+          game.status = GameStatus.ENDED;
+          const newGame = await this.gamesService.createGame(game);
+          this.usersService.saveUsersGameResult(newGame);
+          this.server.to(game.id).emit('update', game);
+          this.server.in(game.id).socketsLeave(game.id);
+          this.games.splice(this.games.indexOf(game), 1);
         }
-        game.status = GameStatus.ENDED;
-        const newGame = await this.gamesService.createGame(game);
-        this.usersService.saveUsersGameResult(newGame);
-        this.server.to(game.id).emit('update', game);
-        this.server.in(game.id).socketsLeave(game.id);
-        this.games.splice(this.games.indexOf(game), 1);
       }
     }
   }
