@@ -87,33 +87,24 @@ export class AuthenticationService {
         ];
     }
 
-    public async getUserFromAuthenticationToken(token: string) {
+      public async getUserFromToken(token: string, tokenName: string) {
         const payload: TokenPayload = this.jwtService.verify(token, {
-            secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET')
+            secret: this.configService.get(tokenName)
           });
           if (payload.userId) {
             return this.usersService.getUserWithRelations(payload.userId, []);
           }
       }
 
-      public async getUserFromRefreshToken(token: string) {
-        const payload: TokenPayload = this.jwtService.verify(token, {
-            secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET')
-          });
-          if (payload.userId) {
-            return this.usersService.getUserWithRelations(payload.userId, []);
-          }
-      }
-
-    async getUserFromSocket(socket: Socket) {
+    public async getUserFromSocket(socket: Socket) {
         const cookie = socket.handshake.headers.cookie;
         const { Authentication: authenticationToken } = parse(cookie);
         const { Refresh: refreshToken } = parse(cookie);
         let user;
         if (refreshToken)
-            user = await this.getUserFromRefreshToken(refreshToken);
+            user = await this.getUserFromToken(refreshToken, 'JWT_REFRESH_TOKEN_SECRET');
         else 
-            user = await this.getUserFromAuthenticationToken(authenticationToken);
+            user = await this.getUserFromToken(authenticationToken, 'JWT_ACCESS_TOKEN_SECRET');
         if (!user) {
             console.log('invalides credentials');
             throw new WsException('Invalid credentials.');
