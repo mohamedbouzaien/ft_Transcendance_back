@@ -22,4 +22,15 @@ export class AcheivementsHistoriesService {
         await this.acheivementHistoryRepository.save(acheivement_history);
         return acheivement_history;
     }
+
+    async   getByAcheivement(id: number) {
+        return await this.acheivementHistoryRepository.findOne({
+            relations: ['acheivement'],
+            where: {
+                acheivement: {
+                    id: id
+                }
+            }
+        });
+    }
 }

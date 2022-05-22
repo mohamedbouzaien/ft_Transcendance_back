@@ -72,9 +72,9 @@ class User {
     @JoinTable()
     public received_relationships: UserRelationship[];
 
-    @OneToMany(() => AcheivementHistory, (acheivement_history: AcheivementHistory) => acheivement_history.user, {eager: true})
+    @OneToMany(() => AcheivementHistory, (acheivement_history: AcheivementHistory) => acheivement_history.user)
     @JoinTable()
-    public acheivement_history;
+    public acheivement_history: AcheivementHistory[];
 
     @Column({default: 0})
     public victories: number;

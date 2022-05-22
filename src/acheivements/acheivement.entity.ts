@@ -1,4 +1,5 @@
-import { Column, Entity, JoinTable, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import AcheivementHistory from "src/acheivements-history/acheivements-history.entity";
+import { Column, Entity, JoinTable, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { AcheivementCategory } from "./acheivement-category.enum";
 import { AcheivementType } from "./acheivement-type.enum";
 
@@ -21,6 +22,9 @@ class Acheivement {
 
     @Column()
     public  message: string;
+
+    @OneToMany(() => AcheivementHistory, (acheivement_history: AcheivementHistory) => acheivement_history.acheivement)
+    public  acheivement_histories: AcheivementHistory[];
 }
 
 export default Acheivement;
