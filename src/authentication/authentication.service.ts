@@ -92,7 +92,7 @@ export class AuthenticationService {
             secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET')
           });
           if (payload.userId) {
-            return this.usersService.getById(payload.userId);
+            return this.usersService.getUserWithRelations(payload.userId, []);
           }
       }
 
@@ -101,7 +101,7 @@ export class AuthenticationService {
             secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET')
           });
           if (payload.userId) {
-            return this.usersService.getById(payload.userId);
+            return this.usersService.getUserWithRelations(payload.userId, []);
           }
       }
 

@@ -7,7 +7,6 @@ import Game from "./entities/game.entity";
 import { PongGateway } from "./pong.gateway";
 import { GamesService } from "./services/game.service";
 import { RoomsService } from "./services/room.service";
-import { TasksService } from "./tasks/tasks.service";
 
 @Module({
   imports: [
@@ -16,6 +15,6 @@ import { TasksService } from "./tasks/tasks.service";
     UsersModule,
     DuelModule
   ],
-  providers: [PongGateway, TasksService, RoomsService, GamesService]
+  providers: [PongGateway, RoomsService, GamesService]
 })
 export class PongModule {};
