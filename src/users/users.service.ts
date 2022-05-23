@@ -84,7 +84,7 @@ export class UsersService {
             relations: [
                 'sent_relationships', 
                 'received_relationships',
-                'invited_channels', 'userChannels', 'blocked_users', 'gamesAsPlayer1', 'gamesAsPlayer2'
+                'invited_channels', 'userChannels', 'blocked_users', 'gamesAsPlayer1', 'gamesAsPlayer2', 'acheivement_history', 'acheivement_history.acheivement'
             ]});
         if (user) {
             return user;
@@ -157,7 +157,7 @@ export class UsersService {
             user.password = hashedPassword;
             await this.usersRepository.update(id, user);
         }
-        const updatedUser = await this.usersRepository.findOne(id);
+        const updatedUser = await this.getById(id);
         if (updatedUser) {
             return updatedUser;
         }

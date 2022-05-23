@@ -19,14 +19,25 @@ export class AuthenticationService {
 
     public async register(registrationData: RegisterDto)
     {
-        const hashedPassword = await bcrypt.hash(registrationData.password, 10);
         try {
-            const createdUser = await this.usersService.create({
-                ...registrationData,
-                password: hashedPassword
-            });
-            createdUser.password = undefined;
-            return createdUser;
+            if (registrationData.password)
+            {
+                const hashedPassword = await bcrypt.hash(registrationData.password, 10);
+                const createdUser = await this.usersService.create({
+                    ...registrationData,
+                    password: hashedPassword
+                });
+                createdUser.password = undefined;
+                return createdUser;
+            }
+            else
+            {
+                const createdUser = await this.usersService.create({
+                    ...registrationData
+                });
+                return createdUser;
+            }
+
         } catch (error) {
             if (error?.code === PostGresErrorCode.UniqueViolation) {
                 throw new HttpException('User with that email already exists', HttpStatus.BAD_REQUEST);
@@ -83,7 +94,9 @@ export class AuthenticationService {
     public getCookiesForLogOut() {
         return [
             'Authentication=; HttpOnly; Path=/; Max-Age=0',
-            'Refresh=; HttpOnly; Path=/; Max-Age=0'
+            'Refresh=; HttpOnly; Path=/; Max-Age=0',
+            'user=; HttpOnly; Path=/; Max-Age=0',
+            'ft_logged=; HttpOnly; Path=/; Max-Age=0'
         ];
     }
 

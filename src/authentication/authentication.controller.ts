@@ -78,13 +78,18 @@ export class AuthenticationController {
     @Get('callback')
     async ftCallback(@Req() request: RequestWithUser) {
         const {user} = request;
-        const accessTokenCookie = this.authenticationService.getCookieWithJwtAccessToken(user.id);
-        const {
-            cookie: refreshTokenCookie,
-            token: refreshToken
-        } = this.authenticationService.getCookieWithJwtRefreshToken(user.id);
-        await this.usersService.setCurrentRefreshToken(refreshToken, user.id);
-        request.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
-        return user;
+        if (user.id)
+        {
+            const accessTokenCookie = this.authenticationService.getCookieWithJwtAccessToken(user.id);
+            const {
+                cookie: refreshTokenCookie,
+                token: refreshToken
+            } = this.authenticationService.getCookieWithJwtRefreshToken(user.id);
+            await this.usersService.setCurrentRefreshToken(refreshToken, user.id);
+            request.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie, "ft_logged=true; Path=/; Max-Age=90"]);
+            return user;
+        }
+        else
+            request.res.setHeader('Set-Cookie', "user="+JSON.stringify(user)+ "; Path=/; Max-Age=200");
     }
 }

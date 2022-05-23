@@ -8,6 +8,7 @@ import UserRelationship from "src/user-relationships/user-relationship.entity"
 import { UserStatus } from "./user-status.enum";
 import { Duel } from "src/duels/entities/duel.entity";
 import Game from "src/pong/entities/game.entity";
+import AcheivementHistory from "src/acheivements-history/acheivements-history.entity";
 
 @Entity()
 class User {
@@ -70,6 +71,10 @@ class User {
     @OneToMany(() => UserRelationship, (userRelationship: UserRelationship) =>userRelationship.receiver)
     @JoinTable()
     public received_relationships: UserRelationship[];
+
+    @OneToMany(() => AcheivementHistory, (acheivement_history: AcheivementHistory) => acheivement_history.user)
+    @JoinTable()
+    public acheivement_history: AcheivementHistory[];
 
     @Column({default: 0})
     public victories: number;
