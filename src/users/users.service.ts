@@ -157,7 +157,7 @@ export class UsersService {
             user.password = hashedPassword;
             await this.usersRepository.update(id, user);
         }
-        const updatedUser = await this.usersRepository.findOne(id);
+        const updatedUser = await this.getById(id);
         if (updatedUser) {
             return updatedUser;
         }

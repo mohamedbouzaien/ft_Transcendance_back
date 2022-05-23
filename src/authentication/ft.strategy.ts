@@ -29,12 +29,16 @@ export class ftStrategy extends PassportStrategy(Strategy)
         const userData = {
             username: profile.username,
             email: profile.emails[0].value,
-            password: '0000',
-            intra_id: profile.id
+            password: undefined,
+            intra_id: profile.id,
         }
-        const user = await this.userService.getByIntraId(userData.intra_id);
+        let user: User = await this.userService.getByIntraId(userData.intra_id);
         if (user)
             return user;
-        return this.authenticationService.register(userData);
+        user = new User();
+        user.username = userData.username;
+        user.email = userData.email;
+        user.intra_id = userData.intra_id;
+        return user;
     }
 }

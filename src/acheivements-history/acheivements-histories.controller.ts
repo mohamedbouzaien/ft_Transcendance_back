@@ -17,7 +17,7 @@ export class AcheivementsHistoriesController {
 
     @Get("acheivement/:id")
     @UseGuards(JwtTwoFactornGuard)
-    async findOne(@Param('id', ParseIntPipe) id: number) {
-        return await this.acheivementsHistoriesService.getByAcheivement(id);
+    async findOne(@Param('id', ParseIntPipe) id: number, @Req() request: RequestWithUser) {
+        return await this.acheivementsHistoriesService.getByAcheivement(id, request.user);
     }
 }
