@@ -22,28 +22,28 @@ export class ChannelsController {
   @Post()
   @UseGuards(JwtAuthenticationGuard)
   async createChannel(@Req() request: RequestWithUser, @Body() channelData: CreateChannelDto) {
-    const user = await this.usersService.getById(request.user.id);
+    const user = await this.usersService.getUserWithRelations(request.user.id, []);
     return await this.chatsService.createChannel(channelData, user);
   }
 
   @Get()
   @UseGuards(JwtAuthenticationGuard)
   async getAllChannels(@Req() request: RequestWithUser) {
-    const user = await this.usersService.getById(request.user.id);
+    const user = await this.usersService.getUserWithRelations(request.user.id, ['userChannels', 'invited_channels']);
     return await this.chatsService.getAllChannelsForUser(user);
   }
 
   @Get(':id')
   @UseGuards(JwtAuthenticationGuard)
   async getChannel(@Req() request: RequestWithUser, @Param() channelData: FindOneParams) {
-    const user = await this.usersService.getById(request.user.id);
+    const user = await this.usersService.getUserWithRelations(request.user.id, []);
     return await this.chatsService.getChannelForUser(channelData, user);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthenticationGuard)
   async updateChannel(@Req() request: RequestWithUser, @Body() channelData: UpdateChannelDto) {
-    const user = await this.usersService.getById(request.user.id);
+    const user = await this.usersService.getUserWithRelations(request.user.id, ['userChannels']);
     const channel = await this.chatsService.updateChannel(channelData, user);
     this.chatGateway.sendToUsers(channel.id, 'updated_channel', channel);
     return channel;
@@ -52,7 +52,7 @@ export class ChannelsController {
   @Delete(':id')
   @UseGuards(JwtAuthenticationGuard)
   async deleteChannel(@Req() request: RequestWithUser, @Param() channelData: FindOneParams) {
-    const user = await this.usersService.getById(request.user.id);
+    const user = await this.usersService.getUserWithRelations(request.user.id, ['userChannels']);
     const channelUsers = await (await this.channelsService.getChannelById(channelData.id)).channelUsers;
     await this.chatsService.deleteChannel(channelData, user);
     this.chatGateway.sendDeletiontoUsers(channelUsers, channelData.id);

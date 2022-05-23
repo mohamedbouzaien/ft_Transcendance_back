@@ -10,7 +10,7 @@ class UpdateChannelUserDto {
   @IsEnum(ChannelUserRole)
   role: ChannelUserRole;
 
-  @ValidateIf(o => Boolean(o.role))
+  @ValidateIf(o => Boolean(o.sanction))
   @IsEnum(SanctionType)
   sanction: SanctionType;
 
