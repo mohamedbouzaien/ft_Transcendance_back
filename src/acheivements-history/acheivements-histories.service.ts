@@ -1,11 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { use } from "passport";
 import { AcheivementsService } from "src/acheivements/acheivements.service";
 import User from "src/users/user.entity";
 import { Repository } from "typeorm";
 import AcheivementHistory from "./acheivements-history.entity";
-import { CreateAcheivementHistoryDto } from "./dto/create-acheivement-history.dto";
 
 @Injectable()
 export class AcheivementsHistoriesService {

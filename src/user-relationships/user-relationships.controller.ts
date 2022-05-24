@@ -3,7 +3,6 @@ import JwtTwoFactornGuard from 'src/authentication/jwt-two-factor.guard';
 import RequestWithUser from 'src/authentication/request-with-user.interface';
 import { UsersService } from 'src/users/users.service';
 import { UpdateUserRelationshipStatusDto } from './dto/update-user-relationship-status.dto';
-import { UserRelationshipStatus } from './user-relationship-status.enum';
 import { UserRelationshipsService } from './user-relationships.service';
 
 @Controller('user-relationships')

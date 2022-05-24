@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import User from "src/users/user.entity";
-import { IsNull, Not, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import CreateDuelDto from "../dto/createDuel.dto";
 import { Duel } from "../entities/duel.entity";
 import { DuelNotFoundException } from "../exception/DuelNotFound.exception";

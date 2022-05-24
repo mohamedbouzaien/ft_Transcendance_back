@@ -1,9 +1,8 @@
-import { CallHandler, ExecutionContext, Injectable, mixin, NestInterceptor, Type } from '@nestjs/common';
+import { Injectable, mixin, NestInterceptor, Type } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
-import { Observable } from 'rxjs';
-import { diskStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+import { diskStorage } from 'multer';
 
 interface LocalFilesInterceptorOptions {
   fieldName: string;
