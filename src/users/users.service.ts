@@ -84,7 +84,7 @@ export class UsersService {
             relations: [
                 'sent_relationships', 
                 'received_relationships',
-                'invited_channels', 'userChannels', 'blocked_users', 'gamesAsPlayer1', 'gamesAsPlayer2', 'acheivement_history', 'acheivement_history.acheivement'
+                'invited_channels', 'userChannels', 'blocked_users', 'gamesAsPlayer1', 'gamesAsPlayer2', 'achievement_history', 'achievement_history.achievement'
             ]});
         if (user) {
             return user;

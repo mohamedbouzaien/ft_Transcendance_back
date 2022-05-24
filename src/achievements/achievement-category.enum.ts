@@ -1,4 +1,4 @@
-export enum AcheivementCategory {
+export enum AchievementCategory {
     NULL = 0,
     WINS = 1,
     ON_ROW = 2,

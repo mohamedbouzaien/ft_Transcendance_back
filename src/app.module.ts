@@ -2,8 +2,8 @@ import * as Joi from '@hapi/joi';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AcheivementsHistoriesModule } from './acheivements-history/acheivements-histories.module';
-import { AcheivementsModule } from './acheivements/acheivements.module';
+import { AchievementsHistoriesModule } from './achievements-history/achievements-histories.module';
+import { AchievementsModule } from './achievements/achievements.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthenticationModule } from './authentication/authentication.module';
@@ -34,7 +34,7 @@ import { UsersModule } from './users/users.module';
       TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
       UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule, AcheivementsModule, AcheivementsHistoriesModule],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule, AchievementsModule, AchievementsHistoriesModule],
   controllers: [AppController],
   providers: [AppService],
 })
