@@ -43,6 +43,7 @@ class GameObject {
   player1: PlayerInterface;
   player2: PlayerInterface;
   ball: BallInterface
+  lastFrame: number
 
   constructor(id: string, player1: User, player2: User) {
     this.id = id;
@@ -53,6 +54,7 @@ class GameObject {
     this.ballSpeed =  GameBallSpeed.MEDIUM;
     this.playerHeight = GamePlayerHeight.MEDIUM;
     this.playerWidth = 5;
+    this.lastFrame = 0
     this.player1 = {
       user: player1,
       isReady: false
@@ -95,6 +97,7 @@ class GameObject {
         y: 0
       }
     }
+    this.lastFrame = Date.now()
     this.status = GameStatus.RUNNING;
   }
 
@@ -122,11 +125,15 @@ class GameObject {
   }
 
   ballMove() {
+    const now = Date.now()
+    const timeElapsed =  now - this.lastFrame
+    const timeFactor = timeElapsed / 16
+    this.lastFrame = now
     if(this.ball.y > this.canvasHeight || this.ball.y < 0) {
       this.ball.speed.y *= -1;
     }
-    this.ball.x += this.ball.speed.x;
-    this.ball.y += this.ball.speed.y;
+    this.ball.x += this.ball.speed.x * timeFactor;
+    this.ball.y += this.ball.speed.y * timeFactor;
     if (this.ball.x > this.canvasWidth - this.playerWidth) {
       this.collide(this.player2);
     } else if (this.ball.x < this.playerWidth) {
