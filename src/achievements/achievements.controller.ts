@@ -9,7 +9,6 @@ export class AchievementController {
 
     }
     @Post()
-    @UseGuards(JwtTwoFactornGuard)
     async   add(@Body() achievements: CreateAchievementDto[]) {
         for (let achievement of achievements) {
             await this.achievementsService.create(achievement);
