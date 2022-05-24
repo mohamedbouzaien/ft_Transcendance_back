@@ -98,7 +98,7 @@ class GameObject {
     this.status = GameStatus.RUNNING;
   }
 
-  mouseUpdate(playerId: number, data: MouseMoveInterface) {
+  async mouseUpdate(playerId: number, data: MouseMoveInterface) {
     let player;
     if (this.player1.user.id == playerId)
       player = this.player1;
@@ -115,7 +115,7 @@ class GameObject {
       player.y = mouseLocation - this.playerHeight / 2;
   }
 
-  updateGame() {
+  async updateGame() {
     this.ballMove();
     if (this.player1.score == this.maxPoints || this.player2.score == this.maxPoints)
       this.status = GameStatus.ENDED;
@@ -134,7 +134,7 @@ class GameObject {
     }
   }
  
-  collide(player: PlayerInterface) {
+  async collide(player: PlayerInterface) {
     // The player doesnt hit the ball
     if (this.ball.y < player.y || this.ball.y > player.y + this.playerHeight) {
       this.reset();
@@ -154,7 +154,7 @@ class GameObject {
     }
   }
 
-  reset() {
+  async reset() {
     // Set ball and players to the center
     this.ball.x = this.canvasWidth / 2;
     this.ball.y = this.canvasHeight / 2;
@@ -166,7 +166,7 @@ class GameObject {
     this.ball.speed.y = Math.random() * 2;
   }
 
-  changeDirection(playerPosition) {
+async changeDirection(playerPosition) {
     var impact = this.ball.y - playerPosition - this.playerHeight / 2;
     var ratio = 100 / (this.playerHeight / 2);
     this.ball.speed.y = Math.round(impact * ratio / 10);
