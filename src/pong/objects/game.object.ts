@@ -1,4 +1,3 @@
-import { Socket } from "socket.io";
 import { UserUnauthorizedException } from "src/users/exception/userUnauthorized.exception";
 import BallInterface from "../interfaces/ball.interface";
 import GameSetupInterface from "../dto/gameSetup.dto";

@@ -1,14 +1,14 @@
-import Acheivement from "src/acheivements/acheivement.entity";
+import Achievement from "src/achievements/achievement.entity";
 import User from "src/users/user.entity";
 import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
-class AcheivementHistory {
+class AchievementHistory {
 
     @PrimaryGeneratedColumn()
     public id?: number;
 
-    @ManyToOne(()=>User, (user: User) => user.acheivement_history)
+    @ManyToOne(()=>User, (user: User) => user.achievement_history)
     @JoinColumn({name: 'user_id'})
     public user: User;
 
@@ -18,9 +18,9 @@ class AcheivementHistory {
     @Column({default: false})
     public isRead: boolean;
 
-    @ManyToOne(() => Acheivement, (acheivement: Acheivement) => acheivement.acheivement_histories)
+    @ManyToOne(() => Achievement, (achievement: Achievement) => achievement.achievement_histories)
     @JoinTable()
-    public acheivement: Acheivement;
+    public achievement: Achievement;
 }
 
-export default AcheivementHistory;
+export default AchievementHistory;

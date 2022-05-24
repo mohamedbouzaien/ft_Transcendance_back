@@ -1,4 +1,4 @@
-import { IsNumber, isNumberString, IsNumberString, IsOptional, isString } from 'class-validator';
+import { IsNumberString, IsOptional } from 'class-validator';
 
 export class FindOneParams {
   @IsNumberString()

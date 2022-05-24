@@ -1,19 +1,19 @@
+import * as Joi from '@hapi/joi';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AchievementsHistoriesModule } from './achievements-history/achievements-histories.module';
+import { AchievementsModule } from './achievements/achievements.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/database.module';
-import { UsersModule } from './users/users.module';
 import { AuthenticationModule } from './authentication/authentication.module';
-import { TwoFactorAuthenticationModule } from './two-factor-authentication/two-factor-authentication.module';
-import { LocalFilesModule } from './local-files/local-files.module';
-import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
-import * as Joi from '@hapi/joi';
 import { ChatModule } from './chat/chat.module';
+import { DatabaseModule } from './database/database.module';
+import { LocalFilesModule } from './local-files/local-files.module';
 import { PongModule } from './pong/pong.module';
-import { ScheduleModule } from '@nestjs/schedule';
-import { AcheivementsModule } from './acheivements/acheivements.module';
-import { AcheivementsHistoriesModule } from './acheivements-history/acheivements-histories.module';
+import { TwoFactorAuthenticationModule } from './two-factor-authentication/two-factor-authentication.module';
+import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [ScheduleModule.forRoot(), ConfigModule.forRoot({
@@ -34,7 +34,7 @@ import { AcheivementsHistoriesModule } from './acheivements-history/acheivements
       TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
       UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule, AcheivementsModule, AcheivementsHistoriesModule],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule, AchievementsModule, AchievementsHistoriesModule],
   controllers: [AppController],
   providers: [AppService],
 })

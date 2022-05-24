@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
+import { IsEnum, IsNotEmpty, MaxLength, MinLength, ValidateIf } from "class-validator";
 import { ChannelStatus } from "../entities/channel.entity";
 
 class CreateChannelDto {
