@@ -1,4 +1,4 @@
-import { IsDate, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, ValidateIf } from "class-validator";
+import { IsDateString, IsEnum, IsNotEmpty, IsNumber, ValidateIf } from "class-validator";
 import { ChannelUserRole, SanctionType } from "../entities/channelUser.entity";
 
 class UpdateChannelUserDto {

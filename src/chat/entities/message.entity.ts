@@ -1,5 +1,5 @@
 import User from "src/users/user.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import Channel from "./channel.entity";
 
 @Entity()

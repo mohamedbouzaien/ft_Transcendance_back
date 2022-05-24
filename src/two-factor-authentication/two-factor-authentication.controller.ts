@@ -1,4 +1,4 @@
-import { ClassSerializerInterceptor, Controller, Post, UseGuards, UseInterceptors, Res, Req, Get, HttpCode, Body, UnauthorizedException } from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, HttpCode, Post, Req, Res, UnauthorizedException, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthenticationService } from 'src/authentication/authentication.service';
 import JwtAuthenticationGuard from 'src/authentication/jwt-authentication.guard';

@@ -1,21 +1,22 @@
+import * as Joi from '@hapi/joi';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AchievementsHistoriesModule } from './achievements-history/achievements-histories.module';
+import { AchievementsModule } from './achievements/achievements.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TodosModule } from './todos/todos.module';
-import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/database.module';
-import { UsersModule } from './users/users.module';
 import { AuthenticationModule } from './authentication/authentication.module';
-import { TwoFactorAuthenticationModule } from './two-factor-authentication/two-factor-authentication.module';
-import { LocalFilesModule } from './local-files/local-files.module';
-import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
-import * as Joi from '@hapi/joi';
 import { ChatModule } from './chat/chat.module';
+import { DatabaseModule } from './database/database.module';
+import { LocalFilesModule } from './local-files/local-files.module';
 import { PongModule } from './pong/pong.module';
-import { ScheduleModule } from '@nestjs/schedule';
+import { TwoFactorAuthenticationModule } from './two-factor-authentication/two-factor-authentication.module';
+import { UserRelationshipsModule } from './user-relationships/user-relationships.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [TodosModule, ScheduleModule.forRoot(), ConfigModule.forRoot({
+  imports: [ScheduleModule.forRoot(), ConfigModule.forRoot({
     validationSchema: Joi.object({
       POSTGRES_HOST: Joi.string().required(),
       POSTGRES_PORT: Joi.number().required(),
@@ -33,7 +34,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
       UPLOADED_FILES_DESTINATION: Joi.string().required()
     })
-  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule,],
+  }), DatabaseModule, TwoFactorAuthenticationModule, UsersModule, AuthenticationModule, LocalFilesModule, ChatModule, UserRelationshipsModule, PongModule, AchievementsModule, AchievementsHistoriesModule],
   controllers: [AppController],
   providers: [AppService],
 })

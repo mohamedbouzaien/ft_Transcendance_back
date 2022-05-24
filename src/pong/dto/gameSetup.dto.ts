@@ -1,5 +1,5 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsNumberString, IsOptional, ValidateIf } from "class-validator";
-import { GameBallSpeed, GameMaxPoints, GamePlayerHeight, GameStatus } from "../objects/game.object";
+import { IsBoolean, IsEnum, IsNotEmpty, IsNumberString, ValidateIf } from "class-validator";
+import { GameBallSpeed, GameMaxPoints, GamePlayerHeight } from "../objects/game.object";
 
 class GameSetupInterface {
   @IsNumberString()

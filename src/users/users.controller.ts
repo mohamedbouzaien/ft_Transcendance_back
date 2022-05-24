@@ -1,9 +1,7 @@
 import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
-import { isEmail } from 'class-validator';
 import JwtTwoFactornGuard from 'src/authentication/jwt-two-factor.guard';
 import RequestWithUser from 'src/authentication/request-with-user.interface';
 import LocalFilesInterceptor from 'src/local-files/local-files.interceptor';
-import { fileURLToPath } from 'url';
 import CreateUserDto from './dto/createUser.dto';
 import UpdateStatusDto from './dto/updateStatus.dto';
 import { UsersService } from './users.service';
@@ -35,16 +33,14 @@ export class UsersController {
     }
 
     @Get('check_mail/:email')
-    @UseGuards(JwtTwoFactornGuard)
     async   checkIfEmailExists(@Param('email') email: string, @Req() request: RequestWithUser) {
-        if (email != request.user.email)
+        if ((request.user && email !== request.user.email) || !request.user)
             return this.usersService.checkIfExistsByEmail(email)
     }
 
     @Get('check_username/:username')
-    @UseGuards(JwtTwoFactornGuard)
     async   checkIfUsernameExists(@Param('username') username: string, @Req() request: RequestWithUser) {
-        if (username != request.user.username)
+        if ((request.user && username !== request.user.username) || !request.user)
             return this.usersService.checkIfExistsByUsername(username);
     }
 
@@ -72,5 +68,11 @@ export class UsersController {
     {
         await this.usersService.setStatus(status, request.user.id);
         return await this.usersService.getById(request.user.id);
+    }
+
+    @Get()
+    @UseGuards(JwtTwoFactornGuard)
+    async  getCurrent(@Req() request: RequestWithUser) {
+        return await   this.usersService.getById(request.user.id);
     }
 }

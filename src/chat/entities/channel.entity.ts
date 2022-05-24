@@ -1,6 +1,6 @@
-import { Exclude, Transform } from "class-transformer";
+import { Exclude } from "class-transformer";
 import User from "src/users/user.entity";
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import ChannelUser from "./channelUser.entity";
 import Message from "./message.entity";
 

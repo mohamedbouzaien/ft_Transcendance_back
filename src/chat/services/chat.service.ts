@@ -1,27 +1,23 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { AuthenticationService } from '../../authentication/authentication.service';
-import { Socket } from 'socket.io';
-import { parse } from 'cookie';
-import { WsException } from '@nestjs/websockets';
-import CreateChannelDto from '../dto/createChannel.dto';
-import User from 'src/users/user.entity';
-import { ChannelsService } from './channels.service';
-import { ChannelUsersService } from './channelUser.service';
-import { ChannelUserRole, SanctionType } from '../entities/channelUser.entity';
-import Channel, { ChannelStatus } from '../entities/channel.entity';
-import { UserUnauthorizedException } from 'src/users/exception/userUnauthorized.exception';
-import { ChannelInvitationDto } from '../dto/ChannelInvitation.dto';
-import { UsersService } from 'src/users/users.service';
-import CreateMessageDto from '../dto/createMessage.dto';
-import { MessagesService } from './messages.service';
-import UpdateChannelDto from '../dto/updateChannel.dto';
-import * as bcrypt from 'bcrypt'
-import UpdateChannelUserDto from '../dto/updateChannelUser.dto';
-import CreateChannelUserDto from '../dto/createChannelUser.dto';
-import CreateDirectMessageDto from '../dto/createDirectMessage.dto';
-import { FindOneParams } from '../dto/findOneParams.dto';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { DuelsService } from 'src/duels/services/duel.service';
 import { UserRelationshipsService } from 'src/user-relationships/user-relationships.service';
+import { UserUnauthorizedException } from 'src/users/exception/userUnauthorized.exception';
+import User from 'src/users/user.entity';
+import { UsersService } from 'src/users/users.service';
+import { AuthenticationService } from '../../authentication/authentication.service';
+import { ChannelInvitationDto } from '../dto/ChannelInvitation.dto';
+import CreateChannelDto from '../dto/createChannel.dto';
+import CreateChannelUserDto from '../dto/createChannelUser.dto';
+import CreateMessageDto from '../dto/createMessage.dto';
+import { FindOneParams } from '../dto/findOneParams.dto';
+import UpdateChannelDto from '../dto/updateChannel.dto';
+import UpdateChannelUserDto from '../dto/updateChannelUser.dto';
+import Channel, { ChannelStatus } from '../entities/channel.entity';
+import { ChannelUserRole, SanctionType } from '../entities/channelUser.entity';
+import { ChannelsService } from './channels.service';
+import { ChannelUsersService } from './channelUser.service';
+import { MessagesService } from './messages.service';
 
 @Injectable()
 export class ChatService {
