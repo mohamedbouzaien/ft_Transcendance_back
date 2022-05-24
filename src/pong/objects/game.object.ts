@@ -28,8 +28,8 @@ export enum GamePlayerHeight {
 
 export enum GameBallSpeed {
   SLOW = 1.1,
-  MEDIUM = 2,
-  FAST = 2.5
+  MEDIUM = 1.5,
+  FAST = 2
 }
 
 class GameObject {
