@@ -128,12 +128,22 @@ class GameObject {
     const now = Date.now()
     const timeElapsed =  now - this.lastFrame
     const timeFactor = timeElapsed / 16
+    // console.log('Time elapsed:',timeElapsed, 'ms', 'Time Factor:', timeFactor)
+    
+    // Un-comment the 2 next lines two generate artificial lag
+    // const ran = Math.random();
+    // for (let i = 0; i < 99999999 * ran; i++)
     this.lastFrame = now
-    if(this.ball.y > this.canvasHeight || this.ball.y < 0) {
-      this.ball.speed.y *= -1;
-    }
     this.ball.x += this.ball.speed.x * timeFactor;
     this.ball.y += this.ball.speed.y * timeFactor;
+    if (this.ball.y > this.canvasHeight){
+      this.ball.y = this.canvasHeight - (this.canvasHeight - this.ball.y)
+      this.ball.speed.y *= -1;
+    }
+    if (this.ball.y < 0){
+      this.ball.y *= -1
+      this.ball.speed.y *= -1;
+    }
     if (this.ball.x > this.canvasWidth - this.playerWidth) {
       this.collide(this.player2);
     } else if (this.ball.x < this.playerWidth) {
