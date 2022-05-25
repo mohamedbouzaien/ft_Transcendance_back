@@ -32,15 +32,31 @@ export class UsersController {
         return await this.usersService.getById(request.user.id);
     }
 
-    @Get('check_mail/:email')
-    async   checkIfEmailExists(@Param('email') email: string, @Req() request: RequestWithUser) {
-        if ((request.user && email !== request.user.email) || !request.user)
+    @Get('intern/check_mail/:email')
+    @UseGuards(JwtTwoFactornGuard)
+    async   checkIfEmailExistsIntern(@Param('email') email: string, @Req() request: RequestWithUser) {
+        if (email !== request.user.email) {
             return this.usersService.checkIfExistsByEmail(email)
+        }
     }
 
-    @Get('check_username/:username')
-    async   checkIfUsernameExists(@Param('username') username: string, @Req() request: RequestWithUser) {
-        if ((request.user && username !== request.user.username) || !request.user)
+    @Get('extern/check_mail/:email')
+    async   checkIfEmailExistsExtern(@Param('email') email: string, @Req() request: RequestWithUser) {
+        if ( email !== undefined) {
+            return this.usersService.checkIfExistsByEmail(email)
+        }
+    }
+
+    @Get('intern/check_username/:username')
+    @UseGuards(JwtTwoFactornGuard)
+    async   checkIfUsernameExistsIntern(@Param('username') username: string, @Req() request: RequestWithUser) {
+        if (username !== request.user.username)
+            return this.usersService.checkIfExistsByUsername(username);
+    }
+
+    @Get('extern/check_username/:username')
+    async   checkIfUsernameExistsExtern(@Param('username') username: string, @Req() request: RequestWithUser) {
+        if (username !== undefined)
             return this.usersService.checkIfExistsByUsername(username);
     }
 
