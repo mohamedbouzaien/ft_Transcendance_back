@@ -4,6 +4,7 @@ class PlayerInterface {
   user: User;
   isReady: boolean;
   timer?: Date;
+  xWall?: number;
   x?: number;
   y?: number;
   score?: number;
